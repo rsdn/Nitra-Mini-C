@@ -1,0 +1,73 @@
+﻿using Nitra;
+using Nitra.Declarations;
+
+ast Top
+{
+  in ContainingTable : TableScope;
+
+  Variables.ContainingTable = ContainingTable;
+  Variables  : Variable*;
+}
+
+declaration Variable
+{
+  symbol
+  {
+    Kind = "var";
+  stage 1:
+    in Result : double;
+  }
+
+  Expression.Scope = ContainingTable;
+  Symbol.Result    = Expression.Result;
+
+  Expression : Expression;
+}
+
+abstract ast Expression
+{
+stage 1:
+  in  Scope  : Scope;
+  out Result : double;
+}
+
+ast Number : Expression
+{
+  Result = Value.ValueOrDefault;
+
+  Value : double;
+}
+
+abstract ast Binary : Expression
+{
+  Expression1.Scope = Scope;
+  Expression2.Scope = Scope;
+
+  Expression1 : Expression;
+  Expression2 : Expression;
+}
+
+ast Sum : Binary { Result = Expression1.Result + Expression2.Result; }
+ast Sub : Binary { Result = Expression1.Result - Expression2.Result; }
+ast Mul : Binary { Result = Expression1.Result * Expression2.Result; }
+ast Div : Binary { Result = Expression1.Result / Expression2.Result; }
+
+abstract ast Unary : Expression
+{
+  Expression.Scope = Scope;
+  
+  Expression : Expression;
+}
+
+ast Plus  : Unary { Result = Expression.Result; }
+ast Minus : Unary { Result = -Expression.Result; }
+
+ast VariableRef : Expression
+{
+  out Ref : Ref[VariableSymbol] = Name.Ref.Resolve();
+
+  Name.Scope = Scope;
+  Result     = Ref.Symbol.Result;
+
+  Name : Reference;
+}
