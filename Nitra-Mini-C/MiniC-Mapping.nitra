@@ -1,13 +1,13 @@
-﻿using Nitra;
+﻿/*using Nitra;
 using Nitra.Runtime;
 using Nitra.Declarations;
 
-map syntax MiniCSyntax.TopRule -> Top
+map syntax MiniCSyntax.Program -> Top
 {
-  VariableDeclarations -> Variables;
+  | VariableDeclarations -> Variables;
 }
 
-map syntax MiniCSyntax.VariableDeclaration -> Variable
+map syntax MiniCSyntax.Declaration.VariableDeclaration -> Variable
 {
   Name       -> Name;
   Expression -> Expression;
@@ -52,4 +52,4 @@ map syntax MiniCSyntax.Expression -> Expression
     {
       Expression -> Expression;
     }
-}
+}*/

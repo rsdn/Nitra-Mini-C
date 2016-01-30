@@ -4,19 +4,41 @@
   using Nitra.CStyleComments;
 
   keyword regex ['a'..'z', '_'..'_']+ rule S;
+  regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" |
+					   "bool" | "float";
 
-  regex Keyword = "var";
+  [Keyword] token Keyword = Name=KeywordToken !IdentifierPartCharacters;
+  [Reference] token Reference = !Keyword IdentifierBody;
+  [Name] token Name = !Keyword IdentifierBody;
 
-  [Reference]
-  token Reference = !Keyword IdentifierBody;
+  regex IntegerLiteral = "\d+";
+  regex FloatLiteral = "\d+\.\d+";
+  regex BooleanLiteral = "true" | "false";
 
-  [Name]
-  token Name = !Keyword IdentifierBody;
+  [StartRule, ExplicitSpaces]
+  syntax Program = (Declaration nl)*;
 
-  [StartRule]
-  syntax TopRule = (VariableDeclaration nl)*;
+  syntax VariableDeclaration = TypeSpec Name ";";
 
-  syntax VariableDeclaration = "var" sm Name sm "=" sm Expression ";";
+  syntax Declaration
+  {  
+	| VariableDeclaration = VariableDeclaration;
+	| FunctionDeclaration = TypeSpec sm Name "(" VariableDeclaration* ")" Body;
+  }
+
+  syntax TypeSpec 
+  {
+    | Void = "void" sm;
+	| Int = "int" sm;
+	| Float = "float" sm;
+	| Bool = "bool" sm;
+  }
+
+  syntax Body
+  {
+    | Block = nl "{" inl Expression* d "}" ";"? nl;
+    | Empty = ";" nl;
+  }
 
   syntax Expression
   {

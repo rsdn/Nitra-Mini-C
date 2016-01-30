@@ -1,4 +1,4 @@
-﻿using Nitra;
+﻿/*using Nitra;
 using Nitra.Declarations;
 
 ast Top
@@ -6,7 +6,7 @@ ast Top
   in ContainingTable : TableScope;
 
   Variables.ContainingTable = ContainingTable;
-  Variables  : Variable*;
+  Variables : Variable*;
 }
 
 declaration Variable
@@ -19,7 +19,7 @@ declaration Variable
   }
 
   Expression.Scope = ContainingTable;
-  Symbol.Result    = Expression.Result;
+  Symbol.Result = Expression.Result;
 
   Expression : Expression;
 }
@@ -34,7 +34,6 @@ stage 1:
 ast Number : Expression
 {
   Result = Value.ValueOrDefault;
-
   Value : double;
 }
 
@@ -42,7 +41,6 @@ abstract ast Binary : Expression
 {
   Expression1.Scope = Scope;
   Expression2.Scope = Scope;
-
   Expression1 : Expression;
   Expression2 : Expression;
 }
@@ -70,4 +68,4 @@ ast VariableRef : Expression
   Result     = Ref.Symbol.Result;
 
   Name : Reference;
-}
+}*/

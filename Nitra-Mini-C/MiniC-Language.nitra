@@ -1,4 +1,4 @@
 ﻿language MiniC
 {
-  syntax module MiniCSyntax start rule TopRule;
+  syntax module MiniCSyntax start rule Program;
 }
