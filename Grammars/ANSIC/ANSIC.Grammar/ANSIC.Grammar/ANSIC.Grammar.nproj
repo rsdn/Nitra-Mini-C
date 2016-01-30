@@ -57,13 +57,37 @@
     <MacroReference Include="Nemerle.Linq">
       <HintPath>$(Nemerle)\Nemerle.Linq.dll</HintPath>
     </MacroReference>
+    <MacroProjectReference Include="..\..\..\..\..\Nitra\Nitra\Nitra.Compiler\Nitra.Compiler.nproj">
+      <Name>Nitra.Compiler</Name>
+      <Project>{a8aaca46-ccc8-429f-b626-4cfc77f3a21a}</Project>
+      <Private>False</Private>
+    </MacroProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Nitra\DotNet.BackEnd.CCI\DotNet.BackEnd.CCI.nproj">
+      <Name>DotNet.BackEnd.CCI</Name>
+      <Project>{9bc9b613-47f1-443c-8205-ac3cfabe7db9}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Nitra\Nitra\DotNetLang\DotNetLang.Stage2.nproj">
+      <Name>DotNetLang.Stage2</Name>
+      <Project>{6338a4d5-e02c-4787-af57-e96bf7342079}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\Nitra\Nitra\Nitra.Runtime\Nitra.Runtime.nproj">
+      <Name>Nitra.Runtime</Name>
+      <Project>{9db13eb2-28e3-432b-8c8f-0e39ef5bcc38}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.n" />
     <Compile Include="Properties\AssemblyInfo.n" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="test.nitra">
+      <SubType>Content</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!--
