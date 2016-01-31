@@ -1,34 +1,46 @@
-﻿/*using Nitra;
+﻿using Nitra;
 using Nitra.Declarations;
 
-ast Top
-{
+ast CompilationUnit {
   in ContainingTable : TableScope;
-
   Variables.ContainingTable = ContainingTable;
-  Variables : Variable*;
+  Variables : Var*;
 }
 
-declaration Variable
-{
-  symbol
-  {
-    Kind = "var";
-  stage 1:
-    in Result : double;
-  }
-
+abstract declaration Var {
   Expression.Scope = ContainingTable;
   Symbol.Result = Expression.Result;
-
-  Expression : Expression;
+  Expression: Expression;
 }
 
-abstract ast Expression
-{
+declaration IntVar: Var {
+  symbol {
+	Kind = "int var";
+  stage 1:
+	in Result: int;
+  }
+}
+
+declaration FloatVar: Var {
+  symbol {
+	Kind = "float var";
+  stage 1:
+	in Result: double;
+  }
+}
+
+declaration BoolVar: Var {
+  symbol {
+	Kind = "bool var";
+  stage 1:
+	in Result: bool;
+  }
+}
+
+abstract ast Expression {
 stage 1:
-  in  Scope  : Scope;
-  out Result : double;
+  in Scope: Scope;
+  out Result: double;
 }
 
 ast Number : Expression
@@ -53,7 +65,6 @@ ast Div : Binary { Result = Expression1.Result / Expression2.Result; }
 abstract ast Unary : Expression
 {
   Expression.Scope = Scope;
-  
   Expression : Expression;
 }
 
@@ -63,9 +74,7 @@ ast Minus : Unary { Result = -Expression.Result; }
 ast VariableRef : Expression
 {
   out Ref : Ref[VariableSymbol] = Name.Ref.Resolve();
-
   Name.Scope = Scope;
-  Result     = Ref.Symbol.Result;
-
+  Result = Ref.Symbol.Result;
   Name : Reference;
-}*/
+}
