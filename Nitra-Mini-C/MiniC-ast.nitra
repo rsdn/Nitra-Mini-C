@@ -1,4 +1,4 @@
-﻿using Nitra;
+﻿/*using Nitra;
 using Nitra.Declarations;
 
 ast CompilationUnit {
@@ -46,4 +46,4 @@ ast VariableRef : Expression {
   Name.Scope = Scope;
   Result = Ref.Symbol.Result;
   Name: Reference;
-}
+}*/

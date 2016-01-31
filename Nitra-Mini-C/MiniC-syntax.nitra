@@ -10,45 +10,100 @@
   [Reference] token Reference = !Keyword IdentifierBody;
   [Name] token Name = !Keyword IdentifierBody;
 
-  regex DecimalDigit = ['0'..'9'];
-  
   [StartRule]
-  syntax CompilationUnit = (Statement nl)*;
+  syntax Program = (Decl nl)*;
 
-  syntax Statement
+  syntax Decl 
   {
-	| Variable = Variable
-	| Expression = Expression
+    | VarDecl = VarDecl ";"
+	| FunDecl = TypeSpec Name "(" (VarDecl ("," sm VarDecl)*)* ")" CompoundStmt
   }
 
-  syntax Variable = Type Name ";";
-
-  syntax Type
+  syntax VarDecl
   {
-    | Void = "void" sm;
-	| Int = "int" sm;
-	| Float = "float" sm;
-	| Bool = "bool" sm;
+    | Scalar = TypeSpec Name
+    | Array = TypeSpec Name ("[" "]")
   }
 
-  syntax Expression
+  syntax TypeSpec
   {
-    | [SpanClass(Number)] IntegerLiteral = Digits
+	| "void" sm
+	| "int" sm
+	| "float" sm
+	| "bool" sm
+  }
+
+  syntax CompoundStmt = "{" inl (VarDecl ";" nl)* (Stmt nl)* d "}";
+
+  syntax Stmt 
+  {
+    | Expr = Expr? ";"
+	| Compound = CompoundStmt
+	| If = "if" sm "(" Expr ")" sm Stmt ("else" Stmt)?
+	| While = "while" sm "(" Expr ")" sm Stmt
+	| Return = "return" sm Expr? ";"
+	| Break = "break" ";"
+  }
+
+  regex DecimalDigit = ['0'..'9'];
+
+  syntax Expr
+  {
+    | [SpanClass(Number)] 
+	  IntegerLiteral = Digits
       {
         regex Digits = DecimalDigit+;
       }
-	| [SpanClass(Number)] FloatLiteral = Digits
+	| [SpanClass(Number)] 
+	  FloatLiteral = Digits
       {
         regex Digits = DecimalDigit+ "." DecimalDigit+;
       }
-	| [SpanClass(Type)] BooleanLiteral = TrueFalse
+	| [SpanClass(Type)] 
+	  BoolLiteral = TrueFalse
 	  {
 		regex TrueFalse = "true" | "false";
 	  }
-    | Parenthesized = "(" Expression ")";
-    | Variable = Reference;
-
+        
 	precedence Assignment:
-    | Assignment = Reference sm "=" sm Expression ";" right-associative;
+    | ScalarAssignment = Reference "=" Expr ";" right-associative
+	| ArrayAssignment = Reference "=" TypeSpec "[" Expr "]" ";" right-associative
+
+	precedence Or:
+	| Or = Expr sm Operator="|" sm Expr
+
+	precedence Equal:
+	| Eq = Expr sm Operator="==" sm Expr
+	| Ne = Expr sm Operator="!=" sm Expr
+
+	precedence LessGreater:
+	| Le = Expr sm Operator="<=" sm Expr
+	| L = Expr sm Operator="<" sm Expr
+	| Ge = Expr sm Operator=">=" sm Expr
+	| G = Expr sm Operator=">" sm Expr
+
+	precedence Sum:
+    | Sum = Expr sm Operator="+" sm Expr
+    | Sub = Expr sm Operator="-" sm Expr
+
+    precedence Mul:
+    | Mul = Expr sm Operator="*" sm Expr
+    | Div = Expr sm Operator="/" sm Expr
+
+    precedence Unary:
+    | Plus = Operator="+" Expr
+    | Minus = Operator="-" Expr
+	| Negate = Operator="!" Expr
+
+	precedence Braces:
+	| Braces = "(" Expr ")"
+
+	precedence Ref:
+	| VariableRef = Reference
+	| ArrayRef = Reference "[" Expr "]"
+	| FunCall = Reference "(" (Expr (sm "," Expr)*)* ")"
+
+	precedence New:
+	| NewArray = TypeSpec "[" Expr "]"
   }
 }
