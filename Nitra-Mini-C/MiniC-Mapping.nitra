@@ -1,55 +1,45 @@
-﻿/*using Nitra;
+﻿using Nitra;
 using Nitra.Runtime;
 using Nitra.Declarations;
 
 map syntax MiniCSyntax.CompilationUnit -> CompilationUnit
 {
-  | VariableDeclarations -> Variables;
+  Statements -> Statements;
 }
 
-map syntax MiniCSyntax.Declaration.VariableDeclaration -> Variable
+map syntax MiniCSyntax.Statement -> Statement
 {
-  Name       -> Name;
-  Expression -> Expression;
+  | Variable -> Variable
+  | Expression -> Expression
+}
+
+map syntax MiniCSyntax.Variable -> Variable
+{
+  Name -> Name;
+  Type -> Type;
+}
+
+map syntax MiniCSyntax.Type -> Type 
+{
+  | Void -> Void
+  | Int -> Int
+  | Float -> Float
+  | Bool -> Bool
 }
 
 map syntax MiniCSyntax.Expression -> Expression
 {
-  | Num -> Number
-    {
+  | IntegerLiteral -> IntNumber {
+      Value = ParsedValue(Digits, int.Parse(GetText(Digits)));
+    }
+  | FloatLiteral -> FloatNumber {
       Value = ParsedValue(Digits, double.Parse(GetText(Digits)));
     }
-  | Braces -> Expression
-  | Variable -> VariableRef
-    {
+  | BooleanLiteral -> BoolValue {
+      Value = ParsedValue(Digits, bool.Parse(GetText(Digits)));
+    }
+  | Parenthesized -> Expression
+  | Variable -> VariableRef {
       Reference -> Name;
     }
-  | Sum -> Sum
-    {
-      Expression1 -> Expression1;
-      Expression2 -> Expression2;
-    }
-  | Sub -> Sub
-    {
-      Expression1 -> Expression1;
-      Expression2 -> Expression2;
-    }
-  | Mul -> Mul
-    {
-      Expression1 -> Expression1;
-      Expression2 -> Expression2;
-    }
-  | Div -> Div
-    {
-      Expression1 -> Expression1;
-      Expression2 -> Expression2;
-    }
-  | Plus -> Plus
-    {
-      Expression -> Expression;
-    }
-  | Minus -> Minus
-    {
-      Expression -> Expression;
-    }
-}*/
+}

@@ -17,17 +17,11 @@
 
   syntax Statement
   {
-	| Declaration = Declaration
+	| Variable = Variable
 	| Expression = Expression
   }
 
-  syntax VariableDeclaration = Type Name ";";
-
-  syntax Declaration
-  {  
-	| VariableDeclaration = VariableDeclaration;
-	//| FunctionDeclaration = Type sm Name "(" VariableDeclaration* ")" Body;
-  }
+  syntax Variable = Type Name ";";
 
   syntax Type
   {
@@ -35,12 +29,6 @@
 	| Int = "int" sm;
 	| Float = "float" sm;
 	| Bool = "bool" sm;
-  }
-
-  syntax Body
-  {
-    | Block = nl "{" inl Expression* d "}" ";"? nl;
-    | Empty = ";" nl;
   }
 
   syntax Expression
@@ -61,32 +49,6 @@
     | Variable = Reference;
 
 	precedence Assignment:
-    | Assignment             = Reference sm "=" sm Expression ";" right-associative;
-
-    precedence ConditionalOR:
-    | ConditionalOr          = Expression sm "||" sm Expression;
-
-    precedence ConditionalAND:
-    | ConditionalAnd         = Expression sm "&&" sm Expression;
-
-    precedence RelationalAndTypeTesting:
-    | LessThan               = Expression sm "<"  sm Expression;
-    | GreaterThan            = Expression sm ">"  sm Expression;
-    | LessThanOrEqual        = Expression sm "<=" sm Expression;
-    | GreaterThanOrEqual     = Expression sm ">=" sm Expression;
-
-    precedence Additive:
-    | Add                    = Expression sm "+"  sm Expression;
-    | Sub                    = Expression sm "-"  sm Expression;
-
-    precedence Multiplicative:
-    | Mul                    = Expression sm "*"  sm Expression;
-    | Div                    = Expression sm "/"  sm Expression;
-    | Remainder              = Expression sm "%"  sm Expression;
-
-    precedence Unary:
-    | Identity               = "+"  Expression;
-    | Negation               = "-"  Expression;
-    | LogicalNegation        = "!"  Expression;
+    | Assignment = Reference sm "=" sm Expression ";" right-associative;
   }
 }
