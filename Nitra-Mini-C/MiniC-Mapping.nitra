@@ -2,7 +2,7 @@
 using Nitra.Runtime;
 using Nitra.Declarations;
 
-map syntax MiniCSyntax.Program -> Top
+map syntax MiniCSyntax.CompilationUnit -> Top
 {
   | VariableDeclarations -> Variables;
 }

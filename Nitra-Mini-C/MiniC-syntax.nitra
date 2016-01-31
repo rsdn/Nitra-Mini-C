@@ -4,29 +4,32 @@
   using Nitra.CStyleComments;
 
   keyword regex ['a'..'z', '_'..'_']+ rule S;
-  regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" |
-					   "bool" | "float";
+  regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" | "bool" | "float";
 
   [Keyword] token Keyword = Name=KeywordToken !IdentifierPartCharacters;
   [Reference] token Reference = !Keyword IdentifierBody;
   [Name] token Name = !Keyword IdentifierBody;
 
-  regex IntegerLiteral = "\d+";
-  regex FloatLiteral = "\d+\.\d+";
-  regex BooleanLiteral = "true" | "false";
+  regex DecimalDigit = ['0'..'9'];
+  
+  [StartRule]
+  syntax CompilationUnit = (Statement nl)*;
 
-  [StartRule, ExplicitSpaces]
-  syntax Program = (Declaration nl)*;
+  syntax Statement
+  {
+	| Declaration = Declaration
+	| Expression = Expression
+  }
 
-  syntax VariableDeclaration = TypeSpec Name ";";
+  syntax VariableDeclaration = Type Name ";";
 
   syntax Declaration
   {  
 	| VariableDeclaration = VariableDeclaration;
-	| FunctionDeclaration = TypeSpec sm Name "(" VariableDeclaration* ")" Body;
+	//| FunctionDeclaration = Type sm Name "(" VariableDeclaration* ")" Body;
   }
 
-  syntax TypeSpec 
+  syntax Type
   {
     | Void = "void" sm;
 	| Int = "int" sm;
@@ -42,24 +45,48 @@
 
   syntax Expression
   {
-    | [SpanClass(Number)] Num = Digits
+    | [SpanClass(Number)] IntegerLiteral = Digits
       {
-        regex Digits = ['0'..'9']+;
+        regex Digits = DecimalDigit+;
       }
-
-    | Braces = "(" Expression ")";
+	| [SpanClass(Number)] FloatLiteral = Digits
+      {
+        regex Digits = DecimalDigit+ "." DecimalDigit+;
+      }
+	| [SpanClass(Type)] BooleanLiteral = TrueFalse
+	  {
+		regex TrueFalse = "true" | "false";
+	  }
+    | Parenthesized = "(" Expression ")";
     | Variable = Reference;
 
-  precedence Sum:
-    | Sum = Expression sm Operator="+" sm Expression;
-    | Sub = Expression sm Operator="-" sm Expression;
+	precedence Assignment:
+    | Assignment             = Reference sm "=" sm Expression ";" right-associative;
 
-  precedence Mul:
-    | Mul = Expression sm Operator="*" sm Expression;
-    | Div = Expression sm Operator="/" sm Expression;
+    precedence ConditionalOR:
+    | ConditionalOr          = Expression sm "||" sm Expression;
 
-  precedence Unary:
-    | Plus  = Operator="+" Expression
-    | Minus = Operator="-" Expression
+    precedence ConditionalAND:
+    | ConditionalAnd         = Expression sm "&&" sm Expression;
+
+    precedence RelationalAndTypeTesting:
+    | LessThan               = Expression sm "<"  sm Expression;
+    | GreaterThan            = Expression sm ">"  sm Expression;
+    | LessThanOrEqual        = Expression sm "<=" sm Expression;
+    | GreaterThanOrEqual     = Expression sm ">=" sm Expression;
+
+    precedence Additive:
+    | Add                    = Expression sm "+"  sm Expression;
+    | Sub                    = Expression sm "-"  sm Expression;
+
+    precedence Multiplicative:
+    | Mul                    = Expression sm "*"  sm Expression;
+    | Div                    = Expression sm "/"  sm Expression;
+    | Remainder              = Expression sm "%"  sm Expression;
+
+    precedence Unary:
+    | Identity               = "+"  Expression;
+    | Negation               = "-"  Expression;
+    | LogicalNegation        = "!"  Expression;
   }
 }

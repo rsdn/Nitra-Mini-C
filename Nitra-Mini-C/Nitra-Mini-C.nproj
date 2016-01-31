@@ -39,14 +39,14 @@
     <MacroReference Include="Nitra.Compiler, Version=0.1.3211.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd">
       <Name>Nitra.Compiler</Name>
       <AssemblyName>Nitra.Compiler.dll</AssemblyName>
-      <HintPath>..\Nitra\Nitra.Compiler.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\JetBrains\Nitra\Nitra.Compiler.dll</HintPath>
       <Private>False</Private>
     </MacroReference>
     <Reference Include="mscorlib" />
     <Reference Include="Nitra.Runtime, Version=0.1.3211.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd">
       <Name>Nitra.Runtime</Name>
       <AssemblyName>Nitra.Runtime.dll</AssemblyName>
-      <HintPath>..\Nitra\Nitra.Runtime.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\JetBrains\Nitra\Nitra.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">

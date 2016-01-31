@@ -1,4 +1,4 @@
 int x;
-float y;
-bool z;
+int y;
+int z;
 z = x + y;
