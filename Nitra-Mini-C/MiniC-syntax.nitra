@@ -65,51 +65,46 @@
     | "true"
     | "false"
 
+    | VariableRef     = Reference
+    | ArrayRef        = Reference "[" Expr "]"
+    | FunCall         = Reference "(" (Expr; "," sm)* ")"
+    | ArraySize       = Reference "." "size"
+    | Braces          = "(" Expr ")"
+    | ArrayAllocation = "new" TypeSpec "[" Expr "]"
+
     precedence Assignment:
-    | ScalarAssignment = Reference sm "=" sm Expr right-associative
-    | ArrayAssignment = Reference "[" Expr "]" sm "=" sm Expr right-associative
+    | ScalarAssignment = Reference              sm "=" sm Expr right-associative
+    | ArrayAssignment  = Reference "[" Expr "]" sm "=" sm Expr right-associative
 
     precedence Or:
-    | Or = Expr sm "||" sm Expr
+    | Or           = Expr sm "||" sm Expr
 
     precedence And:
-    | And = Expr sm "&&" sm Expr
+    | And          = Expr sm "&&" sm Expr
     
     precedence Equal:
-    | Equal = Expr sm "==" sm Expr
-    | NotEqual = Expr sm "!=" sm Expr
+    | Equal        = Expr sm "==" sm Expr
+    | NotEqual     = Expr sm "!=" sm Expr
 
     precedence LessGreater:
-    | LessEqual = Expr sm "<=" sm Expr
-    | Less = Expr sm "<" sm Expr
+    | LessEqual    = Expr sm "<=" sm Expr
+    | Less         = Expr sm "<"  sm Expr
     | GreaterEqual = Expr sm ">=" sm Expr
-    | Greater = Expr sm ">" sm Expr
+    | Greater      = Expr sm ">"  sm Expr
     
     precedence Sum:
-    | Sum = Expr sm "+" sm Expr
-    | Sub = Expr sm "-" sm Expr
-    | Modulus = Expr sm "%" sm Expr
+    | Sum          = Expr sm "+"  sm Expr
+    | Sub          = Expr sm "-"  sm Expr
+    | Modulus      = Expr sm "%"  sm Expr
     
     precedence Mul:
-    | Multiply = Expr sm "*" sm Expr
-    | Divide = Expr sm "/" sm Expr
+    | Multiply     = Expr sm "*"  sm Expr
+    | Divide       = Expr sm "/"  sm Expr
     
     precedence Unary:
-    | Plus = "+" Expr
-    | Minus = "-" Expr
-    | Negate = "!" Expr
+    | Plus          = "+" Expr
+    | Minus         = "-" Expr
+    | Negate        = "!" Expr
     | LogicalNegate = "~" Expr
-    
-    precedence Braces:
-    | Braces = "(" Expr ")"
-    
-    precedence Ref:
-    | VariableRef = Reference
-    | ArrayRef = Reference "[" Expr "]"
-    | FunCall = Reference "(" (Expr; "," sm)* ")"
-    | ArraySize = Reference "." "size"
-
-    precedence Allocation:
-    | ArrayAllocation = "new" TypeSpec "[" Expr "]"
   }
 }
