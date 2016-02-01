@@ -42,6 +42,16 @@
       <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Compiler.dll</HintPath>
       <Private>False</Private>
     </MacroReference>
+    <Reference Include="DotNet.BackEnd.CCI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd">
+      <Name>DotNet.BackEnd.CCI</Name>
+      <AssemblyName>DotNet.BackEnd.CCI.dll</AssemblyName>
+      <HintPath>..\..\nitra\DotNet.BackEnd.CCI\bin\Debug\DotNet.BackEnd.CCI.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetLang, Version=0.1.3211.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd">
+      <Name>DotNetLang</Name>
+      <AssemblyName>DotNetLang.dll</AssemblyName>
+      <HintPath>..\..\nitra\Nitra\DotNetLang\bin\Debug\Stage2\DotNetLang.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Nitra.Runtime, Version=0.1.3211.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd">
       <Name>Nitra.Runtime</Name>
