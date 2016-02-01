@@ -110,6 +110,6 @@
     | ArraySize = Reference "." "size"
 
     precedence Allocation:
-    | ArrayAllocation = TypeSpec "[" Expr "]"
+    | ArrayAllocation = "new" TypeSpec "[" Expr "]"
   }
 }
