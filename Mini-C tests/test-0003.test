@@ -1,0 +1,6 @@
+void main(int i, int j[]) {
+  int k;
+  i = j[i + 1];
+  i = j.size;
+  j = new int[j.size * 2];
+}

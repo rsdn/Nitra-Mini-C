@@ -1,0 +1,12 @@
+int main(bool b) {
+  int foo;
+  while (b) {
+    func(1, 2);
+    break;
+  }
+  return 1;
+}
+
+int func(int i, int j) {
+  return i + j;
+}

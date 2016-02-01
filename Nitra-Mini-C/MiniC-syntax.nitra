@@ -1,0 +1,115 @@
+﻿syntax module MiniCSyntax
+{
+  using Nitra.Core;
+  using Nitra.CStyleComments;
+
+  keyword regex ['a'..'z', '_'..'_']+ rule S;
+  regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" | "bool" | "float";
+
+  [Keyword] token Keyword = Name=KeywordToken !IdentifierPartCharacters;
+  [Reference] token Reference = !Keyword IdentifierBody;
+  [Name] token Name = !Keyword IdentifierBody;
+
+  [StartRule]
+  syntax Program = (Decl nl)*;
+
+  syntax Decl 
+  {
+    | VarDecl = VarDecl ";"
+    | FunDecl = TypeSpec Name "(" (VarDecl; "," sm)* ")" CompoundStmt
+  }
+
+  syntax VarDecl
+  {
+    | Scalar = TypeSpec Name
+    | Array = TypeSpec Name "[" "]"
+  }
+
+  syntax TypeSpec
+  {
+    | "void" sm
+    | "int" sm
+    | "float" sm
+    | "bool" sm
+  }
+
+  syntax CompoundStmt = "{" inl (VarDecl ";" nl)* (Stmt nl)* d "}";
+
+  syntax Stmt 
+  {
+    | Expr = Expr? ";"
+    | Compound = CompoundStmt
+    | If = "if" sm "(" Expr ")" sm Stmt ("else" Stmt)?
+    | While = "while" sm "(" Expr ")" sm Stmt
+    | Return = "return" sm Expr? ";"
+    | Break = "break" ";"
+  }
+
+  regex DecimalDigit = ['0'..'9'];
+  literal Operator = "||", "==", "!=", "<=", "<", ">=", ">", "+", "-", "*", "/", "+", "-", "!";
+
+  syntax Expr
+  {
+    | [SpanClass(Number)] 
+      IntegerLiteral = Digits
+      {
+        regex Digits = DecimalDigit+;
+      }
+    
+    | [SpanClass(Number)] 
+      FloatLiteral = Digits
+      {
+        regex Digits = DecimalDigit+ "." DecimalDigit+;
+      }
+    
+    | "true"
+    | "false"
+
+    precedence Assignment:
+    | ScalarAssignment = Reference sm "=" sm Expr right-associative
+    | ArrayAssignment = Reference "[" Expr "]" sm "=" sm Expr right-associative
+
+    precedence Or:
+    | Or = Expr sm "||" sm Expr
+
+    precedence And:
+    | And = Expr sm "&&" sm Expr
+    
+    precedence Equal:
+    | Equal = Expr sm "==" sm Expr
+    | NotEqual = Expr sm "!=" sm Expr
+
+    precedence LessGreater:
+    | LessEqual = Expr sm "<=" sm Expr
+    | Less = Expr sm "<" sm Expr
+    | GreaterEqual = Expr sm ">=" sm Expr
+    | Greater = Expr sm ">" sm Expr
+    
+    precedence Sum:
+    | Sum = Expr sm "+" sm Expr
+    | Sub = Expr sm "-" sm Expr
+    | Modulus = Expr sm "%" sm Expr
+    
+    precedence Mul:
+    | Multiply = Expr sm "*" sm Expr
+    | Divide = Expr sm "/" sm Expr
+    
+    precedence Unary:
+    | Plus = "+" Expr
+    | Minus = "-" Expr
+    | Negate = "!" Expr
+    | LogicalNegate = "~" Expr
+    
+    precedence Braces:
+    | Braces = "(" Expr ")"
+    
+    precedence Ref:
+    | VariableRef = Reference
+    | ArrayRef = Reference "[" Expr "]"
+    | FunCall = Reference "(" (Expr; "," sm)* ")"
+    | ArraySize = Reference "." "size"
+
+    precedence Allocation:
+    | ArrayAllocation = "new" TypeSpec "[" Expr "]"
+  }
+}

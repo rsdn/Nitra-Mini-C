@@ -1,0 +1,6 @@
+int main(int i, int j[], float k) {
+  i = i + 1;
+  j[i % 2] = (i);
+  k = 1.25;
+  return i;
+}

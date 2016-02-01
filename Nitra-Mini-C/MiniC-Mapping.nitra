@@ -1,0 +1,45 @@
+﻿/*using Nitra;
+using Nitra.Runtime;
+using Nitra.Declarations;
+
+map syntax MiniCSyntax.CompilationUnit -> CompilationUnit
+{
+  Statements -> Statements;
+}
+
+map syntax MiniCSyntax.Statement -> Statement
+{
+  | Variable -> Variable
+  | Expression -> Expression
+}
+
+map syntax MiniCSyntax.Variable -> Variable
+{
+  Name -> Name;
+  Type -> Type;
+}
+
+map syntax MiniCSyntax.Type -> Type 
+{
+  | Void -> Void
+  | Int -> Int
+  | Float -> Float
+  | Bool -> Bool
+}
+
+map syntax MiniCSyntax.Expression -> Expression
+{
+  | IntegerLiteral -> IntNumber {
+      Value = ParsedValue(Digits, int.Parse(GetText(Digits)));
+    }
+  | FloatLiteral -> FloatNumber {
+      Value = ParsedValue(Digits, double.Parse(GetText(Digits)));
+    }
+  | BooleanLiteral -> BoolValue {
+      Value = ParsedValue(Digits, bool.Parse(GetText(Digits)));
+    }
+  | Parenthesized -> Expression
+  | Variable -> VariableRef {
+      Reference -> Name;
+    }
+}*/
