@@ -1,49 +1,18 @@
-﻿/*using Nitra;
+﻿using Nitra;
 using Nitra.Declarations;
 
-ast CompilationUnit {
-  in ContainingTable: TableScope;
-  Vars.ContainingTable = ContainingTable;
-  Statements: Statement*;
+namespace MiniCAst
+{
+  ast CompilationUnit {
+    Declarations: TopDeclaration*;
+  }
+
+  abstract ast TopDeclaration {}
+  declaration VarDeclaration: TopDeclaration {}
+  declaration FunDeclaration: TopDeclaration {}
+
+  declaration Void: Type {}
+  declaration Int: Type {}
+  declaration Float: Type {}
+  declaration Bool: Type {}
 }
-
-abstract ast Statement {
-}
-
-abstract ast Type {}
-ast Void: Type {}
-ast Int: Type {}
-ast Float: Type {}
-ast Bool: Type {}
-
-declaration Variable: Statement {
-  Expression.Scope = ContainingTable;
-  Type: Type;
-}
-
-abstract ast Expression: Statement {
-stage 1:
-  in Scope: Scope;
-}
-
-ast IntNumber: Expression {
-  Value: int;
-  out Result: int = Value.ValueOrDefault;
-}
-
-ast FloatNumber: Expression {
-  Value: double;
-  out Result: double = Value.ValueOrDefault;
-}
-
-ast BoolValue: Expression {
-  Value: bool;
-  out Result: bool = Value.ValueOrDefault;
-}
-
-ast VariableRef : Expression {
-  out Ref: Ref[VariableSymbol] = Name.Ref.Resolve();
-  Name.Scope = Scope;
-  Result = Ref.Symbol.Result;
-  Name: Reference;
-}*/

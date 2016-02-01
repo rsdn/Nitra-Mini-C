@@ -11,7 +11,7 @@
   [Name] token Name = !Keyword IdentifierBody;
 
   [StartRule]
-  syntax Program = (Decl nl)*;
+  syntax CompilationUnit = (Decl nl)*;
 
   syntax Decl 
   {
