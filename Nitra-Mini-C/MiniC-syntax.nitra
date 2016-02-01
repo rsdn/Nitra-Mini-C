@@ -16,13 +16,13 @@
   syntax Decl 
   {
     | VarDecl = VarDecl ";"
-	| FunDecl = TypeSpec Name "(" (VarDecl ("," sm VarDecl)*)* ")" CompoundStmt
+	| FunDecl = TypeSpec Name "(" (VarDecl; "," sm)* ")" CompoundStmt
   }
 
   syntax VarDecl
   {
     | Scalar = TypeSpec Name
-    | Array = TypeSpec Name ("[" "]")
+    | Array = TypeSpec Name "[" "]"
   }
 
   syntax TypeSpec
@@ -46,6 +46,7 @@
   }
 
   regex DecimalDigit = ['0'..'9'];
+  literal Operator = "||", "==", "!=", "<=", "<", ">=", ">", "+", "-", "*", "/", "+", "-", "!";
 
   syntax Expr
   {
@@ -54,56 +55,61 @@
       {
         regex Digits = DecimalDigit+;
       }
+	
 	| [SpanClass(Number)] 
 	  FloatLiteral = Digits
       {
         regex Digits = DecimalDigit+ "." DecimalDigit+;
       }
-	| [SpanClass(Type)] 
-	  BoolLiteral = TrueFalse
-	  {
-		regex TrueFalse = "true" | "false";
-	  }
-        
+	
+	| "true"
+	| "false"
+
 	precedence Assignment:
-    | ScalarAssignment = Reference "=" Expr ";" right-associative
-	| ArrayAssignment = Reference "=" TypeSpec "[" Expr "]" ";" right-associative
+    | ScalarAssignment = Reference sm "=" sm Expr right-associative
+	| ArrayAssignment = Reference "[" Expr "]" sm "=" sm Expr right-associative
 
 	precedence Or:
-	| Or = Expr sm Operator="|" sm Expr
+	| Or = Expr sm "||" sm Expr
 
+	precedence And:
+	| And = Expr sm "&&" sm Expr
+	
 	precedence Equal:
-	| Eq = Expr sm Operator="==" sm Expr
-	| Ne = Expr sm Operator="!=" sm Expr
+	| Equal = Expr sm "==" sm Expr
+	| NotEqual = Expr sm "!=" sm Expr
 
 	precedence LessGreater:
-	| Le = Expr sm Operator="<=" sm Expr
-	| L = Expr sm Operator="<" sm Expr
-	| Ge = Expr sm Operator=">=" sm Expr
-	| G = Expr sm Operator=">" sm Expr
-
+	| LessEqual = Expr sm "<=" sm Expr
+	| Less = Expr sm "<" sm Expr
+	| GreaterEqual = Expr sm ">=" sm Expr
+	| Greater = Expr sm ">" sm Expr
+	
 	precedence Sum:
-    | Sum = Expr sm Operator="+" sm Expr
-    | Sub = Expr sm Operator="-" sm Expr
-
-    precedence Mul:
-    | Mul = Expr sm Operator="*" sm Expr
-    | Div = Expr sm Operator="/" sm Expr
-
-    precedence Unary:
-    | Plus = Operator="+" Expr
-    | Minus = Operator="-" Expr
-	| Negate = Operator="!" Expr
-
+    | Sum = Expr sm "+" sm Expr
+    | Sub = Expr sm "-" sm Expr
+	| Modulus = Expr sm "%" sm Expr
+    
+	precedence Mul:
+    | Multiply = Expr sm "*" sm Expr
+    | Divide = Expr sm "/" sm Expr
+    
+	precedence Unary:
+    | Plus = "+" Expr
+    | Minus = "-" Expr
+	| Negate = "!" Expr
+	| LogicalNegate = "~" Expr
+	
 	precedence Braces:
 	| Braces = "(" Expr ")"
-
+	
 	precedence Ref:
 	| VariableRef = Reference
 	| ArrayRef = Reference "[" Expr "]"
-	| FunCall = Reference "(" (Expr (sm "," Expr)*)* ")"
+	| FunCall = Reference "(" (Expr; "," sm)* ")"
+	| ArraySize = Reference "." "size"
 
-	precedence New:
-	| NewArray = TypeSpec "[" Expr "]"
+	precedence Allocation:
+	| ArrayAllocation = TypeSpec "[" Expr "]"
   }
 }
