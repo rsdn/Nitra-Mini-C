@@ -1,14 +1,21 @@
 ﻿using Nitra;
 using Nitra.Runtime;
 using Nitra.Declarations;
+using MiniCAst;
 
-map syntax MiniCSyntax.CompilationUnit -> MiniCAst.CompilationUnit
+map syntax MiniCSyntax.CompilationUnit -> CompilationUnit
 {
-  Decls -> Declarations;
+  TopDeclarations -> TopDeclarations;
 }
 
-map syntax MiniCSyntax.Decl -> MiniCAst.TopDeclaration
+map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
 {
-  | VarDecl -> VarDeclaration
-  | FunDecl -> FunDeclaration
+  | VarDeclaration -> VarDeclaration 
+	{
+	  match (VarDeclaration) { Scalar(_, name) -> name | Array(_, name) -> name } -> Name;
+	}
+  | FunDeclaration -> FunDeclaration 
+    {
+	  Name = Name;
+	}
 }

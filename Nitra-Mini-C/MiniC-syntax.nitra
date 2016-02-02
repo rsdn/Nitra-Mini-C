@@ -11,15 +11,15 @@
   [Name] token Name = !Keyword IdentifierBody;
 
   [StartRule]
-  syntax CompilationUnit = (Decl nl)*;
+  syntax CompilationUnit = (TopDeclaration nl)*;
 
-  syntax Decl 
+  syntax TopDeclaration
   {
-    | VarDecl = VarDecl ";"
-    | FunDecl = TypeSpec Name "(" (VarDecl; "," sm)* ")" CompoundStmt
+    | VarDeclaration = VarDeclaration ";"
+    | FunDeclaration = TypeSpec Name "(" (VarDeclaration; "," sm)* ")" CompoundStatement
   }
 
-  syntax VarDecl
+  syntax VarDeclaration
   {
     | Scalar = TypeSpec Name
     | Array = TypeSpec Name "[" "]"
@@ -33,14 +33,14 @@
     | "bool" sm
   }
 
-  syntax CompoundStmt = "{" inl (VarDecl ";" nl)* (Stmt nl)* d "}";
+  syntax CompoundStatement = "{" inl (VarDeclaration ";" nl)* (Statement nl)* d "}";
 
-  syntax Stmt 
+  syntax Statement 
   {
     | Expr = Expr? ";"
-    | Compound = CompoundStmt
-    | If = "if" sm "(" Expr ")" sm Stmt ("else" Stmt)?
-    | While = "while" sm "(" Expr ")" sm Stmt
+    | Compound = CompoundStatement
+    | If = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
+    | While = "while" sm "(" Expr ")" sm Statement
     | Return = "return" sm Expr? ";"
     | Break = "break" ";"
   }

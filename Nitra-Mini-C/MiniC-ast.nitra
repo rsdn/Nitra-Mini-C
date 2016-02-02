@@ -4,7 +4,7 @@ using Nitra.Declarations;
 namespace MiniCAst
 {
   ast CompilationUnit {
-    Declarations: TopDeclaration*;
+    TopDeclarations: TopDeclaration*;
   }
 
   abstract ast TopDeclaration {}
