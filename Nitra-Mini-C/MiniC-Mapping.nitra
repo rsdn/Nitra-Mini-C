@@ -11,11 +11,31 @@ map syntax MiniCSyntax.CompilationUnit -> CompilationUnit
 map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
 {
   | VarDeclaration -> VarDeclaration 
-	{
-	  match (VarDeclaration) { Scalar(_, name) -> name | Array(_, name) -> name } -> Name;
-	}
   | FunDeclaration -> FunDeclaration 
     {
-	  Name = Name;
+	  Name -> Name;
+	  TypeSpec -> Type;
 	}
+}
+
+map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
+{
+  | Scalar -> ScalarDeclaration
+    {
+	  Name -> Name;
+	  TypeSpec -> Type;
+	}
+  | Array -> ArrayDeclaration
+    {
+	  Name -> Name;
+	  TypeSpec -> Type;
+	}
+}
+
+map syntax MiniCSyntax.TypeSpec -> Type
+{
+  | Void -> Void { Name = "void"; }
+  | Int -> Int { Name = "int"; }
+  | Float -> Float { Name = "double"; }
+  | Bool -> Bool { Name = "bool"; }
 }

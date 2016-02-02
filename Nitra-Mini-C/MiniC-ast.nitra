@@ -1,5 +1,6 @@
 ﻿using Nitra;
 using Nitra.Declarations;
+using System.Collections.Generic;
 
 namespace MiniCAst
 {
@@ -7,9 +8,26 @@ namespace MiniCAst
     TopDeclarations: TopDeclaration*;
   }
 
-  abstract ast TopDeclaration {}
-  declaration VarDeclaration: TopDeclaration {}
-  declaration FunDeclaration: TopDeclaration {}
+  abstract ast TopDeclaration 
+  {
+    Type: Type;
+  }
+  
+  abstract ast VarDeclaration: TopDeclaration {}
+
+  declaration ScalarDeclaration: VarDeclaration {}
+
+  declaration ArrayDeclaration: VarDeclaration {}
+  
+  declaration FunDeclaration: TopDeclaration 
+  {
+    in Parameters: IList[Parameter];
+  }
+
+  declaration Parameter
+  {
+	in Type: Type;
+  }
 
   declaration Void: Type {}
   declaration Int: Type {}
