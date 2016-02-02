@@ -5,10 +5,12 @@ using System.Collections.Generic;
 namespace MiniCAst
 {
   ast CompilationUnit {
+    in ContainingTable: TableScope;
+	TopDeclarations.ContainingTable = ContainingTable;
     TopDeclarations: TopDeclaration*;
   }
 
-  abstract ast TopDeclaration 
+  abstract ast TopDeclaration: ScopedAst
   {
     Type: Type;
   }
@@ -27,6 +29,33 @@ namespace MiniCAst
   declaration Parameter
   {
 	in Type: Type;
+  }
+
+  abstract ast Expr 
+  {
+  stage 1:
+    in Scope: Scope;
+  }
+
+  abstract ast Ref: Expr
+  {
+    Reference.Scope = Scope;
+	Reference: Reference;
+  }
+
+  ast ScalarRef: Ref
+  {
+    out Ref: Ref[ScalarDeclarationSymbol] = Reference.Ref.Resolve();
+  }
+
+  ast ArrayRef: Ref
+  {
+    out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+  }
+
+  ast FunRef: Ref
+  {
+    out Ref: Ref[FunDeclarationSymbol] = Reference.Ref.Resolve();
   }
 
   declaration Void: Type {}
