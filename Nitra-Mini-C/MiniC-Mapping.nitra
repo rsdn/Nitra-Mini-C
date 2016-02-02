@@ -13,29 +13,19 @@ map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
   | VarDeclaration -> VarDeclaration 
   | FunDeclaration -> FunDeclaration 
     {
-	  Name -> Name;
-	  TypeSpec -> Type;
-	}
+	    Name -> Name;
+  	}
 }
 
 map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
 {
   | Scalar -> ScalarDeclaration
     {
-	  Name -> Name;
-	  TypeSpec -> Type;
-	}
+	    Name -> Name;
+  	}
   | Array -> ArrayDeclaration
     {
-	  Name -> Name;
-	  TypeSpec -> Type;
-	}
+			Name -> Name;
+		}
 }
 
-map syntax MiniCSyntax.TypeSpec -> Type
-{
-  | Void -> Void { Name = "void"; }
-  | Int -> Int { Name = "int"; }
-  | Float -> Float { Name = "double"; }
-  | Bool -> Bool { Name = "bool"; }
-}
