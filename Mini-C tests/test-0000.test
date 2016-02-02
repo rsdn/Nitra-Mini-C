@@ -1,3 +1,5 @@
+int global;
+
 int main(bool b) {
   int foo;
   while (b) {

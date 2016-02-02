@@ -24,6 +24,9 @@ namespace MiniCAst
     //in Parameters: IList[Parameter];
   }
 
+
+  declaration Root : Container {}
+
   declaration Void: Type {}
   declaration Int: Type {}
   declaration Float: Type {}
