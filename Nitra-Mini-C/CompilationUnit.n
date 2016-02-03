@@ -12,63 +12,63 @@ using System.Linq;
 
 namespace MiniCAst
 {
-    [Record]
-    public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
-    {
-        public Void  : VoidSymbol;
-        public Int   : IntSymbol;
-        public Float : FloatSymbol;
-        public Bool  : BoolSymbol;
-    }
+	[Record]
+	public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
+	{
+		public Void  : VoidSymbol;
+		public Int   : IntSymbol;
+		public Float : FloatSymbol;
+		public Bool  : BoolSymbol;
+	}
 
-    public partial class CompilationUnit : AstBase, IProjectSupport
-    {
-        public static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
-        public static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
-        public static NoSpan : NSpan              = NSpan(0);
-        mutable _context: MiniCDependentPropertyEvalContext;
-        public Context: MiniCDependentPropertyEvalContext { get { _context }}
+	public partial class CompilationUnit : AstBase, IProjectSupport
+	{
+		public static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
+		public static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
+		public static NoSpan : NSpan              = NSpan(0);
+		mutable _context: MiniCDependentPropertyEvalContext;
+		public Context: MiniCDependentPropertyEvalContext { get { _context }}
 
-        public Init(project : Project) : void
-        {
-            def root        = RootSymbol();
-            def rootScope   = TableScope("<root>", root);
-            def defineSymbol[Type](name : string) : Type
-            where Type: DeclarationSymbol
-            {
-                def name = Name(NoFile, NoSpan, name);
-                def symbol = ExternalDeclaration.[Type](name).DefineSymbol(rootScope);
-                symbol
-            }
-            def voidSymbol  = defineSymbol.[VoidSymbol]("void");
-            def intSymbol   = defineSymbol.[IntSymbol]("int");
-            def floatSymbol = defineSymbol.[FloatSymbol]("float");
-            def boolSymbol  = defineSymbol.[BoolSymbol]("bool");
-            def context     = MiniCDependentPropertyEvalContext(voidSymbol, intSymbol, floatSymbol, boolSymbol);
+		public Init(project : Project) : void
+		{
+			def root        = RootSymbol();
+			def rootScope   = TableScope("<root>", root);
+			def defineSymbol[Type](name : string) : Type
+						where Type: DeclarationSymbol
+			{
+				def name = Name(NoFile, NoSpan, name);
+				def symbol = ExternalDeclaration.[Type](name).DefineSymbol(rootScope);
+				symbol
+			}
+			def voidSymbol  = defineSymbol.[VoidSymbol]("void");
+			def intSymbol   = defineSymbol.[IntSymbol]("int");
+			def floatSymbol = defineSymbol.[FloatSymbol]("float");
+			def boolSymbol  = defineSymbol.[BoolSymbol]("bool");
+			def context     = MiniCDependentPropertyEvalContext(voidSymbol, intSymbol, floatSymbol, boolSymbol);
 
-            root.MemberTable = rootScope;
-            root.Scope       = rootScope;
-            root.FullName    = "<root>";
-            root.Kind        = "root";
-            root.AddDeclaration(ExternalDeclaration.[RootSymbol](Name(NoFile, NoSpan, "<root>")));
+			root.MemberTable = rootScope;
+			root.Scope       = rootScope;
+			root.FullName    = "<root>";
+			root.Kind        = "root";
+			root.AddDeclaration(ExternalDeclaration.[RootSymbol](Name(NoFile, NoSpan, "<root>")));
 
-            voidSymbol.EvalProperties(context);
-            intSymbol.EvalProperties(context); 
-            floatSymbol.EvalProperties(context);
-            boolSymbol.EvalProperties(context);
-            root.EvalProperties(context);
+			voidSymbol.EvalProperties(context);
+			intSymbol.EvalProperties(context); 
+			floatSymbol.EvalProperties(context);
+			boolSymbol.EvalProperties(context);
+			root.EvalProperties(context);
 
-            project.Data = (context, root);
-        }
+			project.Data = (context, root);
+		}
 
-        public RefreshProject(project : Project) : void
-        {
-            when (project.Data == null)
-                Init(project);
+		public RefreshProject(project : Project) : void
+		{
+			when (project.Data == null)
+			Init(project);
 
-            def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
-            _context = context;
-            EvalProperties(context);
-        }
-    }
+			def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+			_context = context;
+			EvalProperties(context);
+		}
+	}
 }

@@ -22,7 +22,7 @@
   syntax VarDeclaration
   {
     | Scalar = TypeReference Name
-    | Array = TypeReference Name "[" "]"
+    | Array  = TypeReference Name "[" "]"
   }
 
   syntax TypeReference

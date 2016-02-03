@@ -6,18 +6,16 @@ namespace MiniCAst
 {
   ast CompilationUnit
   {
-    TopDeclarations.Context = Context;
     TopDeclarations: TopDeclaration*;
   }
 
   abstract ast TopDeclaration
   {
-    in Context: MiniCDependentPropertyEvalContext;
   }
   
   abstract ast VarDeclaration: TopDeclaration 
   {
-    TypeReference: TypeReference;
+    TypeRef : TypeReference;
   }
 
   declaration ScalarDeclaration: VarDeclaration {}
@@ -31,7 +29,7 @@ namespace MiniCAst
   
   ast TypeReference 
   {
-    out TypeRef: Ref[TypeSymbol];
+    //out TypeRef: Ref[TypeSymbol];
 
 	//Type: TypeReference;
   }
