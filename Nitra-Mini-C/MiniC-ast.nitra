@@ -8,7 +8,7 @@ namespace MiniCAst
   ast CompilationUnit
   {
     in ContainingTable: Scope;
-	TopDeclarations.ContainingTable = ContainingTable;
+    TopDeclarations.ContainingTable = ContainingTable;
     TopDeclarations: TopDeclaration*;
   }
 
