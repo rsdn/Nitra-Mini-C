@@ -65,7 +65,10 @@ namespace MiniCAst
       Init(project);
 
       def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
-      ContainingTable = root.MemberTable;
+      
+      foreach (file in project.Files)
+        when (file.Ast is CompilationUnit as unit)
+          unit.ContainingTable = root.MemberTable;
     }
   }
 }
