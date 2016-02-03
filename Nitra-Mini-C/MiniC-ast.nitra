@@ -7,12 +7,12 @@ namespace MiniCAst
 {
   ast CompilationUnit
   {
-    in ContainingTable: Scope;
+    in ContainingTable: TableScope;
     TopDeclarations.ContainingTable = ContainingTable;
     TopDeclarations: TopDeclaration*;
   }
 
-  abstract ast TopDeclaration
+  abstract ast TopDeclaration: ScopedAst
   {
   }
   
