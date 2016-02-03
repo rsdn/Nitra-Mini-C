@@ -7,7 +7,7 @@ using Nitra;
 using Nitra.Declarations;
 using MiniCAst;
 
-namespace Nitra_Mini_C
+namespace MiniC
 {
   module AstUtils
   {

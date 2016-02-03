@@ -1,7 +1,7 @@
 ﻿using Nitra;
 using Nitra.Declarations;
 using System.Collections.Generic;
-using Nitra_Mini_C;
+using MiniC;
 
 namespace MiniCAst
 {
