@@ -65,6 +65,8 @@ namespace MiniCAst
       Init(project);
 
       def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+      
+      root.MemberTable.Undefine(_.IsParsed);
       def evalHost = MiniCProjectEvalPropertiesHost(project, root);
       evalHost.EvalProperties(context, "Symbol hierarchy");
     }
