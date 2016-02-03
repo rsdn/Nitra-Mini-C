@@ -29,7 +29,7 @@ namespace MiniCAst
   
   abstract ast TypeReference 
   {
-    //out TypeRef: Ref[TypeSymbol];
+    in TypeRef: Ref[TypeSymbol];
 
     | Void  {}
     | Int   {}

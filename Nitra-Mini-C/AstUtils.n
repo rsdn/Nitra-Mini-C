@@ -1,0 +1,23 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using System;
+using Nitra;
+using Nitra.Declarations;
+using MiniCAst;
+
+namespace Nitra_Mini_C
+{
+  module AstUtils
+  {
+    public GetVoidSymbol(this ctx: DependentPropertyEvalContext): VoidSymbol { GetContext(ctx).Void }
+    public GetIntSymbol(this ctx: DependentPropertyEvalContext): IntSymbol { GetContext(ctx).Int }
+    public GetFloatSymbol(this ctx: DependentPropertyEvalContext): FloatSymbol { GetContext(ctx).Float }
+    public GetBoolSymbol(this ctx: DependentPropertyEvalContext): BoolSymbol { GetContext(ctx).Bool }
+    
+    GetContext(ctx: DependentPropertyEvalContext): MiniCDependentPropertyEvalContext {
+      ctx :> MiniCDependentPropertyEvalContext
+    }
+  }
+}
