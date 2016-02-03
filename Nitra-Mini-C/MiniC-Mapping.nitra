@@ -13,19 +13,19 @@ map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
   | VarDeclaration -> VarDeclaration 
   | FunDeclaration -> FunDeclaration 
     {
-	    Name -> Name;
-  	}
+        Name -> Name;
+    }
 }
 
 map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
 {
   | Scalar -> ScalarDeclaration
     {
-	    Name -> Name;
-  	}
+        Name -> Name;
+    }
   | Array -> ArrayDeclaration
     {
-			Name -> Name;
-		}
+            Name -> Name;
+        }
 }
 

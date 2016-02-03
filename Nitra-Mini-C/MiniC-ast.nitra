@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace MiniCAst
 {
   ast CompilationUnit
-	{
+    {
     TopDeclarations: TopDeclaration*;
   }
 
