@@ -2,13 +2,13 @@
 using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
-
 using Nitra;
 using Nitra.Declarations;
 using Nitra.ProjectSystem;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DotNet;
 
 namespace MiniCAst
 {
@@ -69,6 +69,32 @@ namespace MiniCAst
       foreach (file in project.Files)
         when (file.Ast is CompilationUnit as unit)
           unit.ContainingTable = root.MemberTable;
+          
+      def evalHost = MiniCProjectEvalPropertiesHost(project, root);
+      evalHost.EvalProperties(context, "Symbol hierarchy");
+    }
+  }
+  
+  class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
+  {
+    _root : RootSymbol;
+
+    public this(project : Project, root : RootSymbol)
+    {
+      base(project, [root]);
+      _root = root;
+    }
+
+    protected override BeforeStage(context : DependentPropertyEvalContext, _passName : string) : void
+    {
+      match (context.Stage)
+      {
+        | 0 =>
+          foreach (file in _files)
+            when (file.Ast is CompilationUnit as cu)
+              cu.ContainingTable = _root.MemberTable;
+        | _ => ()
+      }
     }
   }
 }

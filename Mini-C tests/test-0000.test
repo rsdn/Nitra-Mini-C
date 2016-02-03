@@ -1,4 +1,5 @@
-int global;
+int globalInt;
+bool globalBool;
 
 int main(bool b) {
   int foo;
