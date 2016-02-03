@@ -34,9 +34,9 @@ map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
 
 map syntax MiniCSyntax.TypeReference -> TypeReference
 {
-  | Void  -> Void  { TypeRef = context.GetVoidSymbol(); }
-  | Int   -> Int   { TypeRef = context.GetIntSymbol(); }
-  | Float -> Float { TypeRef = context.GetFloatSymbol(); }
-  | Bool  -> Bool  { TypeRef = context.GetBoolSymbol(); }
+  | Void  -> Void  {}
+  | Int   -> Int   {}
+  | Float -> Float {}
+  | Bool  -> Bool  {}
 }
 

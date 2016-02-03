@@ -1,6 +1,7 @@
 ﻿using Nitra;
 using Nitra.Declarations;
 using System.Collections.Generic;
+using Nitra_Mini_C;
 
 namespace MiniCAst
 {
@@ -29,12 +30,12 @@ namespace MiniCAst
   
   abstract ast TypeReference 
   {
-    in TypeRef: Ref[TypeSymbol];
+    in TypeRef: TypeSymbol;
 
-    | Void  {}
-    | Int   {}
-    | Float {}
-    | Bool  {}
+    | Void  { TypeRef = context.GetVoidSymbol(); }
+    | Int   { TypeRef = context.GetIntSymbol(); }
+    | Float { TypeRef = context.GetFloatSymbol(); }
+    | Bool  { TypeRef = context.GetBoolSymbol(); }
   }
 
   declaration Root : Container {}
