@@ -12,11 +12,11 @@ namespace MiniCAst
     TopDeclarations: TopDeclaration*;
   }
 
-  abstract ast TopDeclaration: ScopedAst
+  abstract declaration TopDeclaration
   {
   }
   
-  abstract ast VarDeclaration: TopDeclaration 
+  abstract declaration VarDeclaration: TopDeclaration 
   {
     TypeRef : TypeReference;
   }
