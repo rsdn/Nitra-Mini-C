@@ -27,11 +27,14 @@ namespace MiniCAst
     //in Parameters: IList[Parameter];
   }
   
-  ast TypeReference 
+  abstract ast TypeReference 
   {
     //out TypeRef: Ref[TypeSymbol];
 
-	//Type: TypeReference;
+    | Void  {}
+    | Int   {}
+    | Float {}
+    | Bool  {}
   }
 
   declaration Root : Container {}
