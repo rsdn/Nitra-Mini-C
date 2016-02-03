@@ -22,10 +22,17 @@ map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
   | Scalar -> ScalarDeclaration
     {
         Name -> Name;
+		TypeReference -> TypeReference;
     }
   | Array -> ArrayDeclaration
     {
-            Name -> Name;
-        }
+        Name -> Name;
+		TypeReference -> TypeReference;
+    }
+}
+
+map syntax MiniCSyntax.TypeReference -> TypeReference
+{
+  | Void -> 
 }
 

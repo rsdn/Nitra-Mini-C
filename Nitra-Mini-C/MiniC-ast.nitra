@@ -5,15 +5,20 @@ using System.Collections.Generic;
 namespace MiniCAst
 {
   ast CompilationUnit
-    {
+  {
+    TopDeclarations.Context = Context;
     TopDeclarations: TopDeclaration*;
   }
 
   abstract ast TopDeclaration
   {
+    in Context: MiniCDependentPropertyEvalContext;
   }
   
-  abstract ast VarDeclaration: TopDeclaration {}
+  abstract ast VarDeclaration: TopDeclaration 
+  {
+    TypeReference: TypeReference;
+  }
 
   declaration ScalarDeclaration: VarDeclaration {}
 
@@ -23,7 +28,13 @@ namespace MiniCAst
   {
     //in Parameters: IList[Parameter];
   }
+  
+  ast TypeReference 
+  {
+    out TypeRef: Ref[TypeSymbol];
 
+	//Type: TypeReference;
+  }
 
   declaration Root : Container {}
 

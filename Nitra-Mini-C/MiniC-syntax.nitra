@@ -16,16 +16,16 @@
   syntax TopDeclaration
   {
     | VarDeclaration = VarDeclaration ";"
-    | FunDeclaration = TypeSpec Name "(" (VarDeclaration; "," sm)* ")" CompoundStatement
+    | FunDeclaration = TypeReference Name "(" (VarDeclaration; "," sm)* ")" CompoundStatement
   }
 
   syntax VarDeclaration
   {
-    | Scalar = TypeSpec Name
-    | Array = TypeSpec Name "[" "]"
+    | Scalar = TypeReference Name
+    | Array = TypeReference Name "[" "]"
   }
 
-  syntax TypeSpec
+  syntax TypeReference
   {
     | "void" sm
     | "int" sm
@@ -70,7 +70,7 @@
     | FunCall         = Reference "(" (Expr; "," sm)* ")"
     | ArraySize       = Reference "." "size"
     | Braces          = "(" Expr ")"
-    | ArrayAllocation = "new" TypeSpec "[" Expr "]"
+    | ArrayAllocation = "new" TypeReference "[" Expr "]"
 
     precedence Assignment:
     | ScalarAssignment = Reference              sm "=" sm Expr right-associative

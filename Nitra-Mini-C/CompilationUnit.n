@@ -13,7 +13,7 @@ using System.Linq;
 namespace MiniCAst
 {
     [Record]
-    class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
+    public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
     {
         public Void  : VoidSymbol;
         public Int   : IntSymbol;
@@ -26,6 +26,8 @@ namespace MiniCAst
         public static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
         public static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
         public static NoSpan : NSpan              = NSpan(0);
+        mutable _context: MiniCDependentPropertyEvalContext;
+        public Context: MiniCDependentPropertyEvalContext { get { _context }}
 
         public Init(project : Project) : void
         {
@@ -65,7 +67,8 @@ namespace MiniCAst
                 Init(project);
 
             def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
-
+            _context = context;
+            EvalProperties(context);
         }
     }
 }
