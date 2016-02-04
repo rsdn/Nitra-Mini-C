@@ -40,20 +40,20 @@ namespace MiniC
     {
       in ReturnType : TypeSymbol;
       in Parameters : IList[VarDeclarationSymbol];
-	  out ParameterScope : TableScope = TableScope("parameters", this);
+      out ParameterScope : TableScope = TableScope("parameters", this);
       SpanClass = MiniC.FunctionSpanClass;
       Kind = "function";
     }
 
     Symbol.ReturnType          = ReturnTypeRef.Type;
     Parameters.ContainingTable = Symbol.ParameterScope;
-	Symbol.Scope               = ContainingTable.HideWith(Symbol.ParameterScope);
+    Symbol.Scope               = ContainingTable.HideWith(Symbol.ParameterScope);
     Symbol.Parameters          = Parameters.Symbol.ToList();
-	CompoundStatement.Function = this;
+    CompoundStatement.Function = this;
 
     ReturnTypeRef     : TypeReference;
     Parameters        : VarDeclaration*;
-	CompoundStatement : CompoundStatement;
+    CompoundStatement : CompoundStatement;
   }
 
   ast CompoundStatement: BindableAst
@@ -61,10 +61,10 @@ namespace MiniC
     in Function: FunDeclarationSymbol;
     out LocalVariableScope: TableScope = TableScope("local variables", Function);
 
-	VarDeclarations.ContainingTable = LocalVariableScope;
-	Scope = Function.BodyScope.HideWith(LocalVariableScope);
+    VarDeclarations.ContainingTable = LocalVariableScope;
+    Scope = Function.BodyScope.HideWith(LocalVariableScope);
 
-	LocalVariables: VarDeclaration*;
+    LocalVariables: VarDeclaration*;
   }
 
   abstract ast TypeReference 
