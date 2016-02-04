@@ -65,8 +65,109 @@ namespace MiniC
 
     LocalVariables.ContainingTable = LocalVariableScope;
     Scope = OuterScope.HideWith(LocalVariableScope);
+	Statements.Scope = Scope;
 
     LocalVariables: VarDeclaration*;
+    Statements: Statement*;
+  }
+
+  abstract ast Statement: BindableAst
+  {
+    | Expr 
+      { 
+        //Expr: Expr; 
+      }
+    | Compound { Nested: CompoundStatement; }
+    | If 
+      {
+        Condition.Scope = Scope;
+        TrueBranch.Scope = Scope;
+        FalseBranch.Scope = Scope;
+
+        Condition: Expr;
+        TrueBranch: Statement;
+        FalseBranch: Statement;
+      }
+    | While 
+      {
+        Condition.Scope = Scope;
+        Body.Scope = Scope;
+
+        Condition: Expr;
+        Body: Statement;
+      }
+    | Return 
+      { 
+        //Value: Expr; 
+      }
+    | Break {}
+  }
+
+  abstract ast Expr: BindableAst
+  {
+    | IntegerLiteral { Value: int; }
+    | FloatLiteral { Value: double; }
+    | BoolLiteral { Value: bool; }
+    | VariableRef 
+      {
+        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve;
+        Reference.Scope = Scope;
+        Reference: Reference;
+      }
+    | ArrayRef 
+      {
+        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
+        Reference.Scope = Scope;
+        Index.Scope = Scope;
+        
+        Reference: Reference;
+        Index: Expr;
+      }
+    | FunCall 
+      {
+        out Ref: Ref[FunDeclarationSymbol] = Reference.Ref.Resolve();
+        Reference.Scope = Scope;
+        Arguments.Scope = Scope;
+
+        Arguments: Expr*;
+        Reference: Reference;
+      }
+    | ArraySize 
+      {
+        out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+        Reference.Scope = Scope;
+
+        Reference: Reference;
+      }
+    | Braces { Expr: Expr; }
+    | ArrayAllocation 
+      {
+        in Type: TypeSymbol = TypeRef.Type;
+        Size.Scope = Scope;
+
+        TypeRef: TypeReference;
+        Size: Expr;
+      }
+    | ScalarAssignment
+      {
+        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
+        Reference.Scope = Scope;
+        Value.Scope = Scope;
+
+        Reference: Reference;
+        Value: Expr;
+      }
+    | ArrayAssignment
+      {
+        out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+        Reference.Scope = Scope;
+        Index.Scope = Scope;
+        Value.Scope = Scope;
+
+        Reference: Reference;
+        Index: Expr;
+        Value: Expr;
+      }
   }
 
   abstract ast TypeReference 

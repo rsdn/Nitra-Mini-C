@@ -24,6 +24,72 @@ namespace MiniC
   map syntax MiniCSyntax.CompoundStatement -> CompoundStatement
   {
     VarDeclarations -> LocalVariables;
+    Statements -> Statements;
+  }
+
+  map syntax MiniCSyntax.Statement -> Statement
+  {
+    | Expr -> Expr 
+      {
+        //ExprOpt -> Expr;
+      }
+    | Compound -> Compound 
+      {
+        CompoundStatement -> Nested;
+      }
+    | If -> If 
+      {
+        Expr -> Condition;
+        Statement -> TrueBranch;
+        Statement -> FalseBranch; 
+      }
+    | While -> While 
+      {
+        Expr -> Condition;
+        Statement -> Body;
+      }
+    | Return -> Return 
+      {
+        //ExprOpt -> Value;
+      }
+    | Break -> Break {}
+  }
+
+  map syntax MiniCSyntax.Expr -> Expr
+  {
+    | IntegerLiteral -> IntegerLiteral { Value = ParsedValue(Digits, int.Parse(GetText(Digits))); }
+    | FloatLiteral -> FloatLiteral { Value = ParsedValue(Digits, double.Parse(GetText(Digits))); }
+    | True -> BoolLiteral { Value = true; }
+    | False -> BoolLiteral { Value = false; }
+    | VariableRef -> VariableRef { Reference -> Reference; }
+    | ArrayRef -> ArrayRef
+      {
+        Reference -> Reference;
+        Expr -> Index;
+      }
+    | FunCall -> FunCall
+      {
+        Reference -> Reference;
+        Exprs.Item1 -> Arguments;
+      }
+    | ArraySize -> ArraySize { Reference -> Reference; }
+    | Braces -> Braces { Expr = Expr; }
+    | ArrayAllocation -> ArrayAllocation
+      {
+        TypeRef -> TypeRef;
+        Expr -> Size;
+      }
+    | ScalarAssignment -> ScalarAssignment
+      {
+        Reference -> Reference;
+        Expr -> Value;
+      }
+    | ArrayAssignment -> ArrayAssignment
+      {
+        Reference -> Reference;
+        Expr -> Index;
+        Expr -> Value;
+      }
   }
 
   map syntax MiniCSyntax.VarDeclaration -> VarDeclaration

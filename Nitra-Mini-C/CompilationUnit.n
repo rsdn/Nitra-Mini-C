@@ -68,7 +68,8 @@ namespace MiniC
       
       root.MemberTable.Undefine(_.IsParsed);
       def evalHost = MiniCProjectEvalPropertiesHost(project, root);
-      evalHost.EvalProperties(context, "Symbol hierarchy");
+      evalHost.EvalProperties(context, "Symbol hierarchy", 0);
+      evalHost.EvalProperties(context, "Symbol hierarchy", 1);
     }
   }
   
