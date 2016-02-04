@@ -55,6 +55,18 @@ namespace MiniC
     Parameters    : VarDeclaration*;
   }
 
+  ast CompoundStatement 
+  {
+    in Function: FunDeclarationSymbol;
+    out LocalVariableScope: TableScope = TableScope("local variables", Function);
+    in BlockScope: Scope;
+
+	VarDeclarations.ContainingTable = LocalVariableScope;
+	BlockScope = Function.BodyScope.HideWith(LocalVariableScope);
+
+	VarDeclarations: VarDeclaration*;
+  }
+
   abstract ast TypeReference 
   {
     in Type: TypeSymbol;
