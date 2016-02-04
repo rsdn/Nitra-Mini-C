@@ -19,33 +19,35 @@ namespace MiniC
   abstract declaration VarDeclaration: TopDeclaration 
   {
     symbol
-	{
+    {
       in Type: TypeSymbol;
       Kind = "variable";
-	}
+    }
 
-	Symbol.Type = TypeRef.Type;
-    TypeRef: TypeReference;
+    Symbol.Type = TypeRef.Type;
 
-	| ScalarDeclaration {}
-	| ArrayDeclaration {}
+    TypeRef : TypeReference;
+
+    | ScalarDeclaration {}
+    | ArrayDeclaration {}
   }
   
   declaration FunDeclaration: TopDeclaration 
   {
     symbol 
-	{
-	  in ReturnType: TypeSymbol;
-      in Parameters: IList[VarDeclarationSymbol];
-	  Kind = "function";
-	}
+    {
+      in ReturnType : TypeSymbol;
+      in Parameters : IList[VarDeclarationSymbol];
 
-	Symbol.ReturnType = ReturnTypeRef.Type;
-	Parameters.ContainingTable = ContainingTable;
-	Symbol.Parameters = Parameters.Symbol.ToList();
+      Kind = "function";
+    }
 
-	ReturnTypeRef: TypeReference;
-	Parameters: VarDeclaration*;
+    Symbol.ReturnType          = ReturnTypeRef.Type;
+    Parameters.ContainingTable = ContainingTable;
+    Symbol.Parameters          = Parameters.Symbol.ToList();
+
+    ReturnTypeRef : TypeReference;
+    Parameters    : VarDeclaration*;
   }
 
   abstract ast TypeReference 
@@ -60,8 +62,8 @@ namespace MiniC
 
   declaration Root : Container {}
 
-  declaration Void: Type {}
-  declaration Int: Type {}
-  declaration Float: Type {}
-  declaration Bool: Type {}
+  declaration Void  : Type {}
+  declaration Int   : Type {}
+  declaration Float : Type {}
+  declaration Bool  : Type {}
 }

@@ -15,8 +15,8 @@ namespace MiniC
     | FunDeclaration -> FunDeclaration 
       {
         Name -> Name;
-  	  TypeRef -> ReturnTypeRef;
-  	  VarDeclarations.Item1 -> Parameters;
+  	    TypeRef -> ReturnTypeRef;
+  	    VarDeclarations.Item1 -> Parameters;
       }
   }
   
