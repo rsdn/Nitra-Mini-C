@@ -1,5 +1,6 @@
 ﻿using Nitra;
 using Nitra.Declarations;
+using System.Linq;
 using System.Collections.Generic;
 using MiniC;
 
@@ -18,26 +19,42 @@ namespace MiniCAst
   
   abstract declaration VarDeclaration: TopDeclaration 
   {
-    TypeRef : TypeReference;
+    symbol
+	{
+      in Type: TypeSymbol;
+	}
+
+	Symbol.Type = TypeRef.Type;
+    TypeRef: TypeReference;
+
+	| ScalarDeclaration {}
+	| ArrayDeclaration {}
   }
-
-  declaration ScalarDeclaration: VarDeclaration {}
-
-  declaration ArrayDeclaration: VarDeclaration {}
   
   declaration FunDeclaration: TopDeclaration 
   {
-    //in Parameters: IList[Parameter];
+    symbol 
+	{
+	  in ReturnType: TypeSymbol;
+      in Parameters: IList[VarDeclarationSymbol];
+	}
+
+	Symbol.ReturnType = ReturnTypeRef.Type;
+	Parameters.ContainingTable = ContainingTable;
+	Symbol.Parameters = Parameters.Symbol.ToList();
+
+	ReturnTypeRef: TypeReference;
+	Parameters: VarDeclaration*;
   }
-  
+
   abstract ast TypeReference 
   {
-    in TypeRef: TypeSymbol;
+    in Type: TypeSymbol;
 
-    | Void  { TypeRef = context.GetVoidSymbol(); }
-    | Int   { TypeRef = context.GetIntSymbol(); }
-    | Float { TypeRef = context.GetFloatSymbol(); }
-    | Bool  { TypeRef = context.GetBoolSymbol(); }
+    | Void  { Type = context.GetVoidSymbol(); }
+    | Int   { Type = context.GetIntSymbol(); }
+    | Float { Type = context.GetFloatSymbol(); }
+    | Bool  { Type = context.GetBoolSymbol(); }
   }
 
   declaration Root : Container {}

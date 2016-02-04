@@ -14,6 +14,8 @@ map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
   | FunDeclaration -> FunDeclaration 
     {
       Name -> Name;
+	  TypeRef -> ReturnTypeRef;
+	  VarDeclarations.Item1 -> Parameters;
     }
 }
 
@@ -22,17 +24,17 @@ map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
   | Scalar -> ScalarDeclaration
     {
       Name -> Name;
-      TypeReference -> TypeRef;
+      TypeRef -> TypeRef;
     }
 
   | Array -> ArrayDeclaration
     {
       Name -> Name;
-      TypeReference -> TypeRef;
+      TypeRef -> TypeRef;
     }
 }
 
-map syntax MiniCSyntax.TypeReference -> TypeReference
+map syntax MiniCSyntax.TypeRef -> TypeReference
 {
   | Void  -> Void  {}
   | Int   -> Int   {}
