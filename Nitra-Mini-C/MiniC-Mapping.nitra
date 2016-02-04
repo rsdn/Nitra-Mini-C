@@ -56,13 +56,13 @@ namespace MiniC
     | Break -> Break {}
   }
 
-  /*  map syntax MiniCSyntax.Expr -> Expr
+  map syntax MiniCSyntax.Expr -> Expr
   {
     | IntegerLiteral -> IntegerLiteral { Value = ParsedValue(Digits, int.Parse(GetText(Digits))); }
-    | FloatLiteral -> FloatLiteral { Value = ParsedValue(Digits, double.Parse(GetText(Digits))); }
-    | True -> BoolLiteral { Value = true; }
-    | False -> BoolLiteral { Value = false; }
-    | VariableRef -> VariableRef { Reference -> Reference; }
+    | FloatLiteral   -> FloatLiteral   { Value = ParsedValue(Digits, double.Parse(GetText(Digits))); }
+    | True           -> TrueLiteral    { }
+    | False          -> FalseLiteral   { }
+    | VariableRef    -> VariableRef    { Reference -> Reference; }
     | ArrayRef -> ArrayRef
       {
         Reference -> Reference;
@@ -74,7 +74,7 @@ namespace MiniC
         Exprs.Item1 -> Arguments;
       }
     | ArraySize -> ArraySize { Reference -> Reference; }
-    | Braces -> Braces { Expr = Expr; }
+    | Braces -> this.Expr
     | ArrayAllocation -> ArrayAllocation
       {
         TypeRef -> TypeRef;
@@ -88,12 +88,30 @@ namespace MiniC
     | ArrayAssignment -> ArrayAssignment
       {
         Reference -> Reference;
-        Expr -> Index;
-        Expr -> Value;
+        Index -> Index;
+        Expr  -> Value;
       }
-  }
-  */
 
+    | Or           { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | And          { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Equal        { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | NotEqual     { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | LessEqual    { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Less         { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | GreaterEqual { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Greater      { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Sum          { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Sub          { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Modulus      { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Multiply     { Expr1 -> Expr1; Expr2 -> Expr2; }
+    | Divide       { Expr1 -> Expr1; Expr2 -> Expr2; }
+
+    | Plus          { Expr -> Expr1; }
+    | Minus         { Expr -> Expr1; }
+    | Negate        { Expr -> Expr1; }
+    | LogicalNegate { Expr -> Expr1; }
+  }
+  
   map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
   {
     | Scalar -> ScalarDeclaration

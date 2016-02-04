@@ -104,17 +104,18 @@ namespace MiniC
     | Break {}
   }
 
-  ast Expr: BindableAst { }
+  abstract ast Unary  : Expr { Expr1 : Expr; }
+  abstract ast Binary : Expr { Expr1 : Expr; Expr2 : Expr; }
 
-  /*
   abstract ast Expr: BindableAst
   {
-    | IntegerLiteral { Value: int; }
-    | FloatLiteral { Value: double; }
-    | BoolLiteral { Value: bool; }
+    | IntegerLiteral { Value : int; }
+    | FloatLiteral   { Value : double; }
+    | FalseLiteral   { }
+    | TrueLiteral    { }
     | VariableRef 
       {
-        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve;
+        //out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Reference: Reference;
       }
@@ -138,12 +139,12 @@ namespace MiniC
       }
     | ArraySize 
       {
-        out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+        //out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
 
         Reference: Reference;
       }
-    | Braces { Expr: Expr; }
+    //| Braces { Expr1 : Expr; }
     | ArrayAllocation 
       {
         in Type: TypeSymbol = TypeRef.Type;
@@ -163,7 +164,7 @@ namespace MiniC
       }
     | ArrayAssignment
       {
-        out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+        //out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
         Value.Scope = Scope;
@@ -172,9 +173,26 @@ namespace MiniC
         Index: Expr;
         Value: Expr;
       }
-  }
 
-  */
+    | Or           : Binary { }
+    | And          : Binary { }
+    | Equal        : Binary { }
+    | NotEqual     : Binary { }
+    | LessEqual    : Binary { }
+    | Less         : Binary { }
+    | GreaterEqual : Binary { }
+    | Greater      : Binary { }
+    | Sum          : Binary { }
+    | Sub          : Binary { }
+    | Modulus      : Binary { }
+    | Multiply     : Binary { }
+    | Divide       : Binary { }
+
+    | Plus          : Unary { }
+    | Minus         : Unary { }
+    | Negate        : Unary { }
+    | LogicalNegate : Unary { }
+  }
 
   abstract ast TypeReference 
   {

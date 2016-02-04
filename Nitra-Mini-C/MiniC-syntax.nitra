@@ -77,7 +77,7 @@
   
       precedence Assignment:
       | ScalarAssignment = Reference              sm "=" sm Expr right-associative
-      | ArrayAssignment  = Reference "[" Expr "]" sm "=" sm Expr right-associative
+      | ArrayAssignment  = Reference "[" Index=Expr "]" sm "=" sm Expr right-associative
   
       precedence Or:
       | Or           = Expr sm "||" sm Expr
