@@ -14,23 +14,29 @@ namespace MiniC
     | VarDeclaration -> VarDeclaration 
     | FunDeclaration -> FunDeclaration 
       {
-        Name -> Name;
-  	    TypeRef -> ReturnTypeRef;
+        Name                  -> Name;
+  	    TypeRef               -> ReturnTypeRef;
   	    VarDeclarations.Item1 -> Parameters;
+        CompoundStatement     -> CompoundStatement;
       }
   }
   
+  map syntax MiniCSyntax.CompoundStatement -> CompoundStatement
+  {
+    VarDeclarations -> LocalVariables;
+  }
+
   map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
   {
     | Scalar -> ScalarDeclaration
       {
-        Name -> Name;
+        Name    -> Name;
         TypeRef -> TypeRef;
       }
   
     | Array -> ArrayDeclaration
       {
-        Name -> Name;
+        Name    -> Name;
         TypeRef -> TypeRef;
       }
   }

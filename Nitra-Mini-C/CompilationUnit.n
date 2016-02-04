@@ -86,7 +86,7 @@ namespace MiniC
     {
       match (context.Stage)
       {
-        | 0 =>
+        | 0 | 1 =>
           foreach (file in _files)
             when (file.Ast is CompilationUnit as cu)
               cu.ContainingTable = _root.MemberTable;
