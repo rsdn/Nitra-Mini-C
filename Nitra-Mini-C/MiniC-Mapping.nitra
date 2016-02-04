@@ -31,21 +31,22 @@ namespace MiniC
   {
     | Expr -> Expr 
       {
-        //ExprOpt -> Expr;
+        //Expr -> Expr;
       }
+    | Empty -> Empty { }
     | Compound -> Compound 
       {
         CompoundStatement -> Nested;
       }
     | If -> If 
       {
-        Expr -> Condition;
+        //Expr -> Condition;
         Statement -> TrueBranch;
         Statement -> FalseBranch; 
       }
     | While -> While 
       {
-        Expr -> Condition;
+        //Expr -> Condition;
         Statement -> Body;
       }
     | Return -> Return 
@@ -55,7 +56,7 @@ namespace MiniC
     | Break -> Break {}
   }
 
-  map syntax MiniCSyntax.Expr -> Expr
+  /*  map syntax MiniCSyntax.Expr -> Expr
   {
     | IntegerLiteral -> IntegerLiteral { Value = ParsedValue(Digits, int.Parse(GetText(Digits))); }
     | FloatLiteral -> FloatLiteral { Value = ParsedValue(Digits, double.Parse(GetText(Digits))); }
@@ -91,6 +92,7 @@ namespace MiniC
         Expr -> Value;
       }
   }
+  */
 
   map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
   {

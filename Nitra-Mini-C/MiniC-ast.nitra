@@ -73,6 +73,7 @@ namespace MiniC
 
   abstract ast Statement: BindableAst
   {
+    | Empty {}
     | Expr 
       { 
         //Expr: Expr; 
@@ -80,20 +81,20 @@ namespace MiniC
     | Compound { Nested: CompoundStatement; }
     | If 
       {
-        Condition.Scope = Scope;
+        //Condition.Scope = Scope;
         TrueBranch.Scope = Scope;
         FalseBranch.Scope = Scope;
 
-        Condition: Expr;
+        //Condition: Expr;
         TrueBranch: Statement;
         FalseBranch: Statement;
       }
     | While 
       {
-        Condition.Scope = Scope;
+        //Condition.Scope = Scope;
         Body.Scope = Scope;
 
-        Condition: Expr;
+        //Condition: Expr;
         Body: Statement;
       }
     | Return 
@@ -103,6 +104,9 @@ namespace MiniC
     | Break {}
   }
 
+  ast Expr: BindableAst { }
+
+  /*
   abstract ast Expr: BindableAst
   {
     | IntegerLiteral { Value: int; }
@@ -169,6 +173,8 @@ namespace MiniC
         Value: Expr;
       }
   }
+
+  */
 
   abstract ast TypeReference 
   {
