@@ -21,6 +21,7 @@ namespace MiniC
     symbol
 	{
       in Type: TypeSymbol;
+      Kind = "variable";
 	}
 
 	Symbol.Type = TypeRef.Type;
@@ -36,6 +37,7 @@ namespace MiniC
 	{
 	  in ReturnType: TypeSymbol;
       in Parameters: IList[VarDeclarationSymbol];
+	  Kind = "function";
 	}
 
 	Symbol.ReturnType = ReturnTypeRef.Type;
