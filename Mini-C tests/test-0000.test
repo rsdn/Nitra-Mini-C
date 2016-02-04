@@ -1,5 +1,6 @@
 int globalInt;
 bool globalBool;
+int i;
 
 int func(int i, int j) {
   return i + j;
