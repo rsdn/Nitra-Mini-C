@@ -2,9 +2,8 @@
 using Nitra.Declarations;
 using System.Linq;
 using System.Collections.Generic;
-using MiniC;
 
-namespace MiniCAst
+namespace MiniC
 {
   ast CompilationUnit
   {

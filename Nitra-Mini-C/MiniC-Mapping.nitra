@@ -1,44 +1,45 @@
 ﻿using Nitra;
 using Nitra.Runtime;
 using Nitra.Declarations;
-using MiniCAst;
 
-map syntax MiniCSyntax.CompilationUnit -> CompilationUnit
+namespace MiniC 
 {
-  TopDeclarations -> TopDeclarations;
+  map syntax MiniCSyntax.CompilationUnit -> CompilationUnit
+  {
+    TopDeclarations -> TopDeclarations;
+  }
+  
+  map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
+  {
+    | VarDeclaration -> VarDeclaration 
+    | FunDeclaration -> FunDeclaration 
+      {
+        Name -> Name;
+  	  TypeRef -> ReturnTypeRef;
+  	  VarDeclarations.Item1 -> Parameters;
+      }
+  }
+  
+  map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
+  {
+    | Scalar -> ScalarDeclaration
+      {
+        Name -> Name;
+        TypeRef -> TypeRef;
+      }
+  
+    | Array -> ArrayDeclaration
+      {
+        Name -> Name;
+        TypeRef -> TypeRef;
+      }
+  }
+  
+  map syntax MiniCSyntax.TypeRef -> TypeReference
+  {
+    | Void  -> Void  {}
+    | Int   -> Int   {}
+    | Float -> Float {}
+    | Bool  -> Bool  {}
+  }
 }
-
-map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
-{
-  | VarDeclaration -> VarDeclaration 
-  | FunDeclaration -> FunDeclaration 
-    {
-      Name -> Name;
-	  TypeRef -> ReturnTypeRef;
-	  VarDeclarations.Item1 -> Parameters;
-    }
-}
-
-map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
-{
-  | Scalar -> ScalarDeclaration
-    {
-      Name -> Name;
-      TypeRef -> TypeRef;
-    }
-
-  | Array -> ArrayDeclaration
-    {
-      Name -> Name;
-      TypeRef -> TypeRef;
-    }
-}
-
-map syntax MiniCSyntax.TypeRef -> TypeReference
-{
-  | Void  -> Void  {}
-  | Int   -> Int   {}
-  | Float -> Float {}
-  | Bool  -> Bool  {}
-}
-

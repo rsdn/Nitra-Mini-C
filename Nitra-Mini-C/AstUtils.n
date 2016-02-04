@@ -5,7 +5,6 @@ using Nemerle.Utility;
 using System;
 using Nitra;
 using Nitra.Declarations;
-using MiniCAst;
 
 namespace MiniC
 {

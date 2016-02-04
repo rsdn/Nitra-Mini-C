@@ -1,110 +1,114 @@
-﻿syntax module MiniCSyntax
+﻿namespace MiniC
 {
-  using Nitra.Core;
-  using Nitra.CStyleComments;
-
-  keyword regex ['a'..'z', '_'..'_']+ rule S;
-  regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" | "bool" | "float";
-
-  [Keyword] token Keyword = Name=KeywordToken !IdentifierPartCharacters;
-  [Reference] token Reference = !Keyword IdentifierBody;
-  [Name] token Name = !Keyword IdentifierBody;
-
-  [StartRule]
-  syntax CompilationUnit = (TopDeclaration nl)*;
-
-  syntax TopDeclaration
+  syntax module MiniCSyntax
   {
-    | VarDeclaration = VarDeclaration ";"
-    | FunDeclaration = TypeRef Name "(" (VarDeclaration; "," sm)* ")" CompoundStatement
-  }
-
-  syntax VarDeclaration
-  {
-    | Scalar = TypeRef Name
-    | Array  = TypeRef Name "[" "]"
-  }
-
-  syntax TypeRef
-  {
-    | "void" sm
-    | "int" sm
-    | "float" sm
-    | "bool" sm
-  }
-
-  syntax CompoundStatement = "{" inl (VarDeclaration ";" nl)* (Statement nl)* d "}";
-
-  syntax Statement 
-  {
-    | Expr = Expr? ";"
-    | Compound = CompoundStatement
-    | If = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
-    | While = "while" sm "(" Expr ")" sm Statement
-    | Return = "return" sm Expr? ";"
-    | Break = "break" ";"
-  }
-
-  regex DecimalDigit = ['0'..'9'];
-  literal Operator = "||", "==", "!=", "<=", "<", ">=", ">", "+", "-", "*", "/", "+", "-", "!";
-
-  syntax Expr
-  {
-    | [SpanClass(Number)] 
-      IntegerLiteral = Digits
-      {
-        regex Digits = DecimalDigit+;
-      }
-    
-    | [SpanClass(Number)] 
-      FloatLiteral = Digits
-      {
-        regex Digits = DecimalDigit+ "." DecimalDigit+;
-      }
-    
-    | "true"
-    | "false"
-
-    | VariableRef     = Reference
-    | ArrayRef        = Reference "[" Expr "]"
-    | FunCall         = Reference "(" (Expr; "," sm)* ")"
-    | ArraySize       = Reference "." "size"
-    | Braces          = "(" Expr ")"
-    | ArrayAllocation = "new" TypeRef "[" Expr "]"
-
-    precedence Assignment:
-    | ScalarAssignment = Reference              sm "=" sm Expr right-associative
-    | ArrayAssignment  = Reference "[" Expr "]" sm "=" sm Expr right-associative
-
-    precedence Or:
-    | Or           = Expr sm "||" sm Expr
-
-    precedence And:
-    | And          = Expr sm "&&" sm Expr
-    
-    precedence Equal:
-    | Equal        = Expr sm "==" sm Expr
-    | NotEqual     = Expr sm "!=" sm Expr
-
-    precedence LessGreater:
-    | LessEqual    = Expr sm "<=" sm Expr
-    | Less         = Expr sm "<"  sm Expr
-    | GreaterEqual = Expr sm ">=" sm Expr
-    | Greater      = Expr sm ">"  sm Expr
-    
-    precedence Sum:
-    | Sum          = Expr sm "+"  sm Expr
-    | Sub          = Expr sm "-"  sm Expr
-    | Modulus      = Expr sm "%"  sm Expr
-    
-    precedence Mul:
-    | Multiply     = Expr sm "*"  sm Expr
-    | Divide       = Expr sm "/"  sm Expr
-    
-    precedence Unary:
-    | Plus          = "+" Expr
-    | Minus         = "-" Expr
-    | Negate        = "!" Expr
-    | LogicalNegate = "~" Expr
+    using Nitra.Core;
+    using Nitra.CStyleComments;
+  
+    keyword regex ['a'..'z', '_'..'_']+ rule S;
+    regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" | "bool" | "float";
+  
+    [Keyword] token Keyword = Name=KeywordToken !IdentifierPartCharacters;
+    [Reference] token Reference = !Keyword IdentifierBody;
+    [Name] token Name = !Keyword IdentifierBody;
+  
+    [StartRule]
+    syntax CompilationUnit = (TopDeclaration nl)*;
+  
+    syntax TopDeclaration
+    {
+      //| [SpanClass(Variable)] VarDeclaration = VarDeclaration ";"
+      | VarDeclaration = VarDeclaration ";"
+      | FunDeclaration = TypeRef Name "(" (VarDeclaration; "," sm)* ")" CompoundStatement
+    }
+  
+    syntax VarDeclaration
+    {
+      | Scalar = TypeRef Name
+      | Array  = TypeRef Name "[" "]"
+    }
+  
+    syntax TypeRef
+    {
+      | "void" sm
+      | "int" sm
+      | "float" sm
+      | "bool" sm
+    }
+  
+    syntax CompoundStatement = "{" inl (VarDeclaration ";" nl)* (Statement nl)* d "}";
+  
+    syntax Statement 
+    {
+      | Expr = Expr? ";"
+      | Compound = CompoundStatement
+      | If = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
+      | While = "while" sm "(" Expr ")" sm Statement
+      | Return = "return" sm Expr? ";"
+      | Break = "break" ";"
+    }
+  
+    regex DecimalDigit = ['0'..'9'];
+    literal Operator = "||", "==", "!=", "<=", "<", ">=", ">", "+", "-", "*", "/", "+", "-", "!";
+  
+    syntax Expr
+    {
+      | [SpanClass(Number)] 
+        IntegerLiteral = Digits
+        {
+          regex Digits = DecimalDigit+;
+        }
+      
+      | [SpanClass(Number)] 
+        FloatLiteral = Digits
+        {
+          regex Digits = DecimalDigit+ "." DecimalDigit+;
+        }
+      
+      | "true"
+      | "false"
+  
+      | VariableRef     = Reference
+      | ArrayRef        = Reference "[" Expr "]"
+      | FunCall         = Reference "(" (Expr; "," sm)* ")"
+      | ArraySize       = Reference "." "size"
+      | Braces          = "(" Expr ")"
+      | ArrayAllocation = "new" TypeRef "[" Expr "]"
+  
+      precedence Assignment:
+      | ScalarAssignment = Reference              sm "=" sm Expr right-associative
+      | ArrayAssignment  = Reference "[" Expr "]" sm "=" sm Expr right-associative
+  
+      precedence Or:
+      | Or           = Expr sm "||" sm Expr
+  
+      precedence And:
+      | And          = Expr sm "&&" sm Expr
+      
+      precedence Equal:
+      | Equal        = Expr sm "==" sm Expr
+      | NotEqual     = Expr sm "!=" sm Expr
+  
+      precedence LessGreater:
+      | LessEqual    = Expr sm "<=" sm Expr
+      | Less         = Expr sm "<"  sm Expr
+      | GreaterEqual = Expr sm ">=" sm Expr
+      | Greater      = Expr sm ">"  sm Expr
+      
+      precedence Sum:
+      | Sum          = Expr sm "+"  sm Expr
+      | Sub          = Expr sm "-"  sm Expr
+      | Modulus      = Expr sm "%"  sm Expr
+      
+      precedence Mul:
+      | Multiply     = Expr sm "*"  sm Expr
+      | Divide       = Expr sm "/"  sm Expr
+      
+      precedence Unary:
+      | Plus          = "+" Expr
+      | Minus         = "-" Expr
+      | Negate        = "!" Expr
+      | LogicalNegate = "~" Expr
+    }
   }
 }
