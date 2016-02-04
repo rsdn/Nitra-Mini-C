@@ -21,6 +21,8 @@ namespace MiniC
     symbol
     {
       in Type: TypeSymbol;
+
+      SpanClass = MiniC.VariableSpanClass;
       Kind = "variable";
     }
 
@@ -39,6 +41,7 @@ namespace MiniC
       in ReturnType : TypeSymbol;
       in Parameters : IList[VarDeclarationSymbol];
 
+      SpanClass = MiniC.FunctionSpanClass;
       Kind = "function";
     }
 
