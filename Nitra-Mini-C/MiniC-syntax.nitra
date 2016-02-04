@@ -39,12 +39,13 @@
   
     syntax Statement 
     {
-      | Expr = Expr? ";"
+      | Expr     = Expr ";"
+      | Empty    = ";"
       | Compound = CompoundStatement
-      | If = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
-      | While = "while" sm "(" Expr ")" sm Statement
-      | Return = "return" sm Expr? ";"
-      | Break = "break" ";"
+      | If       = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
+      | While    = "while" sm "(" Expr ")" sm Statement
+      | Return   = "return" sm Expr? ";"
+      | Break    = "break" ";"
     }
   
     regex DecimalDigit = ['0'..'9'];
