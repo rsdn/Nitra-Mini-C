@@ -17,7 +17,6 @@
   
     syntax TopDeclaration
     {
-      //| [SpanClass(Variable)] VarDeclaration = VarDeclaration ";"
       | VarDeclaration = VarDeclaration ";"
       | FunDeclaration = TypeRef Name "(" (VarDeclaration; "," sm)* ")" CompoundStatement
     }

@@ -40,13 +40,14 @@ namespace MiniC
     {
       in ReturnType : TypeSymbol;
       in Parameters : IList[VarDeclarationSymbol];
+	  out ParameterScope : TableScope = TableScope("parameters", this);
 
       SpanClass = MiniC.FunctionSpanClass;
       Kind = "function";
     }
 
     Symbol.ReturnType          = ReturnTypeRef.Type;
-    Parameters.ContainingTable = ContainingTable;
+    Parameters.ContainingTable = Symbol.ParameterScope;
     Symbol.Parameters          = Parameters.Symbol.ToList();
 
     ReturnTypeRef : TypeReference;
