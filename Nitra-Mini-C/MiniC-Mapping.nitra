@@ -17,7 +17,7 @@ namespace MiniC
         Name                  -> Name;
         TypeRef               -> ReturnTypeRef;
         VarDeclarations.Item1 -> Parameters;
-        CompoundStatement     -> CompoundStatement;
+        CompoundStatement     -> Body;
       }
   }
   
