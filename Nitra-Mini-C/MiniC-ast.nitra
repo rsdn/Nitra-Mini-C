@@ -144,7 +144,7 @@ namespace MiniC
 
         Reference: Reference;
       }
-    //| Braces { Expr1 : Expr; }
+
     | ArrayAllocation 
       {
         in Type: TypeSymbol = TypeRef.Type;
