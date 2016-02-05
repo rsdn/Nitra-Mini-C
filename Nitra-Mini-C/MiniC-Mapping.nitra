@@ -29,9 +29,9 @@ namespace MiniC
 
   map syntax MiniCSyntax.Statement -> Statement
   {
-    | Expr -> Expr 
+    | Expression -> Expression
       {
-        //Expr -> Expr;
+        Expr -> Body;
       }
     | Empty -> Empty { }
     | Compound -> Compound 

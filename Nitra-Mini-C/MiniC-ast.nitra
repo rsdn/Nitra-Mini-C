@@ -74,10 +74,7 @@ namespace MiniC
   abstract ast Statement: BindableAst
   {
     | Empty {}
-    | Expr 
-      { 
-        //Expr: Expr; 
-      }
+    | Expression { Body: Expr; }
     | Compound { Nested: CompoundStatement; }
     | If 
       {
