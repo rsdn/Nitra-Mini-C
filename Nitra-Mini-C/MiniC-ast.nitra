@@ -104,8 +104,19 @@ namespace MiniC
     | Break {}
   }
 
-  abstract ast Unary  : Expr { Expr1 : Expr; }
-  abstract ast Binary : Expr { Expr1 : Expr; Expr2 : Expr; }
+  abstract ast Unary  : Expr 
+  { 
+    Expr1.Scope = Scope;
+    Expr1 : Expr; 
+  }
+  
+  abstract ast Binary : Expr
+  { 
+    Expr1.Scope = Scope;
+    Expr2.Scope = Scope;
+    Expr1 : Expr;
+    Expr2 : Expr; 
+  }
 
   abstract ast Expr: BindableAst
   {
@@ -155,7 +166,7 @@ namespace MiniC
       }
     | ScalarAssignment
       {
-        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Value.Scope = Scope;
 
