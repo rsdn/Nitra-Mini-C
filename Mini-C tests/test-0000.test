@@ -9,10 +9,11 @@ int func(int i, int j) {
 int main(bool i) {
   int foo;
   foo = func(2, 3);
-  while (b) {
+  while (foo) {
     func(1, 2);
     break;
   }
+  
   return 1;
 }
 
