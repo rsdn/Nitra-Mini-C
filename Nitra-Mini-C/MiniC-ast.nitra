@@ -166,7 +166,7 @@ namespace MiniC
       }
     | ScalarAssignment
       {
-        out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Value.Scope = Scope;
 
