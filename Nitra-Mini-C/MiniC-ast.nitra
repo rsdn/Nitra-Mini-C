@@ -132,7 +132,7 @@ namespace MiniC
       }
     | ArrayRef 
       {
-        out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
         
