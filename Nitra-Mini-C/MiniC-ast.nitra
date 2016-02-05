@@ -77,6 +77,7 @@ namespace MiniC
     | Empty {}
     | Expression 
       { 
+        Body.Scope = Scope;
         Body: Expr;
       }
     | Compound { Nested: CompoundStatement; }
@@ -114,13 +115,13 @@ namespace MiniC
     | TrueLiteral    { }
     | VariableRef 
       {
-        //out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Reference: Reference;
       }
     | ArrayRef 
       {
-        out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
         
@@ -138,7 +139,7 @@ namespace MiniC
       }
     | ArraySize 
       {
-        //out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
 
         Reference: Reference;
@@ -163,7 +164,7 @@ namespace MiniC
       }
     | ArrayAssignment
       {
-        //out Ref: Ref[ArrayDeclarationSymbol] = Reference.Ref.Resolve();
+        out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
         Value.Scope = Scope;
