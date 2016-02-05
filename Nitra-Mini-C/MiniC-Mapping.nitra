@@ -40,19 +40,17 @@ namespace MiniC
       }
     | If -> If 
       {
-        //Expr -> Condition;
+        Expr -> Condition; 
         Statement -> TrueBranch;
         Statement -> FalseBranch; 
       }
-    | While -> While 
+    | While -> While
       {
-        //Expr -> Condition;
+        Expr -> Condition;
         Statement -> Body;
       }
-    | Return -> Return 
-      {
-        //ExprOpt -> Value;
-      }
+    | ReturnVoid -> ReturnVoid {}
+    | Return -> Return { Expr -> Value; }
     | Break -> Break {}
   }
 

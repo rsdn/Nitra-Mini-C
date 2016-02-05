@@ -38,11 +38,11 @@ namespace MiniC
   {
     symbol 
     {
-      in ReturnType : TypeSymbol;
-      in Parameters : IList[VarDeclarationSymbol];
+      in ReturnType      : TypeSymbol;
+      in Parameters      : IList[VarDeclarationSymbol];
       out ParameterScope : TableScope = TableScope("parameters", this);
       SpanClass = MiniC.FunctionSpanClass;
-      Kind = "function";
+      Kind      = "function";
     }
 
     Symbol.ReturnType          = ReturnTypeRef.Type;
@@ -52,9 +52,9 @@ namespace MiniC
     Body.DeclaredIn            = Symbol;
     Body.OuterScope            = Symbol.Scope;
 
-    ReturnTypeRef     : TypeReference;
-    Parameters        : VarDeclaration*;
-    Body : CompoundStatement;
+    ReturnTypeRef : TypeReference;
+    Parameters    : VarDeclaration*;
+    Body          : CompoundStatement;
   }
 
   ast CompoundStatement: BindableAst
@@ -65,39 +65,40 @@ namespace MiniC
 
     LocalVariables.ContainingTable = LocalVariableScope;
     Scope = OuterScope.HideWith(LocalVariableScope);
-	Statements.Scope = Scope;
+    Statements.Scope = Scope;
 
-    LocalVariables: VarDeclaration*;
-    Statements: Statement*;
+    LocalVariables : VarDeclaration*;
+    Statements     : Statement*;
   }
 
   abstract ast Statement: BindableAst
   {
     | Empty {}
-    | Expression { Body: Expr; }
+    | Expression 
+      { 
+        Body: Expr;
+      }
     | Compound { Nested: CompoundStatement; }
     | If 
       {
-        //Condition.Scope = Scope;
-        TrueBranch.Scope = Scope;
+        Condition.Scope = Scope;
+        TrueBranch.Scope  = Scope;
         FalseBranch.Scope = Scope;
 
-        //Condition: Expr;
-        TrueBranch: Statement;
-        FalseBranch: Statement;
+        Condition: Expr;
+        TrueBranch  : Statement;
+        FalseBranch : Statement;
       }
     | While 
       {
-        //Condition.Scope = Scope;
+        Condition.Scope = Scope;
         Body.Scope = Scope;
 
-        //Condition: Expr;
+        Condition: Expr;
         Body: Statement;
       }
-    | Return 
-      { 
-        //Value: Expr; 
-      }
+    | ReturnVoid {}
+    | Return { Value: Expr; }
     | Break {}
   }
 

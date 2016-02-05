@@ -44,7 +44,8 @@
       | Compound   = CompoundStatement
       | If         = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
       | While      = "while" sm "(" Expr ")" sm Statement
-      | Return     = "return" sm Expr? ";"
+      | ReturnVoid = "return" ";"
+      | Return     = "return" sm Expr ";"
       | Break      = "break" ";"
     }
   
