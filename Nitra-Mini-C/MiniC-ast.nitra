@@ -120,11 +120,15 @@ namespace MiniC
         Body: Statement;
       }
     | ReturnVoid {}
-    | Return { Value: Expr; }
+    | Return 
+      { 
+        Value.Scope = Scope;
+        Value: Expr; 
+      }
     | Break {}
   }
 
-  abstract ast Unary  : Expr 
+  abstract ast Unary : Expr 
   { 
     Expr1.Scope = Scope;
     Expr1 : Expr; 
@@ -138,16 +142,33 @@ namespace MiniC
     Expr2 : Expr; 
   }
 
+  abstract ast BoolExpr : Binary
+  {
+     Type = context.GetBoolSymbol();
+  }
+
   abstract ast Expr: BindableAst
   {
-    | IntegerLiteral { Value : int; }
-    | FloatLiteral   { Value : double; }
-    | FalseLiteral   { }
-    | TrueLiteral    { }
+    in Type: DeclarationSymbol = context.GetVoidSymbol();
+
+    | IntegerLiteral 
+      { 
+        Type = context.GetIntSymbol();
+        Value : int; 
+      }
+    | FloatLiteral   
+      { 
+        Type = context.GetFloatSymbol();
+        Value : double; 
+      }
+    | FalseLiteral { Type = context.GetBoolSymbol(); }
+    | TrueLiteral { Type = context.GetBoolSymbol(); }
     | VariableRef 
       {
         out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
+        Type = Ref.Symbol.Type;
+        
         Reference: Reference;
       }
     | ArrayRef 
@@ -155,6 +176,7 @@ namespace MiniC
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
+        Type = Ref.Symbol.Type;
         
         Reference: Reference;
         Index: Expr;
@@ -164,6 +186,7 @@ namespace MiniC
         out Ref: Ref[FunDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Arguments.Scope = Scope;
+        Type = Ref.Symbol.ReturnType;
 
         Arguments: Expr*;
         Reference: Reference;
@@ -172,13 +195,14 @@ namespace MiniC
       {
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
+        Type = context.GetIntSymbol();
 
         Reference: Reference;
       }
 
     | ArrayAllocation 
       {
-        in Type: TypeSymbol = TypeRef.Type;
+        Type = TypeRef.Type;
         Size.Scope = Scope;
 
         TypeRef: TypeReference;
@@ -205,14 +229,30 @@ namespace MiniC
         Value: Expr;
       }
 
-    | Or           : Binary { }
-    | And          : Binary { }
-    | Equal        : Binary { }
-    | NotEqual     : Binary { }
-    | LessEqual    : Binary { }
-    | Less         : Binary { }
-    | GreaterEqual : Binary { }
-    | Greater      : Binary { }
+    | Or : BoolExpr 
+      { 
+      }
+    | And : BoolExpr 
+      { 
+      }
+    | Equal : BoolExpr 
+      { 
+      }
+    | NotEqual : BoolExpr 
+      { 
+      }
+    | LessEqual : BoolExpr 
+      { 
+      }
+    | Less : BoolExpr 
+      { 
+      }
+    | GreaterEqual : BoolExpr 
+      { 
+      }
+    | Greater : BoolExpr 
+      { 
+      }
     | Sum          : Binary { }
     | Sub          : Binary { }
     | Modulus      : Binary { }

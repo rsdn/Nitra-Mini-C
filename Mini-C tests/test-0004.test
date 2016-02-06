@@ -1,0 +1,5 @@
+void main() {
+  int i;
+  int j;
+  return i == 1 || j == 2;
+}
