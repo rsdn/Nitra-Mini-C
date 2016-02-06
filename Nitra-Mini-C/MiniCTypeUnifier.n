@@ -6,9 +6,9 @@ using Nitra.Declarations;
 
 namespace MiniC
 {
-  public sealed class AstTypeUnifier : TypeUnifier
+  public sealed class MiniCTypeUnifier : TypeUnifier
   {
-    public static Instance : AstTypeUnifier = AstTypeUnifier();
+    public static Instance : MiniCTypeUnifier = MiniCTypeUnifier();
 
     protected override IsSubtype(subtype : TypeSymbol, supertype : TypeSymbol) : bool
     {

@@ -182,6 +182,7 @@ namespace MiniC
   abstract ast Expr: BindableAst
   {
     in Type: DeclarationSymbol = context.GetVoidSymbol();
+    in ExpectedType: TypeSymbol = MiniCTypeUnifier.Instance.CreateTypeVar();
 
     | IntegerLiteral 
       { 
@@ -193,8 +194,14 @@ namespace MiniC
         Type = context.GetFloatSymbol();
         Value : double; 
       }
-    | FalseLiteral { Type = context.GetBoolSymbol(); }
-    | TrueLiteral { Type = context.GetBoolSymbol(); }
+    | FalseLiteral 
+      { 
+        Type = context.GetBoolSymbol(); 
+      }
+    | TrueLiteral 
+      { 
+        Type = context.GetBoolSymbol(); 
+      }
     | VariableRef 
       {
         out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
@@ -208,6 +215,7 @@ namespace MiniC
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
+        Index.ExpectedType = context.GetIntSymbol();
         Type = Ref.Symbol.Type;
         
         Reference: Reference;
@@ -218,6 +226,9 @@ namespace MiniC
         out Ref: Ref[FunDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Arguments.Scope = Scope;
+
+        AstUtils.AssignExpectedTypesToArguments(Ref.Symbol.Parameters, Arguments);
+
         Type = Ref.Symbol.ReturnType;
 
         Arguments: Expr*;
@@ -245,9 +256,7 @@ namespace MiniC
         out Ref: Ref[VarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Value.Scope = Scope;
-
-        when (!Ref.Symbol.Type.Equals(Value.Type))
-          Value.Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
+        Value.ExpectedType = Ref.Symbol.Type;
 
         Reference: Reference;
         Value: Expr;
