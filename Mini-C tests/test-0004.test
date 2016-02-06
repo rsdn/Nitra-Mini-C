@@ -1,5 +1,12 @@
 void main() {
   int i;
   int j;
-  return i == 1 || j == 2;
+  bool b;
+  int a[];
+  b = i == 1;
+  a = new int[6];
+  a[6] = 1;
+  i = -7;
+  i = -j;
+  return i == 2 || j == 2 && true;
 }

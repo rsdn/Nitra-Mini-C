@@ -131,6 +131,11 @@ namespace MiniC
   abstract ast Unary : Expr 
   { 
     Expr1.Scope = Scope;
+    Type = Expr1.Type;
+
+    //when (!Expr1.Type.Equals(context.GetIntSymbol()) &&
+    //      !Expr1.Type.Equals(context.GetFloatSymbol()))
+
     Expr1 : Expr; 
   }
   
@@ -142,9 +147,32 @@ namespace MiniC
     Expr2 : Expr; 
   }
 
-  abstract ast BoolExpr : Binary
+  abstract ast SameTypesExpr : Binary
   {
-     Type = context.GetBoolSymbol();
+    when (!Expr1.Type.Equals(Expr2.Type))
+        Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
+  }
+
+  abstract ast OrAndExpr : SameTypesExpr
+  {
+    Type = context.GetBoolSymbol();
+    
+    when (!Expr1.Type.Equals(context.GetBoolSymbol()))
+        Error($"Expected boolean expression but found $(self.Expr1.Type).");
+  }
+
+  abstract ast EqualExpr : SameTypesExpr
+  {
+    Type = context.GetBoolSymbol();
+  }
+
+  abstract ast ArithmeticBinary : SameTypesExpr
+  {
+    when (!Expr1.Type.Equals(context.GetIntSymbol()) &&
+          !Expr1.Type.Equals(context.GetFloatSymbol()))
+      Error($"Expected int or float, but found $(self.Expr1.Type)");
+
+    Type = Expr1.Type;
   }
 
   abstract ast Expr: BindableAst
@@ -214,6 +242,9 @@ namespace MiniC
         Reference.Scope = Scope;
         Value.Scope = Scope;
 
+        when (!Ref.Symbol.Type.Equals(Value.Type))
+          Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
+
         Reference: Reference;
         Value: Expr;
       }
@@ -224,45 +255,35 @@ namespace MiniC
         Index.Scope = Scope;
         Value.Scope = Scope;
 
+        when (!Ref.Symbol.Type.Equals(Value.Type))
+          Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
+        
+        when (!Index.Type.Equals(context.GetIntSymbol()))
+          Error("Array intex must be an int");
+
         Reference: Reference;
         Index: Expr;
         Value: Expr;
       }
 
-    | Or : BoolExpr 
-      { 
-      }
-    | And : BoolExpr 
-      { 
-      }
-    | Equal : BoolExpr 
-      { 
-      }
-    | NotEqual : BoolExpr 
-      { 
-      }
-    | LessEqual : BoolExpr 
-      { 
-      }
-    | Less : BoolExpr 
-      { 
-      }
-    | GreaterEqual : BoolExpr 
-      { 
-      }
-    | Greater : BoolExpr 
-      { 
-      }
-    | Sum          : Binary { }
-    | Sub          : Binary { }
-    | Modulus      : Binary { }
-    | Multiply     : Binary { }
-    | Divide       : Binary { }
+    | Or : OrAndExpr {}
+    | And : OrAndExpr {}
+    | Equal : EqualExpr {}
+    | NotEqual : EqualExpr {}
+    | LessEqual    : ArithmeticBinary {}
+    | Less         : ArithmeticBinary {}
+    | GreaterEqual : ArithmeticBinary {}
+    | Greater      : ArithmeticBinary {}
+    | Sum          : ArithmeticBinary {}
+    | Sub          : ArithmeticBinary {}
+    | Modulus      : ArithmeticBinary {}
+    | Multiply     : ArithmeticBinary {}
+    | Divide       : ArithmeticBinary {}
 
-    | Plus          : Unary { }
-    | Minus         : Unary { }
-    | Negate        : Unary { }
-    | LogicalNegate : Unary { }
+    | Plus          : Unary {}
+    | Minus         : Unary {}
+    | Negate        : Unary {}
+    | LogicalNegate : Unary {}
   }
 
   abstract ast TypeReference 

@@ -57,18 +57,17 @@
       | [SpanClass(Number)] 
         IntegerLiteral = Digits
         {
-          regex Digits = DecimalDigit+;
+          regex Digits = ("+" | "-")? DecimalDigit+;
         }
       
       | [SpanClass(Number)] 
         FloatLiteral = Digits
         {
-          regex Digits = DecimalDigit+ "." DecimalDigit+;
+          regex Digits = ("+" | "-")? DecimalDigit+ "." DecimalDigit+;
         }
       
       | "true"
       | "false"
-  
       | VariableRef     = Reference
       | ArrayRef        = Reference "[" Expr "]"
       | FunCall         = Reference "(" (Expr; "," sm)* ")"
