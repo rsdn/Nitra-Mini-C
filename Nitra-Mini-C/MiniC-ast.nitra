@@ -37,7 +37,7 @@ namespace MiniC
   abstract ast LocalVariableContainer
   {
     in DeclaredIn : DeclarationSymbol;
-    in Loop       : Statement.While;
+    in Loop       : option[Statement.While] = None();
   }
 
   declaration FunDeclaration: TopDeclaration 
@@ -114,7 +114,7 @@ namespace MiniC
         Condition.Scope = Scope;
         Body.Scope = Scope;
         Body.DeclaredIn = DeclaredIn;
-        Body.Loop = this;
+        Body.Loop = Some(this);
 
         Condition: Expr;
         Body: Statement;
