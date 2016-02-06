@@ -37,6 +37,7 @@ namespace MiniC
   abstract ast LocalVariableContainer
   {
     in DeclaredIn : DeclarationSymbol;
+    in Loop       : Statement.While;
   }
 
   declaration FunDeclaration: TopDeclaration 
@@ -72,6 +73,7 @@ namespace MiniC
     Scope = OuterScope.HideWith(LocalVariableScope);
     Statements.Scope = Scope;
     Statements.DeclaredIn = DeclaredIn;
+    Statements.Loop = Loop;
 
     LocalVariables : VarDeclaration*;
     Statements     : Statement*;
@@ -89,6 +91,7 @@ namespace MiniC
       { 
         Nested.OuterScope = Scope;
         Nested.DeclaredIn = DeclaredIn;
+        Nested.Loop = Loop;
 
         Nested : CompoundStatement; 
       }
@@ -109,6 +112,7 @@ namespace MiniC
         Condition.Scope = Scope;
         Body.Scope = Scope;
         Body.DeclaredIn = DeclaredIn;
+        Body.Loop = this;
 
         Condition: Expr;
         Body: Statement;
