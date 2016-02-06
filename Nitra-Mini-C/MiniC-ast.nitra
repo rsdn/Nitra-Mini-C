@@ -153,8 +153,8 @@ namespace MiniC
 
   abstract ast SameTypesExpr : Binary
   {
-    when (!Expr1.Type.Equals(Expr2.Type))
-        Expr2.Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
+    //when (!MiniCTypeUnifier.Instance.TryUnify(Expr1.TypeSymbol, Expr2.TypeSymbol))
+        //Expr2.Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
   }
 
   abstract ast OrAndExpr : SameTypesExpr
@@ -181,8 +181,11 @@ namespace MiniC
 
   abstract ast Expr: BindableAst
   {
-    in Type: DeclarationSymbol = context.GetVoidSymbol();
+    in Type: TypeSymbol = context.GetVoidSymbol();
     in ExpectedType: TypeSymbol = MiniCTypeUnifier.Instance.CreateTypeVar();
+
+    unless (MiniCTypeUnifier.Instance.TryUnify(Type, ExpectedType))
+        Error($"Expected $(self.ExpectedType) but got $(self.Type)");
 
     | IntegerLiteral 
       { 
@@ -227,7 +230,7 @@ namespace MiniC
         Reference.Scope = Scope;
         Arguments.Scope = Scope;
 
-        AstUtils.AssignExpectedTypesToArguments(Ref.Symbol.Parameters, Arguments);
+        //AstUtils.AssignExpectedTypesToArguments(Ref.Symbol.Parameters, Arguments);
 
         Type = Ref.Symbol.ReturnType;
 
@@ -247,6 +250,7 @@ namespace MiniC
       {
         Type = TypeRef.Type;
         Size.Scope = Scope;
+        Size.ExpectedType = context.GetIntSymbol();
 
         TypeRef: TypeReference;
         Size: Expr;
@@ -266,14 +270,10 @@ namespace MiniC
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Index.Scope = Scope;
+        Index.ExpectedType = context.GetIntSymbol();
         Value.Scope = Scope;
-
-        when (!Ref.Symbol.Type.Equals(Value.Type))
-          Value.Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
+        Value.ExpectedType = Ref.Symbol.Type;
         
-        when (!Index.Type.Equals(context.GetIntSymbol()))
-          Index.Error("Array inted must be an int");
-
         Reference: Reference;
         Index: Expr;
         Value: Expr;
