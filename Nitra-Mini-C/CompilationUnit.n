@@ -69,7 +69,7 @@ namespace MiniC
       root.MemberTable.Undefine(_.IsParsed);
       def evalHost = MiniCProjectEvalPropertiesHost(project, root);
       evalHost.EvalProperties(context, "Symbol hierarchy", 0);
-      evalHost.EvalProperties(context, "Symbol hierarchy", 1);
+      evalHost.EvalProperties(context, "Scopes", 1);
     }
   }
   
@@ -87,10 +87,11 @@ namespace MiniC
     {
       match (context.Stage)
       {
-        | 0 | 1 =>
+        | 0 =>
           foreach (file in _files)
             when (file.Ast is CompilationUnit as cu)
               cu.ContainingTable = _root.MemberTable;
+
         | _ => ()
       }
     }
