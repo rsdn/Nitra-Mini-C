@@ -1,0 +1,23 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nitra.Declarations;
+
+namespace MiniC
+{
+  public sealed class AstTypeUnifier : TypeUnifier
+  {
+    public static Instance : AstTypeUnifier = AstTypeUnifier();
+
+    protected override IsSubtype(subtype : TypeSymbol, supertype : TypeSymbol) : bool
+    {
+      subtype.Equals(supertype);
+    }
+    
+    public CreateTypeVar(): TypeVarSymbol 
+    {
+      CreateTypeVar(null, null);
+    }
+  }
+}

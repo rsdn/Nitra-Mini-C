@@ -80,6 +80,9 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AstTypeUnifier.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="AstUtils.n">
       <SubType>Code</SubType>
     </Compile>

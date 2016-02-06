@@ -5,7 +5,7 @@ bool main() {
   int a[];
   b = i == 2;
   a = new int[6];
-  a[6] = 1;
+  a[i] = 1;
   i = -7;
   i = -j;
   return i == 2 || j == 2 && true;
