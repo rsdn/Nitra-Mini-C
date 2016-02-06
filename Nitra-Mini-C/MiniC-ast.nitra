@@ -125,7 +125,7 @@ namespace MiniC
         Value.Scope = Scope;
 
         when (!Value.Type.Equals(DeclaredIn.ReturnType))
-          Error($"Expected $(DeclaredIn.ReturnType) but found $(Value.Type)");
+          Value.Error($"Expected $(DeclaredIn.ReturnType) but found $(Value.Type)");
 
         Value: Expr; 
       }
