@@ -154,7 +154,7 @@ namespace MiniC
   abstract ast SameTypesExpr : Binary
   {
     when (!Expr1.Type.Equals(Expr2.Type))
-        Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
+        Expr2.Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
   }
 
   abstract ast OrAndExpr : SameTypesExpr
@@ -162,7 +162,7 @@ namespace MiniC
     Type = context.GetBoolSymbol();
     
     when (!Expr1.Type.Equals(context.GetBoolSymbol()))
-        Error($"Expected boolean expression but found $(self.Expr1.Type).");
+        Expr1.Error($"Expected boolean expression but found $(self.Expr1.Type).");
   }
 
   abstract ast EqualExpr : SameTypesExpr
@@ -174,7 +174,7 @@ namespace MiniC
   {
     when (!Expr1.Type.Equals(context.GetIntSymbol()) &&
           !Expr1.Type.Equals(context.GetFloatSymbol()))
-      Error($"Expected int or float, but found $(self.Expr1.Type)");
+      Expr1.Error($"Expected int or float, but found $(self.Expr1.Type)");
 
     Type = Expr1.Type;
   }
@@ -247,7 +247,7 @@ namespace MiniC
         Value.Scope = Scope;
 
         when (!Ref.Symbol.Type.Equals(Value.Type))
-          Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
+          Value.Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
 
         Reference: Reference;
         Value: Expr;
@@ -260,10 +260,10 @@ namespace MiniC
         Value.Scope = Scope;
 
         when (!Ref.Symbol.Type.Equals(Value.Type))
-          Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
+          Value.Error($"$(Value.Type) is not compatible with $(Ref.Symbol.Type)");
         
         when (!Index.Type.Equals(context.GetIntSymbol()))
-          Error("Array intex must be an int");
+          Index.Error("Array inted must be an int");
 
         Reference: Reference;
         Index: Expr;
