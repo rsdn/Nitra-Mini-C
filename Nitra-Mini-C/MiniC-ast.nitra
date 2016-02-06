@@ -36,7 +36,7 @@ namespace MiniC
   
   abstract ast LocalVariableContainer
   {
-    in DeclaredIn : DeclarationSymbol;
+    in DeclaredIn : FunDeclarationSymbol;
     in Loop       : option[Statement.While] = None();
   }
 
@@ -123,6 +123,10 @@ namespace MiniC
     | Return 
       { 
         Value.Scope = Scope;
+
+        when (!Value.Type.Equals(DeclaredIn.ReturnType))
+          Error($"Expected $(DeclaredIn.ReturnType) but found $(Value.Type)");
+
         Value: Expr; 
       }
     | Break {}
