@@ -34,6 +34,11 @@ namespace MiniC
     | ArrayDeclaration {}
   }
   
+  abstract ast LocalVariableContainer
+  {
+    in DeclaredIn : DeclarationSymbol;
+  }
+
   declaration FunDeclaration: TopDeclaration 
   {
     symbol 
@@ -50,7 +55,7 @@ namespace MiniC
     Parameters.ContainingTable = Symbol.ParameterScope;
     Symbol.FunScope            = ContainingTable.HideWith(Symbol.ParameterScope);
     Symbol.Parameters          = Parameters.Symbol.ToList();
-    //Body.DeclaredIn            = Symbol;
+    Body.DeclaredIn            = Symbol;
     Body.OuterScope            = Symbol.FunScope;
 
     ReturnTypeRef : TypeReference;
@@ -58,21 +63,21 @@ namespace MiniC
     Body          : CompoundStatement;
   }
 
-  ast CompoundStatement: BindableAst
+  ast CompoundStatement: BindableAst, LocalVariableContainer
   {
     in OuterScope : Scope;
-    //in DeclaredIn : DeclarationSymbol;
-    out LocalVariableScope: TableScope = TableScope("local variables", null); //, DeclaredIn);
+    out LocalVariableScope: TableScope = TableScope("local variables", DeclaredIn);
 
     LocalVariables.ContainingTable = LocalVariableScope;
     Scope = OuterScope.HideWith(LocalVariableScope);
     Statements.Scope = Scope;
+    Statements.DeclaredIn = DeclaredIn;
 
     LocalVariables : VarDeclaration*;
     Statements     : Statement*;
   }
 
-  abstract ast Statement: BindableAst
+  abstract ast Statement: BindableAst, LocalVariableContainer
   {
     | Empty {}
     | Expression 
@@ -83,13 +88,17 @@ namespace MiniC
     | Compound 
       { 
         Nested.OuterScope = Scope;
-        Nested: CompoundStatement; 
+        Nested.DeclaredIn = DeclaredIn;
+
+        Nested : CompoundStatement; 
       }
     | If 
       {
         Condition.Scope = Scope;
         TrueBranch.Scope  = Scope;
         FalseBranch.Scope = Scope;
+        TrueBranch.DeclaredIn = DeclaredIn;
+        FalseBranch.DeclaredIn = DeclaredIn;
 
         Condition: Expr;
         TrueBranch  : Statement;
@@ -99,6 +108,7 @@ namespace MiniC
       {
         Condition.Scope = Scope;
         Body.Scope = Scope;
+        Body.DeclaredIn = DeclaredIn;
 
         Condition: Expr;
         Body: Statement;
