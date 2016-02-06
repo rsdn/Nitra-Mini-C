@@ -124,12 +124,16 @@ namespace MiniC
       { 
         Value.Scope = Scope;
 
-        when (!Value.Type.Equals(DeclaredIn.ReturnType))
+        unless (MiniCTypeUnifier.Instance.TryUnify(Value.Type, DeclaredIn.ReturnType))
           Value.Error($"Expected $(DeclaredIn.ReturnType) but found $(Value.Type)");
 
         Value: Expr; 
       }
-    | Break {}
+    | Break 
+      {
+        when (Loop.IsNone)
+          Error("Break out of while.");
+      }
   }
 
   abstract ast Unary : Expr 
@@ -137,8 +141,9 @@ namespace MiniC
     Expr1.Scope = Scope;
     Type = Expr1.Type;
 
-    //when (!Expr1.Type.Equals(context.GetIntSymbol()) &&
-    //      !Expr1.Type.Equals(context.GetFloatSymbol()))
+    unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetIntSymbol()) ||
+            MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetFloatSymbol()))
+      Expr1.Error($"Expected int or float, but found $(self.Expr1.Type)");
 
     Expr1 : Expr; 
   }
@@ -153,15 +158,15 @@ namespace MiniC
 
   abstract ast SameTypesExpr : Binary
   {
-    //when (!MiniCTypeUnifier.Instance.TryUnify(Expr1.TypeSymbol, Expr2.TypeSymbol))
-        //Expr2.Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
+    unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, Expr2.Type))
+        Expr2.Error($"$(self.Expr2.Type) is not compatible with $(self.Expr1.Type).");
   }
 
   abstract ast OrAndExpr : SameTypesExpr
   {
     Type = context.GetBoolSymbol();
     
-    when (!Expr1.Type.Equals(context.GetBoolSymbol()))
+    unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetBoolSymbol()))
         Expr1.Error($"Expected boolean expression but found $(self.Expr1.Type).");
   }
 
@@ -172,8 +177,8 @@ namespace MiniC
 
   abstract ast ArithmeticBinary : SameTypesExpr
   {
-    when (!Expr1.Type.Equals(context.GetIntSymbol()) &&
-          !Expr1.Type.Equals(context.GetFloatSymbol()))
+    unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetIntSymbol()) ||
+            MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetFloatSymbol()))
       Expr1.Error($"Expected int or float, but found $(self.Expr1.Type)");
 
     Type = Expr1.Type;
@@ -230,8 +235,10 @@ namespace MiniC
         Reference.Scope = Scope;
         Arguments.Scope = Scope;
 
-        //AstUtils.AssignExpectedTypesToArguments(Ref.Symbol.Parameters, Arguments);
-
+        when (Arguments.Count != Ref.Symbol.Parameters.Count)
+            Arguments.Error($"Wrong number of arguments: expected $(Ref.Symbol.Parameters.Count), but given $(Arguments.Count)");
+        
+        //Arguments.ExpectedType = Ref.Symbol.Parameters.Type();
         Type = Ref.Symbol.ReturnType;
 
         Arguments: Expr*;

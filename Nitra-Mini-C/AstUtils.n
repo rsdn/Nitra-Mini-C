@@ -3,6 +3,7 @@ using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Nitra;
 using Nitra.Declarations;
@@ -20,12 +21,9 @@ namespace MiniC
       ctx :> MiniCDependentPropertyEvalContext
     }
     
-    public AssignExpectedTypesToArguments(parameters: Seq[VarDeclarationSymbol], arguments: IAstList[Expr]): void 
+    public Type(this parameters: IList[VarDeclarationSymbol]): IList[TypeSymbol]
     {
-      when (arguments.Count() != parameters.Count())
-        arguments.Error($"Wrong number of arguments: expected $(parameters.Count()), but given $(arguments.Count())");
-        
-        parameters.ZipToArray(arguments).Iter((param, arg) => arg.ExpectedType = param.Type);
+      parameters.MapToArray(x => x.Type);
     }
   }
 }
