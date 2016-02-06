@@ -102,6 +102,8 @@ namespace MiniC
         FalseBranch.Scope = Scope;
         TrueBranch.DeclaredIn = DeclaredIn;
         FalseBranch.DeclaredIn = DeclaredIn;
+        TrueBranch.Loop = Loop;
+        FalseBranch.Loop = Loop;
 
         Condition: Expr;
         TrueBranch  : Statement;
