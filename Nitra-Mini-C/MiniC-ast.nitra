@@ -50,7 +50,7 @@ namespace MiniC
     Parameters.ContainingTable = Symbol.ParameterScope;
     Symbol.FunScope            = ContainingTable.HideWith(Symbol.ParameterScope);
     Symbol.Parameters          = Parameters.Symbol.ToList();
-    Body.DeclaredIn            = Symbol;
+    //Body.DeclaredIn            = Symbol;
     Body.OuterScope            = Symbol.FunScope;
 
     ReturnTypeRef : TypeReference;
@@ -61,8 +61,8 @@ namespace MiniC
   ast CompoundStatement: BindableAst
   {
     in OuterScope : Scope;
-    in DeclaredIn : DeclarationSymbol;
-    out LocalVariableScope: TableScope = TableScope("local variables", DeclaredIn);
+    //in DeclaredIn : DeclarationSymbol;
+    out LocalVariableScope: TableScope = TableScope("local variables", null); //, DeclaredIn);
 
     LocalVariables.ContainingTable = LocalVariableScope;
     Scope = OuterScope.HideWith(LocalVariableScope);
@@ -80,7 +80,11 @@ namespace MiniC
         Body.Scope = Scope;
         Body: Expr;
       }
-    | Compound { Nested: CompoundStatement; }
+    | Compound 
+      { 
+        Nested.OuterScope = Scope;
+        Nested: CompoundStatement; 
+      }
     | If 
       {
         Condition.Scope = Scope;
