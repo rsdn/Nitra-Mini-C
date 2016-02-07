@@ -24,7 +24,7 @@ namespace MiniC.Compiler
         RefreshSolution(solution);
         foreach(project in solution.Projects)
           foreach(file in project.Files)
-            DotNetBackend.GenerateAssembly(file.FullName, file.Ast, config.OutputPath);
+            DotNetBackend.GenerateAssembly(file, config.OutputPath);
       }
     }
         

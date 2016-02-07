@@ -5,10 +5,10 @@ using Nemerle.Utility;
 using Nemerle.Extensions;
 
 using Nitra.Declarations;
+using Nitra.ProjectSystem;
 
 using System;
 using System.Console;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Cci;
@@ -16,89 +16,110 @@ using Microsoft.Cci.MutableCodeModel;
 
 namespace MiniC.Compiler
 {
-  module DotNetBackend
+  class DotNetBackend: IDisposable
   {
-    public GenerateAssembly(fileName: string, ast: IAst, outputPath: string): void 
+    _file: File;
+    _nameTable: NameTable = NameTable();
+    _host: PeReader.DefaultHost = PeReader.DefaultHost(_nameTable);
+    _rootUnitNamespace: RootUnitNamespace;
+    _assembly: Assembly;
+    _mainClass: NamespaceTypeDefinition;
+    
+    public static GenerateAssembly(file: File, output: string): void
     {
-      def nameTable = NameTable();
-      using (host = PeReader.DefaultHost(nameTable)) 
+      using (backend = DotNetBackend(file, output))
       {
-        def coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
-
-        def assembly = Assembly() <- 
-        {
-          Name = nameTable.GetNameFor("hello");
-          ModuleName = nameTable.GetNameFor("hello.exe");
-          PlatformType = host.PlatformType;
-          Kind = ModuleKind.ConsoleApplication;
-          RequiresStartupStub = host.PointerSize == 4;
-          TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion
-        };
-        
-        assembly.AssemblyReferences.Add(coreAssembly);
-        def rootUnitNamespace = RootUnitNamespace();
-        assembly.UnitNamespaceRoot = rootUnitNamespace;
-        rootUnitNamespace.Unit = assembly;
-
-        def moduleClass = NamespaceTypeDefinition() <- 
-        {
-          ContainingUnitNamespace = rootUnitNamespace;
-          InternFactory = host.InternFactory;
-          IsClass = true;
-          Name = nameTable.GetNameFor("<Module>")
-        };
-        assembly.AllTypes.Add(moduleClass);
-
-        def mainClass = NamespaceTypeDefinition() <-
-        {
-          ContainingUnitNamespace = rootUnitNamespace;
-          InternFactory = host.InternFactory;
-          IsClass = true;
-          IsPublic = true;
-          Methods = List(1);
-          Name = nameTable.GetNameFor("Main")
-        };
-        rootUnitNamespace.Members.Add(mainClass);
-        assembly.AllTypes.Add(mainClass);
-        mainClass.BaseClasses = List([host.PlatformType.SystemObject]);
-
-        def mainMethod = MethodDefinition() <-
-        {
-          ContainingTypeDefinition = mainClass;
-          InternFactory = host.InternFactory;
-          IsCil = true;
-          IsStatic = true;
-          Name = nameTable.GetNameFor("Main");
-          Type = host.PlatformType.SystemVoid;
-          Visibility = TypeMemberVisibility.Public
-        };
-        assembly.EntryPoint = mainMethod;
-        mainClass.Methods.Add(mainMethod);
-
-        def ilGenerator = ILGenerator(host, mainMethod);
-
-        def systemConsole = UnitHelper.FindType(nameTable, coreAssembly, "System.Console");
-        def writeLine = TypeHelper.GetMethod(systemConsole, nameTable.GetNameFor("WriteLine"), host.PlatformType.SystemString);
-
-        ilGenerator.Emit(OperationCode.Ldstr, "hello");
-        ilGenerator.Emit(OperationCode.Call, writeLine);
-        ilGenerator.Emit(OperationCode.Ret);
-
-        def body = ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, [], []);
-        mainMethod.Body = body;
-
-        def outputPath = 
-          if (string.IsNullOrWhiteSpace(outputPath)) 
-            Path.GetDirectoryName(fileName) 
-          else 
-            outputPath;
-            
-        def outputFileName = Path.Combine(outputPath, Path.ChangeExtension(Path.GetFileNameWithoutExtension(fileName), ".exe"));
-        
-        WriteLine($"Writing $outputFileName");
-        using (peStream = File.Create(outputFileName))
-          PeWriter.WritePeToStream(assembly, host, peStream);
+        def visitor = AstVisitor();
+        file.Ast.Accept(visitor);
       }
+    }
+    
+    public this(file: File, outputPath: string)
+    {
+      _file = file;
+      def coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
+
+      _assembly = Assembly() <- 
+      {
+        Name = _nameTable.GetNameFor("hello");
+        ModuleName = _nameTable.GetNameFor("hello.exe");
+        PlatformType = _host.PlatformType;
+        Kind = ModuleKind.ConsoleApplication;
+        RequiresStartupStub = _host.PointerSize == 4;
+        TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion
+      };
+        
+      _assembly.AssemblyReferences.Add(coreAssembly);
+      _rootUnitNamespace = RootUnitNamespace() <- { Unit = _assembly };
+      _assembly.UnitNamespaceRoot = _rootUnitNamespace;
+     
+      def moduleClass = NamespaceTypeDefinition() <-
+      {
+        ContainingUnitNamespace = _rootUnitNamespace;
+        InternFactory = _host.InternFactory;
+        IsClass = true;
+        Name = _nameTable.GetNameFor("<Module>")
+      };
+      _assembly.AllTypes.Add(moduleClass);
+
+      _mainClass = NamespaceTypeDefinition() <-
+      {
+        ContainingUnitNamespace = _rootUnitNamespace;
+        InternFactory = _host.InternFactory;
+        IsClass = true;
+        IsPublic = true;
+        Methods = List();
+        Name = _nameTable.GetNameFor("Main");
+        BaseClasses = List([_host.PlatformType.SystemObject]);  
+      };
+      _rootUnitNamespace.Members.Add(_mainClass);
+      _assembly.AllTypes.Add(_mainClass);
+      
+      def outputPath = 
+        if (string.IsNullOrWhiteSpace(outputPath)) 
+          IO.Path.GetDirectoryName(_file.FullName) 
+        else 
+          outputPath;
+            
+      def outputFileName = IO.Path.Combine(outputPath, IO.Path.ChangeExtension(IO.Path.GetFileNameWithoutExtension(_file.FullName), ".exe"));
+        
+      using (peStream = IO.File.Create(outputFileName))
+        PeWriter.WritePeToStream(_assembly, _host, peStream);
+    }
+    
+    //def ilGenerator = ILGenerator(_host, mainMethod);
+
+    //  def systemConsole = UnitHelper.FindType(_nameTable, coreAssembly, "System.Console");
+    //  def writeLine = TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemString);
+
+    //  ilGenerator.Emit(OperationCode.Ldstr, "hello");
+    //  ilGenerator.Emit(OperationCode.Call, writeLine);
+    //  ilGenerator.Emit(OperationCode.Ret);
+
+    //  def body = ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, [], []);
+
+    public Method(name: string, body: ILGeneratorMethodBody): MethodDefinition
+    {
+      def name = if (name == "main") "Main" else name;
+      def method = MethodDefinition() <-
+      {
+        ContainingTypeDefinition = _mainClass;
+        InternFactory = _host.InternFactory;
+        IsCil = true;
+        IsStatic = true;
+        Name = _nameTable.GetNameFor(name);
+        Type = _host.PlatformType.SystemVoid;
+        Visibility = TypeMemberVisibility.Public
+      };
+      
+      when (name == "Main") _assembly.EntryPoint = method;
+      _mainClass.Methods.Add(method);
+      method
+    }
+    
+    public Dispose(): void 
+    { 
+      _host.Dispose()
     }
   }
 }
