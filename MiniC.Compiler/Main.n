@@ -18,7 +18,7 @@ namespace MiniC.Compiler
       when (config.Success)
       {
         def solution = GenerateSolution(config);
-        
+        RefreshSolution(solution);
       }
     }
         
@@ -29,17 +29,10 @@ namespace MiniC.Compiler
       solution
     }
     
-    //public RefreshProject(project : Project) : void
-    //{
-    //  when (project.Data == null)
-    //  Init(project);
-
-    //  def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
-      
-    //  root.MemberTable.Undefine(_.IsParsed);
-    //  def evalHost = MiniCProjectEvalPropertiesHost(project, root);
-    //  evalHost.EvalProperties(context, "Symbol hierarchy", 0);
-    //  evalHost.EvalProperties(context, "Scopes", 1);
-    //}
+    public RefreshSolution(solution: Solution): void
+    {
+      foreach(project in solution.Projects)
+        CompilationUnit.DoRefreshProject(project);
+    }
   }
 }

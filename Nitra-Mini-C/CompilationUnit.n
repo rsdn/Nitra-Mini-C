@@ -27,7 +27,7 @@ namespace MiniC
     public static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
     public static NoSpan : NSpan              = NSpan(0);
 
-    public Init(project : Project) : void
+    public static Init(project : Project) : void
     {
       def root        = RootSymbol();
       def rootScope   = TableScope("<root>", root);
@@ -59,7 +59,7 @@ namespace MiniC
       project.Data = (context, root);
     }
 
-    public RefreshProject(project : Project) : void
+    static public DoRefreshProject(project : Project) : void
     {
       when (project.Data == null)
       Init(project);
@@ -71,9 +71,14 @@ namespace MiniC
       evalHost.EvalProperties(context, "Symbol hierarchy", 0);
       evalHost.EvalProperties(context, "Scopes", 1);
     }
+    
+    public RefreshProject(project: Project): void
+    {
+      DoRefreshProject(project);
+    }
   }
   
-  class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
+  public class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
   {
     _root : RootSymbol;
 
