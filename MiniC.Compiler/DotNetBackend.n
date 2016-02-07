@@ -24,6 +24,7 @@ namespace MiniC.Compiler
     _rootUnitNamespace: RootUnitNamespace;
     _assembly: Assembly;
     _mainClass: NamespaceTypeDefinition;
+    _coreAssembly: IAssembly;
     
     public static GenerateAssembly(file: File, outputPath: string): void
     {
@@ -37,7 +38,7 @@ namespace MiniC.Compiler
     public this(file: File)
     {
       _file = file;
-      def coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
+      _coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
 
       _assembly = Assembly() <- 
       {
@@ -46,10 +47,10 @@ namespace MiniC.Compiler
         PlatformType = _host.PlatformType;
         Kind = ModuleKind.ConsoleApplication;
         RequiresStartupStub = _host.PointerSize == 4;
-        TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion
+        TargetRuntimeVersion = _coreAssembly.TargetRuntimeVersion
       };
         
-      _assembly.AssemblyReferences.Add(coreAssembly);
+      _assembly.AssemblyReferences.Add(_coreAssembly);
       _rootUnitNamespace = RootUnitNamespace() <- { Unit = _assembly };
       _assembly.UnitNamespaceRoot = _rootUnitNamespace;
      
@@ -156,6 +157,7 @@ namespace MiniC.Compiler
         IsStatic = true;
         Name = _nameTable.GetNameFor(name);
         Type = GetType(returnType);
+        Parameters = List();
         Visibility = TypeMemberVisibility.Public
       };
       
@@ -178,20 +180,39 @@ namespace MiniC.Compiler
     {
       def ilGenerator = ILGenerator(_host, method);
       def nameTable = NameTable();
+      
       def localVars = compoundStatement.LocalVariables.Map(var =>
           LocalDefinition() <-
           {
+            MethodDefinition = method;
             Name = nameTable.GetNameFor(var.Name.Text);
             Type = GetType(var.Symbol.Type);
           });
       
       localVars.Iter(ilGenerator.AddVariableToCurrentScope);
-
-      //ilGenerator.Emit(OperationCode.Ldstr, "hello");
-      //ilGenerator.Emit(OperationCode.Call, writeLine);
-      ilGenerator.Emit(OperationCode.Ret);
-
-      ILGeneratorMethodBody(ilGenerator, true, 1, method, localVars, []);
+      
+      foreach (statement in compoundStatement.Statements)
+        GenerateStatement(ilGenerator, statement);
+      
+      ILGeneratorMethodBody(ilGenerator, true, 10, method, localVars, []);
+    }
+    
+    GenerateStatement(ilGenerator: ILGenerator, statement: Statement): void 
+    {
+      match (statement) {
+      | expr is Statement.Expression => GenerateExpression(ilGenerator, expr.Body);
+      | Statement.ReturnVoid => ilGenerator.Emit(OperationCode.Ret);
+      | _ => WriteLine($"Unhandlend statement! $statement");
+      }
+    }
+    
+    GenerateExpression(ilGenerator: ILGenerator, expr: Expr): void
+    {
+      match (expr) {
+      | assignment is Expr.ScalarAssignment => ()
+        //ilGenerator.Emit(OperationCode.Ldloc, );
+      | _ => WriteLine($"Unhandled expression! $expr");
+      }
     }
     
     public Dispose(): void 

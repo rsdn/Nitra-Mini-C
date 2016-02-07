@@ -5,13 +5,6 @@ bool gBool;
 void main() {
   int i;
   int j;
-  bool b;
-  int a[];
-  b = i == 2;
-  a = new int[6];
-  a[i] = 1;
-  i = -7;
-  i = -j;
-  b = i == 2 || j == 2 && true;
+  j = i;
   return;
 }
