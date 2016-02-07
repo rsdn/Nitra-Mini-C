@@ -22,7 +22,9 @@ namespace MiniC.Compiler
       {
         def solution = GenerateSolution(config);
         RefreshSolution(solution);
-        DotNetBackend.GenerateAssembly(config.OutputPath);
+        foreach(project in solution.Projects)
+          foreach(file in project.Files)
+            DotNetBackend.GenerateAssembly(file.FullName, file.Ast, config.OutputPath);
       }
     }
         

@@ -51,9 +51,6 @@ namespace MiniC.Compiler
         return;
       }
 
-      when (string.IsNullOrWhiteSpace(OutputPath)) 
-        OutputPath = Path.ChangeExtension(FileName, ".exe");
-        
       Success = true;
     }
   }

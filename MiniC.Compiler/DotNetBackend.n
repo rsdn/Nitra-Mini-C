@@ -4,7 +4,10 @@ using Nemerle.Text;
 using Nemerle.Utility;
 using Nemerle.Extensions;
 
+using Nitra.Declarations;
+
 using System;
+using System.Console;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +18,7 @@ namespace MiniC.Compiler
 {
   module DotNetBackend
   {
-    public GenerateAssembly(outputPath: string): void 
+    public GenerateAssembly(fileName: string, ast: IAst, outputPath: string): void 
     {
       def nameTable = NameTable();
       using (host = PeReader.DefaultHost(nameTable)) 
@@ -84,7 +87,16 @@ namespace MiniC.Compiler
         def body = ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, [], []);
         mainMethod.Body = body;
 
-        using (peStream = File.Create(outputPath))
+        def outputPath = 
+          if (string.IsNullOrWhiteSpace(outputPath)) 
+            Path.GetDirectoryName(fileName) 
+          else 
+            outputPath;
+            
+        def outputFileName = Path.Combine(outputPath, Path.ChangeExtension(Path.GetFileNameWithoutExtension(fileName), ".exe"));
+        
+        WriteLine($"Writing $outputFileName");
+        using (peStream = File.Create(outputFileName))
           PeWriter.WritePeToStream(assembly, host, peStream);
       }
     }
