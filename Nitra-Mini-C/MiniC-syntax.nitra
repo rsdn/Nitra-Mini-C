@@ -52,6 +52,8 @@
     regex DecimalDigit = ['0'..'9'];
     literal Operator = "||", "==", "!=", "<=", "<", ">=", ">", "+", "-", "*", "/", "+", "-", "!";
   
+    syntax Argument = Expr;
+
     syntax Expr
     {
       | [SpanClass(Number)] 
@@ -70,7 +72,7 @@
       | "false"
       | VariableRef     = Reference
       | ArrayRef        = Reference "[" Expr "]"
-      | FunCall         = Reference "(" (Expr; "," sm)* ")"
+      | FunCall         = Reference "(" (Argument; "," sm)* ")"
       | ArraySize       = Reference "." "size"
       | Braces          = "(" Expr ")"
       | ArrayAllocation = "new" TypeRef "[" Expr "]"

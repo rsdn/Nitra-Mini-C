@@ -184,7 +184,7 @@ namespace MiniC
     Type = Expr1.Type;
   }
 
-  abstract ast Expr: BindableAst
+  abstract ast Expr : BindableAst
   {
     in Type: TypeSymbol = context.GetVoidSymbol();
     in ExpectedType: TypeSymbol = MiniCTypeUnifier.Instance.CreateTypeVar();
@@ -232,18 +232,35 @@ namespace MiniC
     | FunCall 
       {
         out Ref: Ref[FunDeclarationSymbol] = Reference.Ref.Resolve();
+
         Reference.Scope = Scope;
         Arguments.Scope = Scope;
 
         when (Arguments.Count != Ref.Symbol.Parameters.Count)
             Arguments.Error($"Wrong number of arguments: expected $(Ref.Symbol.Parameters.Count), but given $(Arguments.Count)");
         
-        //Arguments.ExpectedType = Ref.Symbol.Parameters.Type();
+        Arguments.IndexIn = 0;
+        Arguments.Func = Ref.Symbol;
         Type = Ref.Symbol.ReturnType;
 
-        Arguments: Expr*;
+        Arguments: Expr.Argument*;
         Reference: Reference;
       }
+
+    | Argument
+      {
+        inout Index : int;
+        in Func : FunDeclarationSymbol;
+
+        Expr.Scope = Scope;
+
+        IndexOut = IndexIn + 1;
+        ExpectedType = AstUtils.GetParameterType(Func, IndexIn);
+        Type = Expr.Type;
+
+        Expr : Expr;
+      }
+
     | ArraySize 
       {
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();

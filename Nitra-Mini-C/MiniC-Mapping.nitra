@@ -54,6 +54,11 @@ namespace MiniC
     | Break -> Break {}
   }
 
+  map syntax MiniCSyntax.Argument -> Expr.Argument
+  {
+    Expr -> Expr;
+  }
+
   map syntax MiniCSyntax.Expr -> Expr
   {
     | IntegerLiteral -> IntegerLiteral { Value = ParsedValue(Digits, int.Parse(GetText(Digits))); }
@@ -69,7 +74,7 @@ namespace MiniC
     | FunCall -> FunCall
       {
         Reference -> Reference;
-        Exprs.Item1 -> Arguments;
+        Arguments.Item1 -> Arguments;
       }
     | ArraySize -> ArraySize { Reference -> Reference; }
     | Braces -> this.Expr

@@ -21,9 +21,14 @@ namespace MiniC
       ctx :> MiniCDependentPropertyEvalContext
     }
     
-    public Type(this parameters: IList[VarDeclarationSymbol]): IList[TypeSymbol]
+    // Hack: Nitra dependent property not support (yet) of indexer access.
+    public GetParameterType(func : FunDeclarationSymbol, index : int) : TypeSymbol
     {
-      parameters.MapToArray(x => x.Type);
+      def parameters = func.Parameters;
+      if (index < parameters.Count && parameters[index].IsTypeEvaluated)
+        parameters[index].Type
+      else 
+        MiniCTypeUnifier.Instance.CreateTypeVar() // Use TypeVar to prevent phantom type mismatch error messages.
     }
   }
 }
