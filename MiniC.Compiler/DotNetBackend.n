@@ -107,19 +107,16 @@ namespace MiniC.Compiler
     public Visit(r: IRef): void
     {
       _ = r;
-      throw System.NotImplementedException()
     }
     
     public Visit(name: Name): void implements IAstVisitor.Visit
     {
       _ = name;
-      throw System.NotImplementedException()
     }
     
     public Visit(reference: Reference): void implements IAstVisitor.Visit
     {
       _ = reference;
-      throw System.NotImplementedException()
     }
     
     public Visit(ast: IAst): void
@@ -173,6 +170,7 @@ namespace MiniC.Compiler
       | _ is FloatSymbol => _host.PlatformType.SystemFloat64;
       | _ is BoolSymbol => _host.PlatformType.SystemBoolean;
       | _ is VoidSymbol => _host.PlatformType.SystemVoid;
+      | _ => assert(false)
       }
     }
     

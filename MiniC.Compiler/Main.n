@@ -22,9 +22,20 @@ namespace MiniC.Compiler
       {
         def solution = GenerateSolution(config);
         RefreshSolution(solution);
+        mutable hasError = false;
         foreach(project in solution.Projects)
           foreach(file in project.Files)
-            DotNetBackend.GenerateAssembly(file, config.OutputPath);
+            foreach (msg in file.GetCompilerMessages())
+            {
+              hasError = true;
+              WriteLine(msg);
+            }
+          
+        unless (hasError)
+          foreach(project in solution.Projects)
+            foreach(file in project.Files)
+              DotNetBackend.GenerateAssembly(file, config.OutputPath);
+        
       }
     }
         
