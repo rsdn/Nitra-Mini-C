@@ -36,6 +36,51 @@
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Cci.ILGenerator, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.ILGenerator</Name>
+      <AssemblyName>Microsoft.Cci.ILGenerator.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.ILGenerator.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MetadataHelper, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.MetadataHelper</Name>
+      <AssemblyName>Microsoft.Cci.MetadataHelper.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.MetadataHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MetadataModel, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.MetadataModel</Name>
+      <AssemblyName>Microsoft.Cci.MetadataModel.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.MetadataModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.MutableMetadataModel, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.MutableMetadataModel</Name>
+      <AssemblyName>Microsoft.Cci.MutableMetadataModel.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.MutableMetadataModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PdbReader, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.PdbReader</Name>
+      <AssemblyName>Microsoft.Cci.PdbReader.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.PdbReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PdbWriter, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.PdbWriter</Name>
+      <AssemblyName>Microsoft.Cci.PdbWriter.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.PdbWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PeReader, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.PeReader</Name>
+      <AssemblyName>Microsoft.Cci.PeReader.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.PeReader.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.PeWriter, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.PeWriter</Name>
+      <AssemblyName>Microsoft.Cci.PeWriter.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.PeWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Cci.SourceModel, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
+      <Name>Microsoft.Cci.SourceModel</Name>
+      <AssemblyName>Microsoft.Cci.SourceModel.dll</AssemblyName>
+      <HintPath>..\packages\CustomMetadataFix.Microsoft.Cci.Metadata.3.0.0\lib\net40\Microsoft.Cci.SourceModel.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -89,6 +134,11 @@
       <Project>{6762e367-20c3-4a1d-80e3-257d80fbe993}</Project>
       <Private>True</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!--

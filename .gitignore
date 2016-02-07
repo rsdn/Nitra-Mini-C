@@ -30,3 +30,4 @@ Nitra.gpState
 *.gpState
 *.Generated.n
 *.nupkg
+packages

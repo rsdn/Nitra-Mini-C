@@ -1,8 +1,11 @@
-﻿using Nemerle.Collections;
+﻿using Nemerle;
+using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
 using System;
+using System.Console;
 using System.IO;
+using System.Linq;
 using System.Collections.Generic;
 using Nitra.Declarations;
 using Nitra.ProjectSystem;
@@ -19,6 +22,8 @@ namespace MiniC.Compiler
       {
         def solution = GenerateSolution(config);
         RefreshSolution(solution);
+        foreach (project in solution.Projects)
+          WriteLine(project.Files.Map(x => x.Statistics));
       }
     }
         
