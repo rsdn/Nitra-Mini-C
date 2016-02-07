@@ -1,0 +1,92 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Extensions;
+
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Cci;
+using Microsoft.Cci.MutableCodeModel;
+
+namespace MiniC.Compiler
+{
+  module DotNetBackend
+  {
+    public GenerateAssembly(outputPath: string): void 
+    {
+      def nameTable = NameTable();
+      using (host = PeReader.DefaultHost(nameTable)) 
+      {
+        def coreAssembly = host.LoadAssembly(host.CoreAssemblySymbolicIdentity);
+
+        def assembly = Assembly() <- 
+        {
+          Name = nameTable.GetNameFor("hello");
+          ModuleName = nameTable.GetNameFor("hello.exe");
+          PlatformType = host.PlatformType;
+          Kind = ModuleKind.ConsoleApplication;
+          RequiresStartupStub = host.PointerSize == 4;
+          TargetRuntimeVersion = coreAssembly.TargetRuntimeVersion
+        };
+        
+        assembly.AssemblyReferences.Add(coreAssembly);
+        def rootUnitNamespace = RootUnitNamespace();
+        assembly.UnitNamespaceRoot = rootUnitNamespace;
+        rootUnitNamespace.Unit = assembly;
+
+        def moduleClass = NamespaceTypeDefinition() <- 
+        {
+          ContainingUnitNamespace = rootUnitNamespace;
+          InternFactory = host.InternFactory;
+          IsClass = true;
+          Name = nameTable.GetNameFor("<Module>")
+        };
+        assembly.AllTypes.Add(moduleClass);
+
+        def mainClass = NamespaceTypeDefinition() <-
+        {
+          ContainingUnitNamespace = rootUnitNamespace;
+          InternFactory = host.InternFactory;
+          IsClass = true;
+          IsPublic = true;
+          Methods = List(1);
+          Name = nameTable.GetNameFor("Main")
+        };
+        rootUnitNamespace.Members.Add(mainClass);
+        assembly.AllTypes.Add(mainClass);
+        mainClass.BaseClasses = List([host.PlatformType.SystemObject]);
+
+        def mainMethod = MethodDefinition() <-
+        {
+          ContainingTypeDefinition = mainClass;
+          InternFactory = host.InternFactory;
+          IsCil = true;
+          IsStatic = true;
+          Name = nameTable.GetNameFor("Main");
+          Type = host.PlatformType.SystemVoid;
+          Visibility = TypeMemberVisibility.Public
+        };
+        assembly.EntryPoint = mainMethod;
+        mainClass.Methods.Add(mainMethod);
+
+        def ilGenerator = ILGenerator(host, mainMethod);
+
+        def systemConsole = UnitHelper.FindType(nameTable, coreAssembly, "System.Console");
+        def writeLine = TypeHelper.GetMethod(systemConsole, nameTable.GetNameFor("WriteLine"), host.PlatformType.SystemString);
+
+        ilGenerator.Emit(OperationCode.Ldstr, "hello");
+        ilGenerator.Emit(OperationCode.Call, writeLine);
+        ilGenerator.Emit(OperationCode.Ret);
+
+        def body = ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, [], []);
+        mainMethod.Body = body;
+
+        using (peStream = File.Create(outputPath))
+          PeWriter.WritePeToStream(assembly, host, peStream);
+      }
+    }
+  }
+}

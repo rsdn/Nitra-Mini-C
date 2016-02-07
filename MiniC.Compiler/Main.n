@@ -22,8 +22,7 @@ namespace MiniC.Compiler
       {
         def solution = GenerateSolution(config);
         RefreshSolution(solution);
-        foreach (project in solution.Projects)
-          WriteLine(project.Files.Map(x => x.Statistics));
+        DotNetBackend.GenerateAssembly(config.OutputPath);
       }
     }
         
@@ -37,7 +36,7 @@ namespace MiniC.Compiler
     public RefreshSolution(solution: Solution): void
     {
       foreach(project in solution.Projects)
-        CompilationUnit.DoRefreshProject(project);
+        Evaluator.RefreshProject(project);
     }
   }
 }

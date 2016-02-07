@@ -21,23 +21,24 @@ namespace MiniC
     public Bool  : BoolSymbol;
   }
 
-  public partial class CompilationUnit : AstBase, IProjectSupport
+  public module Evaluator
   {
-    public static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
-    public static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
-    public static NoSpan : NSpan              = NSpan(0);
-
-    public static Init(project : Project) : void
+    NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
+    NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
+    NoSpan : NSpan              = NSpan(0);
+    
+    Init(project : Project) : void
     {
-      def root        = RootSymbol();
-      def rootScope   = TableScope("<root>", root);
-      def defineSymbol[Type](name : string) : Type
-            where Type: DeclarationSymbol
+      def root = RootSymbol();
+      def rootScope = TableScope("<root>", root);
+      
+      def defineSymbol[Type](name : string) : Type  where Type: DeclarationSymbol
       {
         def name = Name(NoFile, NoSpan, name);
         def symbol = ExternalDeclaration.[Type](name).DefineSymbol(rootScope);
         symbol
       }
+      
       def voidSymbol  = defineSymbol.[VoidSymbol]("void");
       def intSymbol   = defineSymbol.[IntSymbol]("int");
       def floatSymbol = defineSymbol.[FloatSymbol]("float");
@@ -59,7 +60,7 @@ namespace MiniC
       project.Data = (context, root);
     }
 
-    static public DoRefreshProject(project : Project) : void
+    static public RefreshProject(project : Project) : void
     {
       when (project.Data == null)
       Init(project);
@@ -71,10 +72,13 @@ namespace MiniC
       evalHost.EvalProperties(context, "Symbol hierarchy", 0);
       evalHost.EvalProperties(context, "Scopes", 1);
     }
-    
+  }
+  
+  public partial class CompilationUnit : AstBase, IProjectSupport
+  {
     public RefreshProject(project: Project): void
     {
-      DoRefreshProject(project);
+      Evaluator.RefreshProject(project);
     }
   }
   
