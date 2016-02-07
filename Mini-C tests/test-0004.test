@@ -1,3 +1,7 @@
+int gInt;
+float gFloat;
+bool gBool;
+
 bool main() {
   int i;
   int j;

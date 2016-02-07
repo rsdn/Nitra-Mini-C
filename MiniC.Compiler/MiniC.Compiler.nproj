@@ -119,9 +119,6 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AstVisitor.n">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="CommandPromptReader.n">
       <SubType>Code</SubType>
     </Compile>

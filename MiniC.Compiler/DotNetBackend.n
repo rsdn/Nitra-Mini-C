@@ -16,7 +16,7 @@ using Microsoft.Cci.MutableCodeModel;
 
 namespace MiniC.Compiler
 {
-  class DotNetBackend: IDisposable
+  class DotNetBackend: IAstVisitor, IDisposable
   {
     _file: File;
     _nameTable: NameTable = NameTable();
@@ -25,16 +25,16 @@ namespace MiniC.Compiler
     _assembly: Assembly;
     _mainClass: NamespaceTypeDefinition;
     
-    public static GenerateAssembly(file: File, output: string): void
+    public static GenerateAssembly(file: File, outputPath: string): void
     {
-      using (backend = DotNetBackend(file, output))
+      using (backend = DotNetBackend(file))
       {
-        def visitor = AstVisitor();
-        file.Ast.Accept(visitor);
+        file.Ast.Accept(backend);
+        backend.GenerateAssembly(outputPath);
       }
     }
     
-    public this(file: File, outputPath: string)
+    public this(file: File)
     {
       _file = file;
       def coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
@@ -68,13 +68,18 @@ namespace MiniC.Compiler
         InternFactory = _host.InternFactory;
         IsClass = true;
         IsPublic = true;
+        IsStatic = true;
+        Fields = List();
         Methods = List();
         Name = _nameTable.GetNameFor("Main");
         BaseClasses = List([_host.PlatformType.SystemObject]);  
       };
       _rootUnitNamespace.Members.Add(_mainClass);
       _assembly.AllTypes.Add(_mainClass);
-      
+    }
+     
+    GenerateAssembly(outputPath: string): void
+    {
       def outputPath = 
         if (string.IsNullOrWhiteSpace(outputPath)) 
           IO.Path.GetDirectoryName(_file.FullName) 
@@ -98,7 +103,49 @@ namespace MiniC.Compiler
 
     //  def body = ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, [], []);
 
-    public Method(name: string, body: ILGeneratorMethodBody): MethodDefinition
+    public Visit(r: IRef): void
+    {
+      _ = r;
+      throw System.NotImplementedException()
+    }
+    
+    public Visit(name: Name): void implements IAstVisitor.Visit
+    {
+      _ = name;
+      throw System.NotImplementedException()
+    }
+    
+    public Visit(reference: Reference): void implements IAstVisitor.Visit
+    {
+      _ = reference;
+      throw System.NotImplementedException()
+    }
+    
+    public Visit(ast: IAst): void
+    {
+      WriteLine(ast);
+      
+      match (ast) {
+      | decls is TopDeclaration.AstList => decls.Accept(this);
+      | var is VarDeclaration =>
+        def field = FieldDefinition() <- {
+          ContainingTypeDefinition = _mainClass;
+          Name = _nameTable.GetNameFor(var.Name.Text);
+          Type = GetType(var.Symbol.Type);
+          IsStatic = true;
+          Visibility = TypeMemberVisibility.Public;
+          IsReadOnly = false;
+        };
+        _mainClass.Fields.Add(field);
+      
+      | fn is FunDeclaration =>
+        def method = Method(fn.Name.Text, fn.Symbol.ReturnType);
+        method.Body = GenerateCompoundStatement(method, fn.Body);
+      | _ => WriteLine($"Unhandled! $ast");
+      }
+    }
+    
+    public Method(name: string, returnType: TypeSymbol): MethodDefinition
     {
       def name = if (name == "main") "Main" else name;
       def method = MethodDefinition() <-
@@ -108,13 +155,34 @@ namespace MiniC.Compiler
         IsCil = true;
         IsStatic = true;
         Name = _nameTable.GetNameFor(name);
-        Type = _host.PlatformType.SystemVoid;
+        Type = GetType(returnType);
         Visibility = TypeMemberVisibility.Public
       };
       
       when (name == "Main") _assembly.EntryPoint = method;
       _mainClass.Methods.Add(method);
       method
+    }
+    
+    GetType(typeSymbol: TypeSymbol): ITypeReference
+    {
+      match (typeSymbol){
+      | _ is IntSymbol => _host.PlatformType.SystemInt32;
+      | _ is FloatSymbol => _host.PlatformType.SystemFloat64;
+      | _ is BoolSymbol => _host.PlatformType.SystemBoolean;
+      | _ is VoidSymbol => _host.PlatformType.SystemVoid;
+      }
+    }
+    
+    GenerateCompoundStatement(method: MethodDefinition, compoundStatement: CompoundStatement): ILGeneratorMethodBody
+    {
+      def ilGenerator = ILGenerator(_host, method);
+
+      //ilGenerator.Emit(OperationCode.Ldstr, "hello");
+      //ilGenerator.Emit(OperationCode.Call, writeLine);
+      //ilGenerator.Emit(OperationCode.Ret);
+
+      ILGeneratorMethodBody(ilGenerator, true, 1, method, [], []);
     }
     
     public Dispose(): void 
