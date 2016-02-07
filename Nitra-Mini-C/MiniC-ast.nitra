@@ -237,7 +237,7 @@ namespace MiniC
         Arguments.Scope = Scope;
 
         when (Arguments.Count != Ref.Symbol.Parameters.Count)
-            Arguments.Error($"Wrong number of arguments: expected $(Ref.Symbol.Parameters.Count), but given $(Arguments.Count)");
+          Reference.Error($"Wrong number of arguments: expected $(Ref.Symbol.Parameters.Count), but given $(Arguments.Count)");
         
         Arguments.IndexIn = 0;
         Arguments.Func = Ref.Symbol;
