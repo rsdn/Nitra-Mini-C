@@ -5,18 +5,18 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>6762e367-20c3-4a1d-80e3-257d80fbe993</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>79f17816-da0a-4e4c-bd60-6c77528f450e</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Nitra_Mini_C</RootNamespace>
-    <AssemblyName>Nitra_Mini_C</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <RootNamespace>MiniC.Compiler</RootNamespace>
+    <AssemblyName>MiniC.Compiler</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>true</NoStdLib>
     <NemerleVersion>Net-4.0</NemerleVersion>
     <NemerleBinPathRoot Condition=" '$(NemerleBinPathRoot)' == '' ">$(ProgramFiles)\Nemerle</NemerleBinPathRoot>
     <Nemerle Condition=" '$(Nemerle)' == '' ">$(NemerleBinPathRoot)\$(NemerleVersion)</Nemerle>
-    <Name>Nitra-Mini-C</Name>
+    <Name>MiniC.Compiler</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,23 +36,7 @@
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <MacroReference Include="Nitra.Compiler">
-      <Name>Nitra.Compiler</Name>
-      <AssemblyName>Nitra.Compiler.dll</AssemblyName>
-      <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Compiler.dll</HintPath>
-      <Private>False</Private>
-    </MacroReference>
-    <Reference Include="DotNetLang">
-      <Name>DotNetLang</Name>
-      <AssemblyName>DotNetLang.dll</AssemblyName>
-      <HintPath>..\..\nitra\Nitra\DotNetLang\bin\Debug\Stage2\DotNetLang.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="Nitra.Runtime">
-      <Name>Nitra.Runtime</Name>
-      <AssemblyName>Nitra.Runtime.dll</AssemblyName>
-      <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Runtime.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -70,44 +54,46 @@
       <HintPath>$(Nemerle)\Nemerle.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Nitra.Runtime">
+      <Name>Nitra.Runtime</Name>
+      <AssemblyName>Nitra.Runtime.dll</AssemblyName>
+      <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNet.BackEnd.CCI">
+      <Name>DotNet.BackEnd.CCI</Name>
+      <AssemblyName>DotNet.BackEnd.CCI.dll</AssemblyName>
+      <HintPath>..\..\nitra\DotNet.BackEnd.CCI\bin\Debug\DotNet.BackEnd.CCI.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetLang">
+      <Name>DotNetLang</Name>
+      <AssemblyName>DotNetLang.dll</AssemblyName>
+      <HintPath>..\..\nitra\Nitra\DotNetLang\bin\Debug\Stage2\DotNetLang.dll</HintPath>
+    </Reference>
     <MacroReference Include="Nemerle.Linq">
       <HintPath>$(Nemerle)\Nemerle.Linq.dll</HintPath>
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MiniCTypeUnifier.n">
+    <Compile Include="CommandPromptReader.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AstUtils.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="CompilationUnit.n">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MiniC-Ast.nitra">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MiniC-Language.nitra">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MiniC-Mapping.nitra">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Main.n" />
     <Compile Include="Properties\AssemblyInfo.n" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MiniC-Syntax.nitra">
-      <SubType>Content</SubType>
-    </Compile>
+    <ProjectReference Include="..\Nitra-Mini-C\Nitra-Mini-C.nproj">
+      <Name>Nitra-Mini-C</Name>
+      <Project>{6762e367-20c3-4a1d-80e3-257d80fbe993}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!--
 		To modify your build process, add your task inside one of the targets below and uncomment it. 
 		Other similar extension points exist, see Microsoft.Common.targets.
-
 	<Target Name="BeforeBuild">
 	</Target>
 	<Target Name="AfterBuild">

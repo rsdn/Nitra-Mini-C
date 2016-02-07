@@ -1,0 +1,57 @@
+﻿using Nemerle.Collections;
+using Nemerle.Imperative;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Utility.Getopt;
+
+using Nitra;
+using Nitra.Declarations;
+using Nitra.ProjectSystem;
+
+using System;
+using System.Console;
+using System.IO;
+
+namespace MiniC.Compiler
+{
+  class CommandPromptReader
+  {
+    public FileName   : string { get; private set; }
+    public OutputPath : string { get; private set; }
+    public Success    : bool   { get; }
+
+    public this()
+    {
+      def options = [
+        CliOption.String(name = "-file",
+                    aliases = ["-f"],
+                    help = "Source file name",
+                    handler = fileName => { FileName = fileName }),
+                    
+        CliOption.String(name = "-out",
+                    aliases = [],
+                    help = "Output path",
+                    handler = path => { OutputPath = path })
+        ];
+      
+      Getopt.Parse(options);
+
+      def usage() : void
+      {
+        def help = Getopt.Usage(options);
+        WriteLine("Usage: MiniC.Compiler -file [Source.mc]");
+        WriteLine("flags:");
+        WriteLine(help);
+      }
+
+      when (string.IsNullOrEmpty(FileName))
+      {
+        WriteLine("'file' option is required");
+        usage();
+        return;
+      }
+
+      Success = true;
+    }
+  }
+}

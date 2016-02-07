@@ -1,0 +1,45 @@
+﻿using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using Nitra.Declarations;
+using Nitra.ProjectSystem;
+using MiniC;
+
+namespace MiniC.Compiler
+{
+  module Program
+  {
+    Main() : void
+    {
+      def config = CommandPromptReader();
+      when (config.Success)
+      {
+        def solution = GenerateSolution(config);
+        
+      }
+    }
+        
+    GenerateSolution(cfg: CommandPromptReader): FsSolution[IAst]
+    {
+      def solution = FsSolution();
+      _ = FsProject(solution, Path.GetDirectoryName(cfg.FileName), [FsFile(cfg.FileName, MiniC.Instance)], []);
+      solution
+    }
+    
+    //public RefreshProject(project : Project) : void
+    //{
+    //  when (project.Data == null)
+    //  Init(project);
+
+    //  def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+      
+    //  root.MemberTable.Undefine(_.IsParsed);
+    //  def evalHost = MiniCProjectEvalPropertiesHost(project, root);
+    //  evalHost.EvalProperties(context, "Symbol hierarchy", 0);
+    //  evalHost.EvalProperties(context, "Scopes", 1);
+    //}
+  }
+}
