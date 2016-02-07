@@ -180,7 +180,7 @@ namespace MiniC.Compiler
 
       //ilGenerator.Emit(OperationCode.Ldstr, "hello");
       //ilGenerator.Emit(OperationCode.Call, writeLine);
-      //ilGenerator.Emit(OperationCode.Ret);
+      ilGenerator.Emit(OperationCode.Ret);
 
       ILGeneratorMethodBody(ilGenerator, true, 1, method, [], []);
     }

@@ -59,6 +59,10 @@ namespace MiniC
     Body.DeclaredIn            = Symbol;
     Body.OuterScope            = Symbol.FunScope;
 
+    when (Name.Text == "main" && !MiniCTypeUnifier.Instance.TryUnify(Symbol.ReturnType, context.GetVoidSymbol())
+                                 && !MiniCTypeUnifier.Instance.TryUnify(Symbol.ReturnType, context.GetIntSymbol()))
+      ReturnTypeRef.Error($"Return type of main function must be void or int, but it's $(Symbol.ReturnType)");
+
     ReturnTypeRef : TypeReference;
     Parameters    : VarDeclaration*;
     Body          : CompoundStatement;

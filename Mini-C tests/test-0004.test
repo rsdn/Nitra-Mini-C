@@ -2,7 +2,7 @@ int gInt;
 float gFloat;
 bool gBool;
 
-bool main() {
+void main() {
   int i;
   int j;
   bool b;
@@ -12,5 +12,6 @@ bool main() {
   a[i] = 1;
   i = -7;
   i = -j;
-  return i == 2 || j == 2 && true;
+  b = i == 2 || j == 2 && true;
+  return;
 }
