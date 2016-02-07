@@ -177,12 +177,21 @@ namespace MiniC.Compiler
     GenerateCompoundStatement(method: MethodDefinition, compoundStatement: CompoundStatement): ILGeneratorMethodBody
     {
       def ilGenerator = ILGenerator(_host, method);
+      def nameTable = NameTable();
+      def localVars = compoundStatement.LocalVariables.Map(var =>
+          LocalDefinition() <-
+          {
+            Name = nameTable.GetNameFor(var.Name.Text);
+            Type = GetType(var.Symbol.Type);
+          });
+      
+      localVars.Iter(ilGenerator.AddVariableToCurrentScope);
 
       //ilGenerator.Emit(OperationCode.Ldstr, "hello");
       //ilGenerator.Emit(OperationCode.Call, writeLine);
       ilGenerator.Emit(OperationCode.Ret);
 
-      ILGeneratorMethodBody(ilGenerator, true, 1, method, [], []);
+      ILGeneratorMethodBody(ilGenerator, true, 1, method, localVars, []);
     }
     
     public Dispose(): void 
