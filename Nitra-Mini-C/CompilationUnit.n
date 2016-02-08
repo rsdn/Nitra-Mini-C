@@ -63,7 +63,7 @@ namespace MiniC
     static public RefreshProject(project : Project) : void
     {
       when (project.Data == null)
-      Init(project);
+        Init(project);
 
       def (context, root) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
       

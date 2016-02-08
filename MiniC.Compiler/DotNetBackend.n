@@ -1,4 +1,7 @@
-﻿using Nemerle;
+﻿using Microsoft.Cci;
+using Microsoft.Cci.MutableCodeModel;
+
+using Nemerle;
 using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
@@ -10,15 +13,46 @@ using Nitra.ProjectSystem;
 using System;
 using System.Console;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Microsoft.Cci;
-using Microsoft.Cci.MutableCodeModel;
 
 namespace MiniC.Compiler
 {
-  class DotNetBackend: IAstVisitor, IDisposable
+  class FuncBodyAstVisitor : IAstVisitor
   {
-    _file: File;
+    public Visit(ast: IAst) : void
+    {
+      WriteLine(ast);
+      
+      match (ast)
+      {
+        | decls is TopDeclaration.AstList => decls.Accept(this);
+        | _ => WriteLine($"Unhandled! $ast");
+      }
+      
+      ast.Accept(this);
+    }
+    
+    public Visit(r: IRef): void
+    {
+      _ = r;
+    }
+    
+    public Visit(name: Name): void implements IAstVisitor.Visit
+    {
+      _ = name;
+    }
+    
+    public Visit(reference: Reference): void implements IAstVisitor.Visit
+    {
+      _ = reference;
+    }
+    
+  }
+  
+  class DotNetBackend : IDisposable
+  {
+    _project : Project;
     _nameTable: NameTable = NameTable();
     _host: PeReader.DefaultHost = PeReader.DefaultHost(_nameTable);
     _rootUnitNamespace: RootUnitNamespace;
@@ -26,18 +60,30 @@ namespace MiniC.Compiler
     _mainClass: NamespaceTypeDefinition;
     _coreAssembly: IAssembly;
     
-    public static GenerateAssembly(file: File, outputPath: string): void
+    public static GenerateAssembly(project : Project, outputPath: string): void
     {
-      using (backend = DotNetBackend(file))
+      def (context, rootSymbol) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+          
+      using (backend = DotNetBackend(project))
       {
-        file.Ast.Accept(backend);
+        foreach (symbols in rootSymbol.MemberTable.Symbols)
+          foreach (toDeclSymbol in symbols)
+          {
+            | funcDecl is FunDeclarationSymbol => backend.Add(funcDecl)
+            | varDecl  is VarDeclarationSymbol => backend.Add(varDecl)
+            | s when ReferenceEquals(s, context.Void)
+                  || ReferenceEquals(s, context.Bool)
+                  || ReferenceEquals(s, context.Int)
+                  || ReferenceEquals(s, context.Float) => ()
+            | _ => assert(false);
+          }
         backend.GenerateAssembly(outputPath);
       }
     }
     
-    public this(file: File)
+    public this(project : Project)
     {
-      _file = file;
+      _project = project;
       _coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
 
       _assembly = Assembly() <- 
@@ -82,70 +128,36 @@ namespace MiniC.Compiler
     GenerateAssembly(outputPath: string): void
     {
       def outputPath = 
-        if (string.IsNullOrWhiteSpace(outputPath)) 
-          IO.Path.GetDirectoryName(_file.FullName) 
+        if (string.IsNullOrWhiteSpace(outputPath))
+          if (_project.Files.IsEmpty())
+            Path.Combine(_project.ProjectDir, "out.exe")
+          else 
+            Path.ChangeExtension(_project.Files.First().FullName, ".exe")
         else 
           outputPath;
             
-      def outputFileName = IO.Path.Combine(outputPath, IO.Path.ChangeExtension(IO.Path.GetFileNameWithoutExtension(_file.FullName), ".exe"));
-        
-      using (peStream = IO.File.Create(outputFileName))
+      using (peStream = IO.File.Create(outputPath))
         PeWriter.WritePeToStream(_assembly, _host, peStream);
     }
     
-    //def ilGenerator = ILGenerator(_host, mainMethod);
-
-    //  def systemConsole = UnitHelper.FindType(_nameTable, coreAssembly, "System.Console");
-    //  def writeLine = TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemString);
-
-    //  ilGenerator.Emit(OperationCode.Ldstr, "hello");
-    //  ilGenerator.Emit(OperationCode.Call, writeLine);
-    //  ilGenerator.Emit(OperationCode.Ret);
-
-    //  def body = ILGeneratorMethodBody(ilGenerator, true, 1, mainMethod, [], []);
-
-    public Visit(r: IRef): void
-    {
-      _ = r;
-    }
     
-    public Visit(name: Name): void implements IAstVisitor.Visit
+    public Add(var : VarDeclarationSymbol): void
     {
-      _ = name;
-    }
+      def field = FieldDefinition() <- {
+        ContainingTypeDefinition = _mainClass;
+        Name = _nameTable.GetNameFor(var.Name);
+        Type = GetType(var.Type);
+        IsStatic = true;
+        Visibility = TypeMemberVisibility.Public;
+        IsReadOnly = false;
+      };
+      _mainClass.Fields.Add(field);
+    }    
     
-    public Visit(reference: Reference): void implements IAstVisitor.Visit
+    public Add(func : FunDeclarationSymbol): void
     {
-      _ = reference;
-    }
-    
-    public Visit(ast: IAst): void
-    {
-      WriteLine(ast);
-      
-      match (ast) {
-      | decls is TopDeclaration.AstList => decls.Accept(this);
-      | var is VarDeclaration =>
-        def field = FieldDefinition() <- {
-          ContainingTypeDefinition = _mainClass;
-          Name = _nameTable.GetNameFor(var.Name.Text);
-          Type = GetType(var.Symbol.Type);
-          IsStatic = true;
-          Visibility = TypeMemberVisibility.Public;
-          IsReadOnly = false;
-        };
-        _mainClass.Fields.Add(field);
-      
-      | fn is FunDeclaration =>
-        def method = Method(fn.Name.Text, fn.Symbol.ReturnType);
-        method.Body = GenerateCompoundStatement(method, fn.Body);
-      | _ => WriteLine($"Unhandled! $ast");
-      }
-    }
-    
-    public Method(name: string, returnType: TypeSymbol): MethodDefinition
-    {
-      def name = if (name == "main") "Main" else name;
+      def name = func.Name;
+      //method.Body = GenerateCompoundStatement(method, fn.Body);
       def method = MethodDefinition() <-
       {
         ContainingTypeDefinition = _mainClass;
@@ -153,24 +165,41 @@ namespace MiniC.Compiler
         IsCil = true;
         IsStatic = true;
         Name = _nameTable.GetNameFor(name);
-        Type = GetType(returnType);
+        Type = GetType(func.ReturnType);
         Parameters = List();
         Visibility = TypeMemberVisibility.Public
       };
       
-      when (name == "Main") _assembly.EntryPoint = method;
+      foreach (p in func.Parameters)
+      {
+        def cciParametr = ParameterDefinition();
+        cciParametr.Name = _nameTable.GetNameFor(p.Name);
+        cciParametr.Type = GetType(p.Type);
+        method.Parameters.Add(cciParametr);
+      }
+      
+      method.Body = MakeBody(func, method);
+      
+      when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
+        _assembly.EntryPoint = method;
       _mainClass.Methods.Add(method);
-      method
+    }
+    
+    MakeBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
+    {
+      def compoundStatement = func.Declarations.First().Body;
+      GenerateCompoundStatement(method, compoundStatement)
     }
     
     GetType(typeSymbol: TypeSymbol): ITypeReference
     {
-      match (typeSymbol){
-      | _ is IntSymbol => _host.PlatformType.SystemInt32;
-      | _ is FloatSymbol => _host.PlatformType.SystemFloat64;
-      | _ is BoolSymbol => _host.PlatformType.SystemBoolean;
-      | _ is VoidSymbol => _host.PlatformType.SystemVoid;
-      | _ => assert(false)
+      match (typeSymbol)
+      {
+        | _ is IntSymbol => _host.PlatformType.SystemInt32;
+        | _ is FloatSymbol => _host.PlatformType.SystemFloat64;
+        | _ is BoolSymbol => _host.PlatformType.SystemBoolean;
+        | _ is VoidSymbol => _host.PlatformType.SystemVoid;
+        | _ => assert(false)
       }
     }
     
@@ -187,7 +216,8 @@ namespace MiniC.Compiler
             Type = GetType(var.Symbol.Type);
           });
       
-      localVars.Iter(ilGenerator.AddVariableToCurrentScope);
+      foreach (localVar in localVars)
+        ilGenerator.AddVariableToCurrentScope(localVar);
       
       foreach (statement in compoundStatement.Statements)
         GenerateStatement(ilGenerator, statement);

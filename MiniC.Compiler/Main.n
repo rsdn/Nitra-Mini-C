@@ -1,15 +1,19 @@
-﻿using Nemerle;
+﻿using MiniC;
+
+using Nemerle;
 using Nemerle.Collections;
+using Nemerle.Imperative;
 using Nemerle.Text;
 using Nemerle.Utility;
+
+using Nitra.Declarations;
+using Nitra.ProjectSystem;
+
 using System;
 using System.Console;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
-using Nitra.Declarations;
-using Nitra.ProjectSystem;
-using MiniC;
 
 namespace MiniC.Compiler
 {
@@ -31,11 +35,11 @@ namespace MiniC.Compiler
               WriteLine(msg);
             }
           
-        unless (hasError)
-          foreach(project in solution.Projects)
-            foreach(file in project.Files)
-              DotNetBackend.GenerateAssembly(file, config.OutputPath);
-        
+        when (hasError)
+          return;
+
+        foreach(project in solution.Projects)
+          DotNetBackend.GenerateAssembly(project, config.OutputPath);
       }
     }
         
