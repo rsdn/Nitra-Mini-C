@@ -2,9 +2,10 @@ int gInt;
 float gFloat;
 bool gBool;
 
-void main() {
+int main() {
   int i;
   int j;
+  i = 42;
   j = i;
-  return;
+  return j;
 }

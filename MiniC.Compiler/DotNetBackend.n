@@ -50,15 +50,48 @@ namespace MiniC.Compiler
     
   }
   
+  [Record]
+  class MethodContext
+  {
+    _backend           : DotNetBackend;
+    _nameTable         : NameTable;
+    public Method      : MethodDefinition;
+    public IlGenerator : ILGenerator;
+    [RecordIgnore]
+    _localVars   : List[LocalDefinition] = List();
+    [RecordIgnore]
+    _localVarMap   : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
+    
+    public LocalVars : Seq[LocalDefinition] { get { _localVars } }
+    
+    public GetCciLocalVar(varDeclSymbol : VarDeclarationSymbol) : ILocalDefinition
+    {
+      _localVarMap[varDeclSymbol]
+    }
+    
+    public AddLocalVar(varDeclSymbol : VarDeclarationSymbol) : void
+    {
+      def cciLocalVar = LocalDefinition() <-
+      {
+        MethodDefinition = Method;
+        Name = _nameTable.GetNameFor(varDeclSymbol.Name);
+        Type = _backend.GetType(varDeclSymbol.Type);
+      };
+      IlGenerator.AddVariableToCurrentScope(cciLocalVar);
+      _localVars.Add(cciLocalVar);
+      _localVarMap.Add(varDeclSymbol, cciLocalVar);
+    }
+  }
+  
   class DotNetBackend : IDisposable
   {
-    _project : Project;
-    _nameTable: NameTable = NameTable();
-    _host: PeReader.DefaultHost = PeReader.DefaultHost(_nameTable);
-    _rootUnitNamespace: RootUnitNamespace;
-    _assembly: Assembly;
-    _mainClass: NamespaceTypeDefinition;
-    _coreAssembly: IAssembly;
+    _project           : Project;
+    _nameTable         : NameTable = NameTable();
+    _host              : PeReader.DefaultHost = PeReader.DefaultHost(_nameTable);
+    _rootUnitNamespace : RootUnitNamespace;
+    _assembly          : Assembly;
+    _mainClass         : NamespaceTypeDefinition;
+    _coreAssembly      : IAssembly;
     
     public static GenerateAssembly(project : Project, outputPath: string): void
     {
@@ -188,10 +221,63 @@ namespace MiniC.Compiler
     MakeBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
     {
       def compoundStatement = func.Declarations.First().Body;
-      GenerateCompoundStatement(method, compoundStatement)
+      def methodContext     = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
+      GenerateCompoundStatement(methodContext, compoundStatement);
+      ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
     }
     
-    GetType(typeSymbol: TypeSymbol): ITypeReference
+    GenerateCompoundStatement(methodContext : MethodContext, compoundStatement: CompoundStatement) : void
+    {
+      def ilGenerator = methodContext.IlGenerator;
+      
+      ilGenerator.BeginScope();
+      
+      foreach (var in compoundStatement.LocalVariables)
+        methodContext.AddLocalVar(var.Symbol);
+      
+      foreach (statement in compoundStatement.Statements)
+        GenerateStatement(methodContext, statement);
+        
+      ilGenerator.EndScope();
+    }
+    
+    GenerateStatement(methodContext : MethodContext, statement : Statement): void 
+    {
+      def ilGenerator = methodContext.IlGenerator;
+      
+      match (statement)
+      {
+        | Expression as expr => GenerateExpression(methodContext, expr.Body);
+        | ReturnVoid         => ilGenerator.Emit(OperationCode.Ret);
+        | Return as s =>
+          GenerateExpression(methodContext, s.Value);
+          ilGenerator.Emit(OperationCode.Ret);
+          
+        | _ => WriteLine($"Unhandlend statement! $statement");
+      }
+    }
+    
+    GenerateExpression(methodContext : MethodContext, expr : Expr) : void
+    {
+      def ilGenerator = methodContext.IlGenerator;
+      
+      match (expr)
+      {
+        | IntegerLiteral as e => ilGenerator.Emit(OperationCode.Ldc_I4, e.Value.Value);
+        | VariableRef as e => 
+          def cciVar = methodContext.GetCciLocalVar(e.Ref.Symbol);
+          ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+          
+        | ScalarAssignment as assignment =>
+          GenerateExpression(methodContext, assignment.Value);
+          def cciVar = methodContext.GetCciLocalVar(assignment.Ref.Symbol);
+          ilGenerator.Emit(OperationCode.Stloc, cciVar);
+        
+        | _ => WriteLine($"Unhandled expression! $expr");
+      }
+    }
+    
+    public GetType(typeSymbol: TypeSymbol): ITypeReference
     {
       match (typeSymbol)
       {
@@ -203,47 +289,7 @@ namespace MiniC.Compiler
       }
     }
     
-    GenerateCompoundStatement(method: MethodDefinition, compoundStatement: CompoundStatement): ILGeneratorMethodBody
-    {
-      def ilGenerator = ILGenerator(_host, method);
-      def nameTable = NameTable();
-      
-      def localVars = compoundStatement.LocalVariables.Map(var =>
-          LocalDefinition() <-
-          {
-            MethodDefinition = method;
-            Name = nameTable.GetNameFor(var.Name.Text);
-            Type = GetType(var.Symbol.Type);
-          });
-      
-      foreach (localVar in localVars)
-        ilGenerator.AddVariableToCurrentScope(localVar);
-      
-      foreach (statement in compoundStatement.Statements)
-        GenerateStatement(ilGenerator, statement);
-      
-      ILGeneratorMethodBody(ilGenerator, true, 10, method, localVars, []);
-    }
-    
-    GenerateStatement(ilGenerator: ILGenerator, statement: Statement): void 
-    {
-      match (statement) {
-      | expr is Statement.Expression => GenerateExpression(ilGenerator, expr.Body);
-      | Statement.ReturnVoid => ilGenerator.Emit(OperationCode.Ret);
-      | _ => WriteLine($"Unhandlend statement! $statement");
-      }
-    }
-    
-    GenerateExpression(ilGenerator: ILGenerator, expr: Expr): void
-    {
-      match (expr) {
-      | assignment is Expr.ScalarAssignment => ()
-        //ilGenerator.Emit(OperationCode.Ldloc, );
-      | _ => WriteLine($"Unhandled expression! $expr");
-      }
-    }
-    
-    public Dispose(): void 
+   public Dispose(): void 
     { 
       _host.Dispose()
     }
