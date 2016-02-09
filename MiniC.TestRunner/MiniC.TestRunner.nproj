@@ -59,6 +59,9 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandPromptReader.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Main.n" />
     <Compile Include="PeVerify.cs">
       <SubType>Code</SubType>

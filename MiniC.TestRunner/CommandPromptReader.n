@@ -1,0 +1,47 @@
+﻿using Nemerle.Collections;
+using Nemerle.Imperative;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Utility.Getopt;
+
+using System;
+using System.Console;
+using System.IO;
+
+namespace MiniC.TestRunner
+{
+  class CommandPromptReader
+  {
+    public SourceDir  : string { get; private set; }
+    public Success    : bool   { get; }
+
+    public this()
+    {
+      def options = [
+        CliOption.String(name = "-dir",
+                    aliases = [],
+                    help = "Directory containing test files",
+                    handler = sourceDir => { SourceDir = sourceDir }),
+        ];
+      
+      Getopt.Parse(options);
+
+      def usage() : void
+      {
+        def help = Getopt.Usage(options);
+        WriteLine("Usage: MiniC.TestRunner -dir [directory containing test files]");
+        WriteLine("flags:");
+        WriteLine(help);
+      }
+
+      when (string.IsNullOrEmpty(SourceDir))
+      {
+        WriteLine("'dir' option is required");
+        usage();
+        return;
+      }
+
+      Success = true;
+    }
+  }
+}

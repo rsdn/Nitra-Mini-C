@@ -7,11 +7,15 @@ using System.Collections.Generic;
 using System.Console;
 using System.Linq;
 
-module Program
+namespace MiniC.TestRunner 
 {
-  Main() : void
+  module Program
   {
-    WriteLine("Hi!");
-    _ = ReadLine();
+    Main() : void
+    {
+      def config = CommandPromptReader();
+      when (config.Success)
+        _ = ReadLine();
+    }
   }
 }
