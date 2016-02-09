@@ -7,6 +7,8 @@ Project("{EDCC3B85-0BAD-11DB-BC1A-00112FDE8B61}") = "Nitra-Mini-C", "Nitra-Mini-
 EndProject
 Project("{EDCC3B85-0BAD-11DB-BC1A-00112FDE8B61}") = "MiniC.Compiler", "MiniC.Compiler\MiniC.Compiler.nproj", "{79F17816-DA0A-4E4C-BD60-6C77528F450E}"
 EndProject
+Project("{EDCC3B85-0BAD-11DB-BC1A-00112FDE8B61}") = "MiniC.TestRunner", "MiniC.TestRunner\MiniC.TestRunner.nproj", "{3B762275-5E91-40EF-8DD4-B1239D0AA905}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{79F17816-DA0A-4E4C-BD60-6C77528F450E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79F17816-DA0A-4E4C-BD60-6C77528F450E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79F17816-DA0A-4E4C-BD60-6C77528F450E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B762275-5E91-40EF-8DD4-B1239D0AA905}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B762275-5E91-40EF-8DD4-B1239D0AA905}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B762275-5E91-40EF-8DD4-B1239D0AA905}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B762275-5E91-40EF-8DD4-B1239D0AA905}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
