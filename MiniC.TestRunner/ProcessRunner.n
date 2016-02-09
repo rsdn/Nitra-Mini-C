@@ -1,0 +1,66 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using Nemerle.Extensions;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace MiniC.TestRunner
+{
+  type Output = list[string];
+  
+  module ProcessRunner
+  {
+    public Run(exePath: string, timeout: TimeSpan, arguments: string = null): Result[Output]
+    {
+        def startInfo = ProcessStartInfo() <-
+        {
+            FileName = exePath;
+            Arguments = arguments;
+            CreateNoWindow = true;
+            UseShellExecute = false;
+            ErrorDialog = false;
+            RedirectStandardOutput = true;
+            RedirectStandardError = true
+        };
+        using (process = Process() <- { StartInfo = startInfo; EnableRaisingEvents = true })
+        {
+          if (!process.Start()) 
+            Result.Fail([$"Cannot start $exePath"])
+          else if (!process.WaitForExit(timeout.TotalMilliseconds :> int)) 
+          {
+            KillProcess(process);
+            Result.Fail([$"$exePath has not exited in $timeout]"]);
+          }
+          else 
+            Result.Ok(ReadAllLines(process.StandardOutput).Append(ReadAllLines(process.StandardError)));
+        }
+      }
+      
+      ReadAllLines(reader: StreamReader): Output
+      {
+        reader.ReadToEnd().Split(array["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries).ToNList()
+      }
+      
+      KillProcess(process: Process): void
+      {
+        unless (process.HasExited)
+          try
+          {
+            process.Kill();
+            ignore(process.WaitForExit(5000));
+          }
+          catch 
+          { 
+            e => () 
+          }
+      }
+    }
+  }

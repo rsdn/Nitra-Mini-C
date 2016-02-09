@@ -1,0 +1,35 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace MiniC.TestRunner
+{
+  public variant Result[T]
+  {
+    | Ok { value: T }
+    | Fail { errors: list[string] }
+    
+    public Bind[U](binder: T -> Result[U]): Result[U]
+    {
+      match (this)
+      {
+        | Ok(x) => binder(x)
+        | Fail(e) => Fail(e)
+      }
+    }
+    
+    public Map[U](f: T -> U): Result[U]
+    {
+      match (this) 
+      {
+        | Ok(x) => Ok(f(x))
+        | Fail(e) => Fail(e)
+      }
+    }
+  }
+}

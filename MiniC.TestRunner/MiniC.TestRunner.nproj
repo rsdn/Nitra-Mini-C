@@ -66,8 +66,14 @@
     <Compile Include="PeVerify.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ProcessRunner.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
     <Compile Include="Test.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Utils.n">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

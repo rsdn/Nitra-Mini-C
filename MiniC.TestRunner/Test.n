@@ -4,6 +4,7 @@ using Nemerle.Text;
 using Nemerle.Utility;
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,6 @@ namespace MiniC.TestRunner
   class TestCase
   {
     public SourceFile: string;
-    public AssemblyPath: string;
     public ExpectedOutput: list[string];
   }
   
@@ -25,11 +25,7 @@ namespace MiniC.TestRunner
       Directory
         .GetFiles(dir, pattern)
         .ToNList()
-        .Map(file =>
-          {
-            def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(file)) + ".exe";
-            TestCase(file, assemblyPath, ParseOutputComment(File.ReadAllLines(file)))
-          })
+        .Map(file => TestCase(file, ParseOutputComment(File.ReadAllLines(file))))
     }
     
     ParseOutputComment(lines: array[string]): list[string]
@@ -47,58 +43,70 @@ namespace MiniC.TestRunner
     }
   }
   
+  public variant TestStage
+  {
+    | Compilation
+    | Verifying
+    | OutputChecking
+  }
+  
   [Record]
-  public variant Error
+  public class TestStageResult
   {
-    | Compiler
-    | PeVerify
-    | WrongOutput
+    public Stage: TestStage;
+    public Duration: TimeSpan;
+    public Result: Result[FakeVoid];
     
-    public Message: string;
-
-    public override ToString(): string
+    public static Time[T](stage: TestStage, f: void -> Result[T]): (Result[T] * TestStageResult)
     {
-      match (this)
-      {
-        | Compiler with name = "Compiler"
-        | PeVerify with name = "PeVerify"
-        | WrongOutput with name = "WrongOutput" =>
-          $"[$name] $Message"
-      }
+      def sw = Stopwatch.StartNew();
+      def result = f();
+      sw.Stop();
+      (result, TestStageResult(stage, sw.Elapsed, result.Map(_ => FakeVoid())))
     }
   }
-  
-  public variant Result[T, E]
+
+  [Record]
+  public class TestResult
   {
-    | Ok { value: T }
-    | Error { error: E }
-    
-    public Bind[U](binder: T -> Result[U, E]): Result[U, E]
-    {
-      match (this)
-      {
-        | Error(e) => Error(e)
-        | Ok(v) => binder(v)
-      }
-    }
+    public Stages: list[TestStageResult]
   }
   
-  type TestResult = Result[FakeVoid, list[Error]];
-
   module TestRunner
   {
-    public Run(case: TestCase): TestResult
+    public Run(case: TestCase, outputDir: string): TestResult
     {
-      Compiler.Compile(case.SourceFile, case.AssemblyPath)
-        .Bind(_ => TestResult.Ok(FakeVoid()))
+      def (compilationResult, compilationStage) = 
+        TestStageResult.Time(
+          TestStage.Compilation(), 
+          () => Compiler.Compile(case.SourceFile, outputDir));
+      
+      def (verifyResult, verifyStage) =
+        TestStageResult.Time(
+          TestStage.Verifying(), 
+          () => compilationResult.Bind(assemblyName => Result.Ok(FakeVoid())));
+        
+      TestResult([compilationStage, verifyStage])
     }
   }
   
   module Compiler
   {
-    public Compile(_filePath: string, _assemblyPath: string): TestResult
+    compilerPath: string = @"..\..\..\MiniC.Compiler\bin\Debug\MiniC.Compiler.exe";
+    type AssemblyPath = string;
+    
+    public Compile(filePath: string, outputDir: string): Result[AssemblyPath]
     {
-      Result.Ok(FakeVoid())
+      def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(filePath)) + ".exe";
+      ProcessRunner.Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath")
+        .Bind(outputLines => 
+        {
+          match (outputLines)
+          {
+            | [] => Result.Ok(assemblyPath)
+            | _ => Result.Fail(outputLines)
+          }
+        });
     }
   }
 }
