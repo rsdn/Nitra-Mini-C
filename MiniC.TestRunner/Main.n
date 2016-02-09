@@ -17,7 +17,18 @@ namespace MiniC.TestRunner
       def config = CommandPromptReader();
       when (config.Success)
       {
-        Directory.GetFiles(config.SourceDir)
+        def tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        TestReader.ReadTests(config.SourceDir, "*.c").Map(test =>
+        {
+          test.Bind(x => 
+          {
+            match (TestRunner.Run(x, tempDir))
+            {
+              | r when r.Stages.All(x => x.Result.IsOk) => Result.Ok(r)
+              | r => Result.Fail([]) // Result.Fail(r.Stages.Map(_.Result).OfType.[Result.Fail[Error]]().Map(x => x.)
+            }
+          })
+        })
       }
     }
   }

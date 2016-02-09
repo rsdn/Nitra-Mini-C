@@ -14,11 +14,9 @@ using System.Threading.Tasks;
 
 namespace MiniC.TestRunner
 {
-  type Output = list[string];
-  
   module ProcessRunner
   {
-    public Run(exePath: string, timeout: TimeSpan, arguments: string = null): Result[Output]
+    public Run(exePath: string, timeout: TimeSpan, arguments: string = null): Result[Output, string]
     {
         def startInfo = ProcessStartInfo() <-
         {
@@ -46,7 +44,7 @@ namespace MiniC.TestRunner
       
       ReadAllLines(reader: StreamReader): Output
       {
-        reader.ReadToEnd().Split(array["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries).ToNList()
+        Output(reader.ReadToEnd().Split(array["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries).ToNList())
       }
       
       KillProcess(process: Process): void
@@ -59,7 +57,7 @@ namespace MiniC.TestRunner
           }
           catch 
           { 
-            e => () 
+            _ => () 
           }
       }
     }

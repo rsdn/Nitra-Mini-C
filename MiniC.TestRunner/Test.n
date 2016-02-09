@@ -15,31 +15,47 @@ namespace MiniC.TestRunner
   class TestCase
   {
     public SourceFile: string;
-    public ExpectedOutput: list[string];
+    public ExpectedOutput: Output;
+  }
+  
+  [Record]
+  public variant Error
+  {
+    | ReadTestError
+    | CompilerError
+    | VerifyError
+    | OutputError
+    public Messages: list[string]
   }
   
   module TestReader
   {
-    public ReadTests(dir: string, pattern: string, outputDir: string): list[TestCase] 
+    public ReadTests(dir: string, pattern: string): list[Result[TestCase, Error]]
     {
       Directory
         .GetFiles(dir, pattern)
         .ToNList()
-        .Map(file => TestCase(file, ParseOutputComment(File.ReadAllLines(file))))
+        .Map(file => ParseOutputComment(File.ReadAllLines(file)).Map(x => TestCase(file, x)))
     }
     
-    ParseOutputComment(lines: array[string]): list[string]
+    ParseOutputComment(lines: array[string]): Result[Output, Error]
     {
+      def error(msg) { Result.Fail([Error.ReadTestError([msg])]) }
+      
       def loop (inside, output, lines)
       {
         match (inside, lines)
         {
           | (false, "BEGIN-OUTPUT" :: rest) => loop (true, output, rest)
-          | (true, "END-OUTPUT" :: _) => output
+          | (true, "BEGIN-OUTPUT" :: _) => error("Duplicated BEGIN-OUTPUT")
+          | (true, "END-OUTPUT" :: _) => Result.Ok(output)
+          | (false, "END-OUTPUT" :: _) => error("END-OUTPUT without previous BEGIN-OUTPUT")
+          | (true, line :: rest) => loop (true, line :: output, rest)
+          | (true, []) => error("Missing END-OUTPUT marker")
           | (_, _ :: rest) => loop (inside, output, rest)
         }
       }
-      loop(false, [], lines).Reverse()
+      loop(false, [], lines).Map(x => Output(x.Reverse().Filter(x => x.Trim() != "")))
     }
   }
   
@@ -55,9 +71,9 @@ namespace MiniC.TestRunner
   {
     public Stage: TestStage;
     public Duration: TimeSpan;
-    public Result: Result[FakeVoid];
+    public Result: Result[FakeVoid, Error];
     
-    public static Time[T](stage: TestStage, f: void -> Result[T]): (Result[T] * TestStageResult)
+    public static Time[T](stage: TestStage, f: void -> Result[T, Error]): (Result[T, Error] * TestStageResult)
     {
       def sw = Stopwatch.StartNew();
       def result = f();
@@ -95,16 +111,18 @@ namespace MiniC.TestRunner
     compilerPath: string = @"..\..\..\MiniC.Compiler\bin\Debug\MiniC.Compiler.exe";
     type AssemblyPath = string;
     
-    public Compile(filePath: string, outputDir: string): Result[AssemblyPath]
+    public Compile(filePath: string, outputDir: string): Result[AssemblyPath, Error]
     {
       def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(filePath)) + ".exe";
-      ProcessRunner.Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath")
-        .Bind(outputLines => 
+      ProcessRunner
+        .Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath")
+        .MapError(e => Error.CompilerError([e]))
+        .Bind(output =>
         {
-          match (outputLines)
+          match (output)
           {
-            | [] => Result.Ok(assemblyPath)
-            | _ => Result.Fail(outputLines)
+            | Output([]) => Result.Ok(assemblyPath)
+            | _ => Result.Fail([Error.CompilerError(output.Lines)])
           }
         });
     }

@@ -73,6 +73,9 @@
     <Compile Include="Test.n">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Result.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Utils.n">
       <SubType>Code</SubType>
     </Compile>
