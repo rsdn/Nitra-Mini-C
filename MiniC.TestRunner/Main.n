@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Console;
 using System.Linq;
+using System.IO;
 
 namespace MiniC.TestRunner 
 {
@@ -15,7 +16,9 @@ namespace MiniC.TestRunner
     {
       def config = CommandPromptReader();
       when (config.Success)
-        _ = ReadLine();
+      {
+        Directory.GetFiles(config.SourceDir)
+      }
     }
   }
 }

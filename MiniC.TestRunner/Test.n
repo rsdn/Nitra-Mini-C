@@ -1,0 +1,104 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+
+using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace MiniC.TestRunner
+{
+  [Record]
+  class TestCase
+  {
+    public SourceFile: string;
+    public AssemblyPath: string;
+    public ExpectedOutput: list[string];
+  }
+  
+  module TestReader
+  {
+    public ReadTests(dir: string, pattern: string, outputDir: string): list[TestCase] 
+    {
+      Directory
+        .GetFiles(dir, pattern)
+        .ToNList()
+        .Map(file =>
+          {
+            def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(file)) + ".exe";
+            TestCase(file, assemblyPath, ParseOutputComment(File.ReadAllLines(file)))
+          })
+    }
+    
+    ParseOutputComment(lines: array[string]): list[string]
+    {
+      def loop (inside, output, lines)
+      {
+        match (inside, lines)
+        {
+          | (false, "BEGIN-OUTPUT" :: rest) => loop (true, output, rest)
+          | (true, "END-OUTPUT" :: _) => output
+          | (_, _ :: rest) => loop (inside, output, rest)
+        }
+      }
+      loop(false, [], lines).Reverse()
+    }
+  }
+  
+  [Record]
+  public variant Error
+  {
+    | Compiler
+    | PeVerify
+    | WrongOutput
+    
+    public Message: string;
+
+    public override ToString(): string
+    {
+      match (this)
+      {
+        | Compiler with name = "Compiler"
+        | PeVerify with name = "PeVerify"
+        | WrongOutput with name = "WrongOutput" =>
+          $"[$name] $Message"
+      }
+    }
+  }
+  
+  public variant Result[T, E]
+  {
+    | Ok { value: T }
+    | Error { error: E }
+    
+    public Bind[U](binder: T -> Result[U, E]): Result[U, E]
+    {
+      match (this)
+      {
+        | Error(e) => Error(e)
+        | Ok(v) => binder(v)
+      }
+    }
+  }
+  
+  type TestResult = Result[FakeVoid, list[Error]];
+
+  module TestRunner
+  {
+    public Run(case: TestCase): TestResult
+    {
+      Compiler.Compile(case.SourceFile, case.AssemblyPath)
+        .Bind(_ => TestResult.Ok(FakeVoid()))
+    }
+  }
+  
+  module Compiler
+  {
+    public Compile(_filePath: string, _assemblyPath: string): TestResult
+    {
+      Result.Ok(FakeVoid())
+    }
+  }
+}
