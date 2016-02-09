@@ -281,11 +281,11 @@ namespace MiniC.Compiler
     {
       match (typeSymbol)
       {
-        | _ is IntSymbol => _host.PlatformType.SystemInt32;
-        | _ is FloatSymbol => _host.PlatformType.SystemFloat64;
-        | _ is BoolSymbol => _host.PlatformType.SystemBoolean;
-        | _ is VoidSymbol => _host.PlatformType.SystemVoid;
-        | _ => assert(false)
+        | IntSymbol   => _host.PlatformType.SystemInt32;
+        | FloatSymbol => _host.PlatformType.SystemFloat64;
+        | BoolSymbol  => _host.PlatformType.SystemBoolean;
+        | VoidSymbol  => _host.PlatformType.SystemVoid;
+        | _           => assert(false)
       }
     }
     
