@@ -15,84 +15,9 @@ namespace MiniC.TestRunner
   {
     Main() : void
     {
-      def config = CommandPromptReader();
+      def config = Config();
       when (config.Success)
-      {
-        def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
-        def results =
-          TestReader
-            .ReadTests(config.SourceDir, "*.c")
-            .Select(case => 
-            {
-              match (case)
-              {
-                | Result.Fail(e) => 
-                    WriteLine(e);
-                    ([], case.Map(_ => FakeVoid()))
-                | Result.Ok(case) =>
-                    def result = TestRunner.Run(case, tempDir.FullName);
-                    def fileName = Path.GetFileNameWithoutExtension(case.SourceFile);
-                    match (result.Result)
-                    {
-                      | Result.Ok(_) => 
-                          WriteLine($"$fileName - OK");
-                          when (config.Verbose)
-                            foreach (stage in result.Stages)
-                              WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
-                           
-                      | Result.Fail(es) => 
-                          WriteLine($"$fileName - ERROR");
-                          if (config.Verbose)
-                            foreach (stage in result.Stages)
-                            {
-                              WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
-                              when (stage.Result is Result.Fail(es))
-                                foreach (e in es) 
-                                  WriteLine($"$(e.Format(2))")
-                            }
-                          else
-                            foreach (e in es)
-                              WriteLine($"$(e.Format(1))")
-                    }
-                    (result.Stages, result.Result)
-              }
-            })
-            .TakeWhile((_, r) => !config.StopOnFirstError || r.IsOk)
-            .ToList()
-            .ToNList();
-            
-        def stagesByType = 
-          results.Map((stages, _) => stages)
-            .Concat()
-            .GroupBy(x => x.Stage)
-            .Select(x => (x.Key, x.ToList().ToNList()))
-            .OrderBy(x => x[0])
-            .ToArray()
-            .ToNList();
-        
-        def stats = 
-          stagesByType.Map((stage, stages) =>
-          {
-            def duration = TimeSpan.FromMilliseconds(stages.Map(x => x.Duration.TotalMilliseconds :> int).Sum() :> double);
-            def count = stages.Length;
-            def errorCount = stages.Filter(x => !x.Result.IsOk).Length;
-            (stage, count, errorCount, duration)
-          });
-
-        def totalDuration = TimeSpan.FromMilliseconds(stats.Map((_, _, _, x) => x.TotalMilliseconds).Sum());
-        def totalCount = results.Length;
-        def totalError = results.Filter((_, r) => !r.IsOk).Length;
-        
-        when (config.Verbose)
-        {
-          WriteLine();
-        
-          foreach ((stage, count, errorCount, duration) in stats)
-            WriteLine($"$stage: count = $count, errors = $errorCount, duration = $duration");
-        }
-
-        WriteLine($"\nTotal: run = $totalCount, failed = $totalError, duration = $totalDuration\n");
-      }
+        ResultsPrinter.PrintTotalResults(TestRunner.RunAll(config), config.Verbose)
     }
   }
 }

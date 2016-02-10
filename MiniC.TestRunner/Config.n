@@ -10,12 +10,13 @@ using System.IO;
 
 namespace MiniC.TestRunner
 {
-  class CommandPromptReader
+  class Config
   {
-    public SourceDir        : string { get; private set; }
+    public SourceDir        : DirPath { get; private set; }
     public SearchPattern    : string { get; private set; }
     public StopOnFirstError : bool { get; private set; }
     public Verbose          : bool { get; private set; }
+    public CompilerPath     : FilePath { get; private set; }
     public Success          : bool { get; }
 
     public this()
@@ -36,7 +37,11 @@ namespace MiniC.TestRunner
         CliOption.Boolean(name = "-verbose",
                     aliases = ["-v"],
                     help = "Verbose output",
-                    handler = x => { Verbose = x })
+                    handler = x => { Verbose = x }),
+        CliOption.String(name = "-compiler",
+                    aliases = ["-c"],
+                    help = "Path to compiler",
+                    handler = x => { CompilerPath = x })
         ];
       
       Getopt.Parse(options);
@@ -49,9 +54,16 @@ namespace MiniC.TestRunner
         WriteLine(help);
       }
 
-      when (string.IsNullOrEmpty(SourceDir))
+      when (string.IsNullOrWhiteSpace(SourceDir))
       {
         WriteLine("'dir' option is required");
+        usage();
+        return;
+      }
+
+      when (string.IsNullOrWhiteSpace(CompilerPath))
+      {
+        WriteLine("'compiler' option is required");
         usage();
         return;
       }

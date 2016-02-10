@@ -5,6 +5,7 @@ using Nemerle.Utility;
 using Nemerle.Extensions;
 
 using System;
+using System.Console;
 using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
@@ -12,6 +13,105 @@ using System.Linq;
 
 namespace MiniC.TestRunner
 {
+  module TestRunner
+  {
+    public RunAll(config: Config): list[TestResult]
+    {
+      def runTest(test, outputDir)
+      {
+        def result =
+          TestStageResult.Time(TestStage.Compile, () => Compiler.Compile(test.SourceFile, outputDir, config.CompilerPath))
+            .Bind(assembly => TestStageResult.Time(TestStage.Verify, () => PeVerify.VerifyAssembly(assembly)))
+            .Bind(assembly => TestStageResult.Time(TestStage.OutputCheck, () => OutputChecker.CheckAssemblyOutput(assembly, test.ExpectedOutput)));
+          
+        TestResult(result.Result, result.Writer)
+      }
+      
+      def printErrors(errors: list[Error], indent: int)
+      {
+        foreach (e in errors)
+          WriteLine($"$(e.Format(indent))")
+      }
+      
+      def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+      TestReader
+        .ReadTests(config.SourceDir, "*.c")
+        .Select(case => 
+        {
+          match (case)
+          {
+            | Result.Fail(es) =>
+                WriteLine();
+                printErrors(es, 0);
+                TestResult(case.Map(_ => FakeVoid()), [])
+            | Result.Ok(case) =>
+                def result = runTest(case, tempDir.FullName);
+                def fileName = Path.GetFileNameWithoutExtension(case.SourceFile);
+                match (result.Result)
+                {
+                  | Result.Ok(_) => 
+                      WriteLine($"$fileName - OK");
+                      when (config.Verbose)
+                        foreach (stage in result.Stages)
+                          WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                       
+                  | Result.Fail(es) => 
+                      WriteLine($"$fileName - ERROR");
+                      if (config.Verbose)
+                        foreach (stage in result.Stages)
+                        {
+                          WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                          when (stage.Result is Result.Fail(es)) printErrors(es, 2)
+                        }
+                      else printErrors(es, 1)
+                }
+                TestResult(result.Result, result.Stages)
+          }
+        })
+        .TakeWhile(r => !config.StopOnFirstError || r.Result.IsOk)
+        .ToList()
+        .ToNList()
+    }
+  }
+  
+  module ResultsPrinter
+  {
+    public PrintTotalResults(results: list[TestResult], verbose: bool): void
+    {
+      def stagesByType = 
+          results.Map(r => r.Stages)
+            .Concat()
+            .GroupBy(x => x.Stage)
+            .Select(x => (x.Key, x.ToList().ToNList()))
+            .OrderBy(x => x[0])
+            .ToArray()
+            .ToNList();
+        
+        def stats = 
+          stagesByType.Map((stage, stages) =>
+          {
+            def duration = TimeSpan.FromMilliseconds(stages.Map(x => x.Duration.TotalMilliseconds :> int).Sum() :> double);
+            def count = stages.Length;
+            def errorCount = stages.Filter(x => !x.Result.IsOk).Length;
+            (stage, count, errorCount, duration)
+          });
+
+        def totalDuration = TimeSpan.FromMilliseconds(stats.Map((_, _, _, x) => x.TotalMilliseconds).Sum());
+        def totalCount = results.Length;
+        def totalError = results.Filter(r => !r.Result.IsOk).Length;
+        
+        when (verbose)
+        {
+          WriteLine();
+        
+          foreach ((stage, count, errorCount, duration) in stats)
+            WriteLine($"$stage: count = $count, errors = $errorCount, duration = $duration");
+        }
+      
+        WriteLine($"\nTotal: run = $totalCount, failed = $totalError, duration = $totalDuration\n");
+    }
+  }
+  
   [Record]
   class TestCase
   {
@@ -26,11 +126,7 @@ namespace MiniC.TestRunner
     | ReadTestError { Message: string }
     | CompilerError { Messages: list[string] }
     | VerifyError { Message: list[string] }
-    | OutputError 
-      {
-        Expected: Output;
-        Actual: Output
-      }
+    | OutputError { Expected: Output; Actual: Output }
     
     public Format(indent: int): string
     {
@@ -60,9 +156,11 @@ namespace MiniC.TestRunner
   {
     public ReadTests(dir: DirPath, pattern: string): Seq[Result[TestCase, Error]]
     {
-      Directory
-        .EnumerateFiles(dir, pattern)
-        .Select(file => ParseOutputComment(File.ReadAllLines(file)).Map(x => TestCase(file, x)))
+      if (!Directory.Exists(dir)) [Result.Fail([Error.ReadTestError($"Directory $dir does not exists.")])]
+      else
+        Directory
+          .EnumerateFiles(dir, pattern)
+          .Select(file => ParseOutputComment(File.ReadAllLines(file)).Map(x => TestCase(file, x)))
     }
     
     ParseOutputComment(lines: array[string]): Result[Output, Error]
@@ -87,7 +185,7 @@ namespace MiniC.TestRunner
     }
   }
   
-    public enum TestStage
+  public enum TestStage
   {
     | Compile
     | Verify
@@ -117,28 +215,14 @@ namespace MiniC.TestRunner
     public Stages: list[TestStageResult];
   }
   
-  module TestRunner
-  {
-    public Run(case: TestCase, outputDir: DirPath): TestResult
-    {
-      def result =
-        TestStageResult.Time(TestStage.Compile, () => Compiler.Compile(case.SourceFile, outputDir))
-          .Bind(assembly => TestStageResult.Time(TestStage.Verify, () => PeVerify.VerifyAssembly(assembly)))
-          .Bind(assembly => TestStageResult.Time(TestStage.OutputCheck, () => OutputChecker.CheckAssemblyOutput(assembly, case.ExpectedOutput)));
-          
-      TestResult(result.Result, result.Writer)
-    }
-  }
-  
   module Compiler
   {
-    compilerPath = @"..\..\..\MiniC.Compiler\bin\Debug\MiniC.Compiler.exe";
     type AssemblyPath = FilePath;
     
-    public Compile(filePath: FilePath, outputDir: DirPath): Result[AssemblyPath, Error]
+    public Compile(sourcePath: FilePath, outputDir: DirPath, compilerPath: FilePath): Result[AssemblyPath, Error]
     {
-      def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(filePath)) + ".exe";
-      def (output, result) = ProcessRunner.Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath");
+      def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(sourcePath)) + ".exe";
+      def (output, result) = ProcessRunner.Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $sourcePath -out $assemblyPath");
       def outputResult = 
         match (output)
         {

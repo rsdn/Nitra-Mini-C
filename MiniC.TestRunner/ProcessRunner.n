@@ -18,6 +18,9 @@ namespace MiniC.TestRunner
   {
     public Run(exePath: FilePath, timeout: TimeSpan, arguments: string = null): Output * Result[FakeVoid, Error]
     {
+      if (!File.Exists(exePath)) (Output.Empty, Result.Fail([Error.ProcessRunError($"$exePath does not exists.")]))
+      else
+      {
         def startInfo = ProcessStartInfo() <-
         {
             FileName = exePath;
@@ -32,11 +35,11 @@ namespace MiniC.TestRunner
         using (process = Process() <- { StartInfo = startInfo; EnableRaisingEvents = true })
         {
           if (!process.Start()) 
-            (Output([]), Result.Fail([Error.ProcessRunError($"Cannot start $exePath")]))
+            (Output.Empty, Result.Fail([Error.ProcessRunError($"Cannot start $exePath")]))
           else if (!process.WaitForExit(timeout.TotalMilliseconds :> int)) 
           {
             KillProcess(process);
-            (Output([]), Result.Fail([Error.ProcessRunError($"$exePath has not exited in $timeout]")]))
+            (Output.Empty, Result.Fail([Error.ProcessRunError($"$exePath has not exited in $timeout]")]))
           }
           else 
           {
@@ -48,24 +51,25 @@ namespace MiniC.TestRunner
           }
         }
       }
+    }
       
-      ReadAllLines(reader: StreamReader): Output
-      {
-        Output(reader.ReadToEnd().Split(array["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries).ToNList())
-      }
-      
-      KillProcess(process: Process): void
-      {
-        unless (process.HasExited)
-          try
-          {
-            process.Kill();
-            ignore(process.WaitForExit(5000));
-          }
-          catch 
-          { 
-            _ => () 
-          }
+    ReadAllLines(reader: StreamReader): Output
+    {
+      Output(reader.ReadToEnd().Split(array["\r\n", "\r", "\n"], StringSplitOptions.RemoveEmptyEntries).ToNList())
+    }
+    
+    KillProcess(process: Process): void
+    {
+      unless (process.HasExited)
+        try
+        {
+          process.Kill();
+          ignore(process.WaitForExit(5000));
+        }
+        catch 
+        { 
+          _ => () 
+        }
       }
     }
   }

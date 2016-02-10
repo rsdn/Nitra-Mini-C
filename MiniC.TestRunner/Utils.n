@@ -19,6 +19,8 @@ namespace MiniC.TestRunner
     {
       Output(Lines.Append(that.Lines))
     }
+    
+    public static Empty: Output { get { Output([]) }}
   }
   
   type FilePath = string;
