@@ -15,7 +15,7 @@ namespace MiniC.TestRunner
 {
   module TestRunner
   {
-    public RunAll(config: Config): list[TestResult]
+    public RunAll(config: Config): list[TestResult] * TimeSpan
     {
       def runTest(test, outputDir)
       {
@@ -35,8 +35,10 @@ namespace MiniC.TestRunner
       
       def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
       WriteLine();
+      def totalSw = Stopwatch.StartNew();
       
-      TestReader
+      def results =
+        TestReader
         .ReadTests(config.SourceDir, "*.c")
         .AsParallel()
         .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
@@ -59,14 +61,14 @@ namespace MiniC.TestRunner
                         PrintOk($"$fileName - OK");
                         when (config.Verbose)
                           foreach (stage in result.Stages)
-                            Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                            Print($"  $(stage.Stage) - $(stage.CpuTime.TotalMilliseconds) ms");
                          
                     | Result.Fail(es) => 
                         PrintError($"$fileName - ERROR");
                         if (config.Verbose)
                           foreach (stage in result.Stages)
                           {
-                            Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                            Print($"  $(stage.Stage) - $(stage.CpuTime.TotalMilliseconds) ms");
                             when (stage.Result is Result.Fail(es)) printErrors(es, 2)
                           }
                         else printErrors(es, 1)
@@ -77,7 +79,8 @@ namespace MiniC.TestRunner
         })
         .TakeWhile(r => !config.StopOnFirstError || r.Result.IsOk)
         .ToList()
-        .ToNList()
+        .ToNList();
+        (results, totalSw.Elapsed)
     }
     
     PrintColored(message: string, color: ConsoleColor): void
@@ -96,7 +99,7 @@ namespace MiniC.TestRunner
     PrintOk(message: string): void { PrintColored(message, ConsoleColor.Green) }
     Print(message: string): void { PrintColored(message, ConsoleColor.White) }
   
-    public PrintTotalResults(results: list[TestResult], verbose: bool): void
+    public PrintTotalResults(results: list[TestResult], totalDuration: TimeSpan, verbose: bool): void
     {
       def stagesByType = 
           results.Map(r => r.Stages)
@@ -110,13 +113,13 @@ namespace MiniC.TestRunner
         def stats = 
           stagesByType.Map((stage, stages) =>
           {
-            def duration = TimeSpan.FromMilliseconds(stages.Map(x => x.Duration.TotalMilliseconds :> int).Sum() :> double);
+            def cpuTime = TimeSpan.FromMilliseconds(stages.Map(x => x.CpuTime.TotalMilliseconds :> int).Sum() :> double);
             def count = stages.Length;
             def errorCount = stages.Filter(x => !x.Result.IsOk).Length;
-            (stage, count, errorCount, duration)
+            (stage, count, errorCount, cpuTime)
           });
 
-        def totalDuration = TimeSpan.FromMilliseconds(stats.Map((_, _, _, x) => x.TotalMilliseconds).Sum());
+        def totalCpuTime = TimeSpan.FromMilliseconds(stats.Map((_, _, _, x) => x.TotalMilliseconds).Sum());
         def totalCount = results.Length;
         def totalError = results.Filter(r => !r.Result.IsOk).Length;
         
@@ -125,11 +128,11 @@ namespace MiniC.TestRunner
           WriteLine();
         
           foreach ((stage, count, errorCount, duration) in stats)
-            WriteLine($"$stage: count = $count, errors = $errorCount, duration = $duration");
+            WriteLine($"$stage: count = $count, errors = $errorCount, CPU time = $duration");
         }
         
         Print("");
-        def message = $"\nTotal: run = $totalCount, failed = $totalError, duration = $totalDuration\n";
+        def message = $"\nTotal: run = $totalCount, failed = $totalError, CPU time = $totalCpuTime, duration = $totalDuration\n";
         if (totalError == 0) 
         {
           PrintOk("OK");
@@ -227,7 +230,7 @@ namespace MiniC.TestRunner
   public class TestStageResult
   {
     public Stage: TestStage;
-    public Duration: TimeSpan;
+    public CpuTime: TimeSpan;
     public Result: Result[FakeVoid, Error];
     
     public static Time[T](stage: TestStage, f: void -> Result[T, Error]): ResultWriter[T, Error, TestStageResult]

@@ -17,7 +17,10 @@ namespace MiniC.TestRunner
     {
       def config = Config();
       when (config.Success)
-        TestRunner.PrintTotalResults(TestRunner.RunAll(config), config.Verbose)
+      {
+        def (results, duration) = TestRunner.RunAll(config);
+        TestRunner.PrintTotalResults(results, duration, config.Verbose)
+      }
     }
   }
 }
