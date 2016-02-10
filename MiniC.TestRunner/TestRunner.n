@@ -51,23 +51,26 @@ namespace MiniC.TestRunner
             | Result.Ok(case) =>
                 def result = runTest(case, tempDir.FullName);
                 def fileName = Path.GetFileNameWithoutExtension(case.SourceFile);
-                match (result.Result)
+                lock(typeof(TestRunner))
                 {
-                  | Result.Ok(_) => 
-                      PrintOk($"$fileName - OK");
-                      when (config.Verbose)
-                        foreach (stage in result.Stages)
-                          Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
-                       
-                  | Result.Fail(es) => 
-                      PrintError($"$fileName - ERROR");
-                      if (config.Verbose)
-                        foreach (stage in result.Stages)
-                        {
-                          Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
-                          when (stage.Result is Result.Fail(es)) printErrors(es, 2)
-                        }
-                      else printErrors(es, 1)
+                  match (result.Result)
+                  {
+                    | Result.Ok(_) => 
+                        PrintOk($"$fileName - OK");
+                        when (config.Verbose)
+                          foreach (stage in result.Stages)
+                            Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                         
+                    | Result.Fail(es) => 
+                        PrintError($"$fileName - ERROR");
+                        if (config.Verbose)
+                          foreach (stage in result.Stages)
+                          {
+                            Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                            when (stage.Result is Result.Fail(es)) printErrors(es, 2)
+                          }
+                        else printErrors(es, 1)
+                  }
                 }
                 TestResult(result.Result, result.Stages)
           }

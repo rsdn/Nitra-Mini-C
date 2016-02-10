@@ -88,7 +88,7 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Tests\EmptyMain.c">
+    <Content Include="Tests\EmptyFuncs.c">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Tests\LacalVars.c">
