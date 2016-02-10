@@ -11,7 +11,7 @@ using System.Linq;
 namespace MiniC.TestRunner
 {
   [Record, StructuralEquality]
-  class Output 
+  public class Output 
   { 
     public Lines: list[string];
     

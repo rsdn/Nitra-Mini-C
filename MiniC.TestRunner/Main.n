@@ -18,7 +18,7 @@ namespace MiniC.TestRunner
       def config = CommandPromptReader();
       when (config.Success)
       {
-        def tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
         def _results =
           TestReader
             .ReadTests(config.SourceDir, "*.c")
@@ -30,7 +30,7 @@ namespace MiniC.TestRunner
                     WriteLine(e);
                     case.Map(_ => FakeVoid())
                 | Result.Ok(case) =>
-                    def result = TestRunner.Run(case, tempDir);
+                    def result = TestRunner.Run(case, tempDir.FullName);
                     def fileName = Path.GetFileNameWithoutExtension(case.SourceFile);
                     match (result.Result)
                     {
@@ -42,10 +42,13 @@ namespace MiniC.TestRunner
                               WriteLine($"\t$(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
                               when (stage.Result is Result.Fail(es))
                                 foreach (e in es) 
-                                  WriteLine($"\t\t$e")
+                                  WriteLine($"$(e.Format(2))")
                             }
                            
-                      | Result.Fail(e) => WriteLine($"$fileName - $e");
+                      | Result.Fail(es) => 
+                          WriteLine($"$fileName - ERROR");
+                          foreach (e in es)
+                            WriteLine($"$(e.Format(1))")
                     }
                     result.Result
               }

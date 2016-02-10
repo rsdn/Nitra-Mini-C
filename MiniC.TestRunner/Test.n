@@ -21,22 +21,37 @@ namespace MiniC.TestRunner
   [Record]
   public variant Error
   {
-    | ReadTestError
-    | CompilerError
-    | VerifyError
-    | OutputError
-    public Message: string;
-    public override ToString(): string
+    | ProcessRunError { Message: string }
+    | ReadTestError { Message: string }
+    | CompilerError { Messages: list[string] }
+    | VerifyError { Message: list[string] }
+    | OutputError 
+      {
+        Expected: Output;
+        Actual: Output
+      }
+    
+    public Format(indent: int): string
     {
-      def name =
+      def prefix = string.Join("", Enumerable.Repeat("  ", indent).ToArray());
+      def (name, lines) =
         match(this)
         {
-          | ReadTestError => "ReadTest"
-          | CompilerError => "Compiler"
-          | VerifyError => "PeVerify"
-          | OutputError => "WrongOutput"
+          | ProcessRunError(msg) => ("ProcessRunError", [msg])
+          | ReadTestError(msg) => ("ReadTestError", [msg])
+          | CompilerError(msgs) => ("CompilerError", msgs)
+          | VerifyError(msgs) => ("PeVerifyError", msgs)
+          | OutputError(exp, act) => 
+            {
+              ("WrongOutput",
+               ["Expected:"]
+                .Append(exp.Lines.Map(x => prefix + x))
+                .Append(["Actual:"])
+                .Append(act.Lines.Map(x => prefix + x)))
+            }
         }
-      $"[$name] $Message"
+      def lines = string.Join("\n", lines.Map(x => prefix + prefix + x));
+      $"$prefix[$name]\n$lines"
     }
   }
   
@@ -63,10 +78,11 @@ namespace MiniC.TestRunner
           | (false, "END-OUTPUT" :: _) => error("END-OUTPUT without previous BEGIN-OUTPUT")
           | (true, line :: rest) => loop (true, line :: output, rest)
           | (true, []) => error("Missing END-OUTPUT marker")
+          | (false, []) => error("No BEGIN-OUTPUT marker was found")
           | (_, _ :: rest) => loop (inside, output, rest)
         }
       }
-      loop(false, [], lines).Map(x => Output(x.Reverse().Filter(x => x.Trim() != "")))
+      loop(false, [], lines.ToNList()).Map(x => Output(x.Reverse().Filter(x => !string.IsNullOrWhiteSpace(x))))
     }
   }
   
@@ -112,7 +128,7 @@ namespace MiniC.TestRunner
       def (_, verifyStage) =
         TestStageResult.Time(
           TestStage.Verify(), 
-          () => compilationResult.Bind(assemblyPath => Result.Ok(FakeVoid())));
+          () => compilationResult.Bind(_assemblyPath => Result.Ok(FakeVoid())));
           
       def (_, outputCheckStage) =
         TestStageResult.Time(
@@ -135,13 +151,12 @@ namespace MiniC.TestRunner
       def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(filePath)) + ".exe";
       ProcessRunner
         .Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath")
-        .MapError(e => Error.CompilerError(e))
         .Bind(output =>
         {
           match (output)
           {
             | Output([]) => Result.Ok(assemblyPath)
-            | _ => Result.Fail(output.Lines.Map(x => Error.CompilerError(x)))
+            | _ => Result.Fail([Error.CompilerError(output.Lines)])
           }
         });
     }
@@ -152,10 +167,9 @@ namespace MiniC.TestRunner
     public CheckAssemblyOutput(assemblyPath: FilePath, expectedOutput: Output): Result[FakeVoid, Error]
     {
       ProcessRunner.Run(assemblyPath, TimeSpan.FromSeconds(10))
-        .MapError(e => Error.OutputError(e))
         .Bind(actualOutput =>
           if (actualOutput != expectedOutput) 
-            Result.Fail([Error.OutputError($"Expected\n\n$(expectedOutput.Lines)\n\nbut was:\n\n$(actualOutput.Lines)")])
+            Result.Fail([Error.OutputError(expectedOutput, actualOutput)])
           else 
             Result.Ok(FakeVoid()))
     }
