@@ -30,7 +30,7 @@ namespace MiniC.TestRunner
       def printErrors(errors: list[Error], indent: int)
       {
         foreach (e in errors)
-          WriteLine($"$(e.Format(indent))")
+          PrintError($"$(e.Format(indent))")
       }
       
       def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
@@ -54,17 +54,17 @@ namespace MiniC.TestRunner
                 match (result.Result)
                 {
                   | Result.Ok(_) => 
-                      WriteLine($"$fileName - OK");
+                      PrintOk($"$fileName - OK");
                       when (config.Verbose)
                         foreach (stage in result.Stages)
-                          WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                          Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
                        
                   | Result.Fail(es) => 
-                      WriteLine($"$fileName - ERROR");
+                      PrintError($"$fileName - ERROR");
                       if (config.Verbose)
                         foreach (stage in result.Stages)
                         {
-                          WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                          Print($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
                           when (stage.Result is Result.Fail(es)) printErrors(es, 2)
                         }
                       else printErrors(es, 1)
@@ -76,10 +76,23 @@ namespace MiniC.TestRunner
         .ToList()
         .ToNList()
     }
-  }
+    
+    PrintColored(message: string, color: ConsoleColor): void
+    {
+      lock (typeof(TestRunner))
+      {
+        Console.ForegroundColor = color;
+        try
+          WriteLine(message)
+        finally
+          Console.ResetColor()
+      }
+    }
+    
+    PrintError(message: string): void { PrintColored(message, ConsoleColor.Red) }
+    PrintOk(message: string): void { PrintColored(message, ConsoleColor.Green) }
+    Print(message: string): void { PrintColored(message, ConsoleColor.White) }
   
-  module ResultsPrinter
-  {
     public PrintTotalResults(results: list[TestResult], verbose: bool): void
     {
       def stagesByType = 
@@ -112,8 +125,18 @@ namespace MiniC.TestRunner
             WriteLine($"$stage: count = $count, errors = $errorCount, duration = $duration");
         }
         
-        WriteLine("\n" + if (totalError == 0) "OK" else "ERROR");
-        WriteLine($"\nTotal: run = $totalCount, failed = $totalError, duration = $totalDuration\n");
+        Print("");
+        def message = $"\nTotal: run = $totalCount, failed = $totalError, duration = $totalDuration\n";
+        if (totalError == 0) 
+        {
+          PrintOk("OK");
+          PrintOk(message);
+        }
+        else 
+        {
+          PrintError("ERROR");
+          PrintError(message);
+        }
     }
   }
   
