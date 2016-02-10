@@ -1,10 +1,8 @@
 ﻿int main() {
-	return;
+	return 0;
 }
 
 /*
 BEGIN-OUTPUT
-1
-2
 END-OUTPUT
 */

@@ -73,7 +73,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
-    <Compile Include="Test.n">
+    <Compile Include="TestRunner.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Result.n">
@@ -89,6 +89,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Tests\EmptyMain.c">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Tests\LacalVars.c">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

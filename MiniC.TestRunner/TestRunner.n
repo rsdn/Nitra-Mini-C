@@ -22,7 +22,7 @@ namespace MiniC.TestRunner
         def result =
           TestStageResult.Time(TestStage.Compile, () => Compiler.Compile(test.SourceFile, outputDir, config.CompilerPath))
             .Bind(assembly => TestStageResult.Time(TestStage.Verify, () => PeVerify.VerifyAssembly(assembly)))
-            .Bind(assembly => TestStageResult.Time(TestStage.OutputCheck, () => OutputChecker.CheckAssemblyOutput(assembly, test.ExpectedOutput)));
+            .Bind(assembly => TestStageResult.Time(TestStage.RunAssembly, () => OutputChecker.CheckAssemblyOutput(assembly, test.ExpectedOutput)));
           
         TestResult(result.Result, result.Writer)
       }
@@ -34,8 +34,12 @@ namespace MiniC.TestRunner
       }
       
       def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+      WriteLine();
+      
       TestReader
         .ReadTests(config.SourceDir, "*.c")
+        .AsParallel()
+        .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
         .Select(case => 
         {
           match (case)
@@ -107,7 +111,8 @@ namespace MiniC.TestRunner
           foreach ((stage, count, errorCount, duration) in stats)
             WriteLine($"$stage: count = $count, errors = $errorCount, duration = $duration");
         }
-      
+        
+        WriteLine("\n" + if (totalError == 0) "OK" else "ERROR");
         WriteLine($"\nTotal: run = $totalCount, failed = $totalError, duration = $totalDuration\n");
     }
   }
@@ -189,7 +194,7 @@ namespace MiniC.TestRunner
   {
     | Compile
     | Verify
-    | OutputCheck
+    | RunAssembly
   }
   
   [Record]
