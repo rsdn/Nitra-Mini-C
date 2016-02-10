@@ -38,17 +38,21 @@ namespace MiniC.TestRunner
                           WriteLine($"$fileName - OK");
                           when (config.Verbose)
                             foreach (stage in result.Stages)
+                              WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                           
+                      | Result.Fail(es) => 
+                          WriteLine($"$fileName - ERROR");
+                          if (config.Verbose)
+                            foreach (stage in result.Stages)
                             {
-                              WriteLine($"\t$(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                              WriteLine($"  $(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
                               when (stage.Result is Result.Fail(es))
                                 foreach (e in es) 
                                   WriteLine($"$(e.Format(2))")
                             }
-                           
-                      | Result.Fail(es) => 
-                          WriteLine($"$fileName - ERROR");
-                          foreach (e in es)
-                            WriteLine($"$(e.Format(1))")
+                          else
+                            foreach (e in es)
+                              WriteLine($"$(e.Format(1))")
                     }
                     result.Result
               }

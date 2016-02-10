@@ -24,7 +24,7 @@ namespace MiniC.TestRunner
         | Fail(e) => Fail(e)
       }
     }
-    
+
     public Map[U](f: T -> U): Result[U, E]
     {
       match (this) 
@@ -40,6 +40,24 @@ namespace MiniC.TestRunner
       {
         | Ok(x) => Ok(x)
         | Fail(e) => Fail(e.Map(f))
+      }
+    }
+  }
+  
+  [Record]
+  public class ResultWriter[T, E, W]
+  {
+    public Result: Result[T, E];
+    public Writer: list[W];
+    
+    public Bind[U](binder: T -> ResultWriter[U, E, W]): ResultWriter[U, E, W]
+    {
+      match (Result)
+      {
+        | Ok(x) => 
+            def r = binder(x);
+            ResultWriter(r.Result, Writer.Append(r.Writer))
+        | Fail(e) => ResultWriter(Result.Fail(e), Writer)
       }
     }
   }

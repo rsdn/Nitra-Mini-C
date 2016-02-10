@@ -91,6 +91,15 @@ namespace MiniC.TestRunner
     | Compile
     | Verify
     | OutputCheck
+    public override ToString(): string
+    {
+      match (this)
+      {
+        | Compile => "Compilation"
+        | Verify => "PeVerify"
+        | OutputCheck => "Run generated assembly"
+      }
+    }
   }
   
   [Record]
@@ -100,44 +109,32 @@ namespace MiniC.TestRunner
     public Duration: TimeSpan;
     public Result: Result[FakeVoid, Error];
     
-    public static Time[T](stage: TestStage, f: void -> Result[T, Error]): (Result[T, Error] * TestStageResult)
+    public static Time[T](stage: TestStage, f: void -> Result[T, Error]): ResultWriter[T, Error, TestStageResult]
     {
       def sw = Stopwatch.StartNew();
       def result = f();
       sw.Stop();
-      (result, TestStageResult(stage, sw.Elapsed, result.Map(_ => FakeVoid())))
+      ResultWriter(result, [TestStageResult(stage, sw.Elapsed, result.Map(_ => FakeVoid()))])
     }
   }
 
   [Record]
   public class TestResult
   {
+    public Result: Result[FakeVoid, Error];
     public Stages: list[TestStageResult];
-    public Result: Result[FakeVoid, Error]
   }
   
   module TestRunner
   {
     public Run(case: TestCase, outputDir: DirPath): TestResult
     {
-      def (compilationResult, compilationStage) = 
-        TestStageResult.Time(
-          TestStage.Compile(), 
-          () => Compiler.Compile(case.SourceFile, outputDir));
-      
-      def (_, verifyStage) =
-        TestStageResult.Time(
-          TestStage.Verify(), 
-          () => compilationResult.Bind(_assemblyPath => Result.Ok(FakeVoid())));
+      def result =
+        TestStageResult.Time(TestStage.Compile(), () => Compiler.Compile(case.SourceFile, outputDir))
+          .Bind(assembly => TestStageResult.Time(TestStage.Verify(), () => PeVerify.VerifyAssembly(assembly)))
+          .Bind(assembly => TestStageResult.Time(TestStage.OutputCheck(), () => OutputChecker.CheckAssemblyOutput(assembly, case.ExpectedOutput)));
           
-      def (_, outputCheckStage) =
-        TestStageResult.Time(
-          TestStage.OutputCheck(),
-          () => compilationResult.Bind(assemblyPath => OutputChecker.CheckAssemblyOutput(assemblyPath, case.ExpectedOutput)));
-        
-      def stageResults = [compilationStage, verifyStage, outputCheckStage];
-      def result = stageResults.Map(_.Result).Fold(Result.Ok(FakeVoid()), (r, acc) => acc.Bind(_ => r));
-      TestResult([compilationStage, verifyStage, outputCheckStage], result)
+      TestResult(result.Result, result.Writer)
     }
   }
   
@@ -149,16 +146,14 @@ namespace MiniC.TestRunner
     public Compile(filePath: FilePath, outputDir: DirPath): Result[AssemblyPath, Error]
     {
       def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(filePath)) + ".exe";
-      ProcessRunner
-        .Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath")
-        .Bind(output =>
+      def (output, result) = ProcessRunner.Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath");
+      def outputResult = 
+        match (output)
         {
-          match (output)
-          {
-            | Output([]) => Result.Ok(assemblyPath)
-            | _ => Result.Fail([Error.CompilerError(output.Lines)])
-          }
-        });
+          | Output([]) => Result.Ok(FakeVoid())
+          | _ => Result.Fail([Error.CompilerError(output.Lines)])
+        }
+      outputResult.Bind(_ => result).Map(_ => assemblyPath)
     }
   }
   
@@ -166,12 +161,13 @@ namespace MiniC.TestRunner
   {
     public CheckAssemblyOutput(assemblyPath: FilePath, expectedOutput: Output): Result[FakeVoid, Error]
     {
-      ProcessRunner.Run(assemblyPath, TimeSpan.FromSeconds(10))
-        .Bind(actualOutput =>
-          if (actualOutput != expectedOutput) 
-            Result.Fail([Error.OutputError(expectedOutput, actualOutput)])
-          else 
-            Result.Ok(FakeVoid()))
+      def (output, result) = ProcessRunner.Run(assemblyPath, TimeSpan.FromSeconds(10));
+      def outputResult =  
+        if (output != expectedOutput) 
+          Result.Fail([Error.OutputError(expectedOutput, output)])
+        else 
+          Result.Ok(FakeVoid());
+      outputResult.Bind(_ => result)
     }
   }
 }

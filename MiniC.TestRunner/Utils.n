@@ -23,4 +23,16 @@ namespace MiniC.TestRunner
   
   type FilePath = string;
   type DirPath = string;
+  
+  module NListExtensions
+  {
+    public TryHead[T](this l: list[T]): option[T]
+    {
+      match (l)
+      {
+        | [] => None()
+        | h :: _ => Some(h)
+      }
+    }
+  }
 }

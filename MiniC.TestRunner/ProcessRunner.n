@@ -16,7 +16,7 @@ namespace MiniC.TestRunner
 {
   module ProcessRunner
   {
-    public Run(exePath: FilePath, timeout: TimeSpan, arguments: string = null): Result[Output, Error]
+    public Run(exePath: FilePath, timeout: TimeSpan, arguments: string = null): Output * Result[FakeVoid, Error]
     {
         def startInfo = ProcessStartInfo() <-
         {
@@ -32,14 +32,20 @@ namespace MiniC.TestRunner
         using (process = Process() <- { StartInfo = startInfo; EnableRaisingEvents = true })
         {
           if (!process.Start()) 
-            Result.Fail([Error.ProcessRunError($"Cannot start $exePath")])
+            (Output([]), Result.Fail([Error.ProcessRunError($"Cannot start $exePath")]))
           else if (!process.WaitForExit(timeout.TotalMilliseconds :> int)) 
           {
             KillProcess(process);
-            Result.Fail([Error.ProcessRunError($"$exePath has not exited in $timeout]")]);
+            (Output([]), Result.Fail([Error.ProcessRunError($"$exePath has not exited in $timeout]")]))
           }
           else 
-            Result.Ok(ReadAllLines(process.StandardOutput).Append(ReadAllLines(process.StandardError)));
+          {
+            def output = ReadAllLines(process.StandardOutput).Append(ReadAllLines(process.StandardError));
+            if (process.ExitCode != 0)
+              (output, Result.Fail([Error.ProcessRunError($"$exePath exited with non zero code $(process.ExitCode)")]))
+            else
+              (output, Result.Ok(FakeVoid()));
+          }
         }
       }
       

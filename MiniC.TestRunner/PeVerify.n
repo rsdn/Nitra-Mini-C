@@ -1,0 +1,85 @@
+﻿using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using System;
+using System.IO;
+using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace MiniC.TestRunner
+{
+  module PeVerify
+  {
+    PeVerifyExpectedExitCode = 0;
+    
+    GetPeVerifyPath(): Result[FilePath, Error]
+    {
+      def programFilesDir = Environment.ExpandEnvironmentVariables("%ProgramFiles%");
+      
+      def otherProgramFilesDir =
+        if (programFilesDir.Contains("(x86)"))
+          programFilesDir.Replace(" (x86)", "")
+        else $"$programFilesDir (x86)";
+      
+      def sdkDirs = [programFilesDir, otherProgramFilesDir].Map(x => DirectoryInfo(x + @"\Microsoft SDKs\Windows")).Filter(_.Exists);
+      if (sdkDirs.IsEmpty) Result.Fail([Error.VerifyError(["PeVerify.exe is needed to verify compiled assemblies, but no Microsoft SDK is found."])])
+      else
+      {
+        def exePath = 
+          sdkDirs
+          .Map(_.GetDirectories())
+          .Flatten()
+          .Map(sdkVersion => sdkVersion.GetDirectories("bin"))
+          .Flatten()
+          .Map(binDir => binDir.GetDirectories("NETFX*Tools"))
+          .Flatten()
+          .Map(toolsDir =>
+          {
+              def path = Path.Combine(toolsDir.FullName, "peverify.exe");
+              if (File.Exists(path)) Some(path) else None()
+          })
+          .Filter(_.IsSome)
+          .Map(_.Value)
+          .TryHead();
+      
+        match (exePath)
+        {
+          | Some(x) => Result.Ok(x)  
+          | None => Result.Fail([Error.VerifyError([$"Could not find peverify.exe under $(sdkDirs.Map(_.FullName))"])]);
+        }
+      }
+    }
+
+    public VerifyAssembly(assemblyName: FilePath): Result[FilePath, Error]
+    {
+      def parseErrors(output: Output): Result[FakeVoid, Error]
+      {
+        match (output.Lines.Filter(_.Contains("[IL]:")))
+        {
+          | [] => Result.Ok(FakeVoid())
+          | errors => 
+              Result.Fail([Error.VerifyError(errors.Map(error =>
+              {
+                // Lets remove any path information.
+                def path = Path.GetDirectoryName(assemblyName) + "\\";
+                def sb = StringBuilder(error);
+                when (path.Length > 0) ignore(sb.Replace(path, ""));
+                sb.Replace("\r\n", " ").ToString()
+              }))])
+        }
+      }
+      
+      GetPeVerifyPath()
+        .Bind(peVerifyPath => 
+        {
+          def (output, result) = ProcessRunner.Run(peVerifyPath, TimeSpan.FromSeconds(10), $"$assemblyName /UNIQUE /IL /NOLOGO");
+          def errors = parseErrors(output);
+          errors.Bind(_ => result)
+        })
+        .Map(_ => assemblyName);
+    }
+  }
+}
