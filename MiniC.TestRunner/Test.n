@@ -14,7 +14,7 @@ namespace MiniC.TestRunner
   [Record]
   class TestCase
   {
-    public SourceFile: string;
+    public SourceFile: FilePath;
     public ExpectedOutput: Output;
   }
   
@@ -25,22 +25,33 @@ namespace MiniC.TestRunner
     | CompilerError
     | VerifyError
     | OutputError
-    public Messages: list[string]
+    public Message: string;
+    public override ToString(): string
+    {
+      def name =
+        match(this)
+        {
+          | ReadTestError => "ReadTest"
+          | CompilerError => "Compiler"
+          | VerifyError => "PeVerify"
+          | OutputError => "WrongOutput"
+        }
+      $"[$name] $Message"
+    }
   }
   
   module TestReader
   {
-    public ReadTests(dir: string, pattern: string): list[Result[TestCase, Error]]
+    public ReadTests(dir: DirPath, pattern: string): Seq[Result[TestCase, Error]]
     {
       Directory
-        .GetFiles(dir, pattern)
-        .ToNList()
-        .Map(file => ParseOutputComment(File.ReadAllLines(file)).Map(x => TestCase(file, x)))
+        .EnumerateFiles(dir, pattern)
+        .Select(file => ParseOutputComment(File.ReadAllLines(file)).Map(x => TestCase(file, x)))
     }
     
     ParseOutputComment(lines: array[string]): Result[Output, Error]
     {
-      def error(msg) { Result.Fail([Error.ReadTestError([msg])]) }
+      def error(msg) { Result.Fail([Error.ReadTestError(msg)]) }
       
       def loop (inside, output, lines)
       {
@@ -61,9 +72,9 @@ namespace MiniC.TestRunner
   
   public variant TestStage
   {
-    | Compilation
-    | Verifying
-    | OutputChecking
+    | Compile
+    | Verify
+    | OutputCheck
   }
   
   [Record]
@@ -85,46 +96,68 @@ namespace MiniC.TestRunner
   [Record]
   public class TestResult
   {
-    public Stages: list[TestStageResult]
+    public Stages: list[TestStageResult];
+    public Result: Result[FakeVoid, Error]
   }
   
   module TestRunner
   {
-    public Run(case: TestCase, outputDir: string): TestResult
+    public Run(case: TestCase, outputDir: DirPath): TestResult
     {
       def (compilationResult, compilationStage) = 
         TestStageResult.Time(
-          TestStage.Compilation(), 
+          TestStage.Compile(), 
           () => Compiler.Compile(case.SourceFile, outputDir));
       
-      def (verifyResult, verifyStage) =
+      def (_, verifyStage) =
         TestStageResult.Time(
-          TestStage.Verifying(), 
-          () => compilationResult.Bind(assemblyName => Result.Ok(FakeVoid())));
+          TestStage.Verify(), 
+          () => compilationResult.Bind(assemblyPath => Result.Ok(FakeVoid())));
+          
+      def (_, outputCheckStage) =
+        TestStageResult.Time(
+          TestStage.OutputCheck(),
+          () => compilationResult.Bind(assemblyPath => OutputChecker.CheckAssemblyOutput(assemblyPath, case.ExpectedOutput)));
         
-      TestResult([compilationStage, verifyStage])
+      def stageResults = [compilationStage, verifyStage, outputCheckStage];
+      def result = stageResults.Map(_.Result).Fold(Result.Ok(FakeVoid()), (r, acc) => acc.Bind(_ => r));
+      TestResult([compilationStage, verifyStage, outputCheckStage], result)
     }
   }
   
   module Compiler
   {
-    compilerPath: string = @"..\..\..\MiniC.Compiler\bin\Debug\MiniC.Compiler.exe";
-    type AssemblyPath = string;
+    compilerPath = @"..\..\..\MiniC.Compiler\bin\Debug\MiniC.Compiler.exe";
+    type AssemblyPath = FilePath;
     
-    public Compile(filePath: string, outputDir: string): Result[AssemblyPath, Error]
+    public Compile(filePath: FilePath, outputDir: DirPath): Result[AssemblyPath, Error]
     {
       def assemblyPath = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(filePath)) + ".exe";
       ProcessRunner
         .Run(compilerPath, TimeSpan.FromSeconds(10), $"-f $filePath -out $assemblyPath")
-        .MapError(e => Error.CompilerError([e]))
+        .MapError(e => Error.CompilerError(e))
         .Bind(output =>
         {
           match (output)
           {
             | Output([]) => Result.Ok(assemblyPath)
-            | _ => Result.Fail([Error.CompilerError(output.Lines)])
+            | _ => Result.Fail(output.Lines.Map(x => Error.CompilerError(x)))
           }
         });
+    }
+  }
+  
+  module OutputChecker
+  {
+    public CheckAssemblyOutput(assemblyPath: FilePath, expectedOutput: Output): Result[FakeVoid, Error]
+    {
+      ProcessRunner.Run(assemblyPath, TimeSpan.FromSeconds(10))
+        .MapError(e => Error.OutputError(e))
+        .Bind(actualOutput =>
+          if (actualOutput != expectedOutput) 
+            Result.Fail([Error.OutputError($"Expected\n\n$(expectedOutput.Lines)\n\nbut was:\n\n$(actualOutput.Lines)")])
+          else 
+            Result.Ok(FakeVoid()))
     }
   }
 }

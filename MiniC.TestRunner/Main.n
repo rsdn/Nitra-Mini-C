@@ -1,6 +1,7 @@
 ﻿using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
+using Nemerle;
 
 using System;
 using System.Collections.Generic;
@@ -18,17 +19,40 @@ namespace MiniC.TestRunner
       when (config.Success)
       {
         def tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        TestReader.ReadTests(config.SourceDir, "*.c").Map(test =>
-        {
-          test.Bind(x => 
-          {
-            match (TestRunner.Run(x, tempDir))
+        def _results =
+          TestReader
+            .ReadTests(config.SourceDir, "*.c")
+            .Select(case => 
             {
-              | r when r.Stages.All(x => x.Result.IsOk) => Result.Ok(r)
-              | r => Result.Fail([]) // Result.Fail(r.Stages.Map(_.Result).OfType.[Result.Fail[Error]]().Map(x => x.)
-            }
-          })
-        })
+              match (case)
+              {
+                | Result.Fail(e) => 
+                    WriteLine(e);
+                    case.Map(_ => FakeVoid())
+                | Result.Ok(case) =>
+                    def result = TestRunner.Run(case, tempDir);
+                    def fileName = Path.GetFileNameWithoutExtension(case.SourceFile);
+                    match (result.Result)
+                    {
+                      | Result.Ok(_) => 
+                          WriteLine($"$fileName - OK");
+                          when (config.Verbose)
+                            foreach (stage in result.Stages)
+                            {
+                              WriteLine($"\t$(stage.Stage) - $(stage.Duration.TotalMilliseconds) ms");
+                              when (stage.Result is Result.Fail(es))
+                                foreach (e in es) 
+                                  WriteLine($"\t\t$e")
+                            }
+                           
+                      | Result.Fail(e) => WriteLine($"$fileName - $e");
+                    }
+                    result.Result
+              }
+            })
+            .TakeWhile(x => !config.StopOnFirstError || x.IsOk)
+            .ToList()
+            .ToNList()
       }
     }
   }

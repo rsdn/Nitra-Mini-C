@@ -12,8 +12,11 @@ namespace MiniC.TestRunner
 {
   class CommandPromptReader
   {
-    public SourceDir  : string { get; private set; }
-    public Success    : bool   { get; }
+    public SourceDir        : string { get; private set; }
+    public SearchPattern    : string { get; private set; }
+    public StopOnFirstError : bool { get; private set; }
+    public Verbose          : bool { get; private set; }
+    public Success          : bool { get; }
 
     public this()
     {
@@ -21,7 +24,19 @@ namespace MiniC.TestRunner
         CliOption.String(name = "-dir",
                     aliases = [],
                     help = "Directory containing test files",
-                    handler = sourceDir => { SourceDir = sourceDir }),
+                    handler = x => { SourceDir = x }),
+        CliOption.String(name = "-pattern",
+                    aliases = ["-p"],
+                    help = "Files search pattern",
+                    handler = x => { SearchPattern = if (string.IsNullOrWhiteSpace(x)) "*.c" else x }),
+        CliOption.Boolean(name = "-stop_on_first_error",
+                    aliases = ["-sfe"],
+                    help = "Stop on first failed test",
+                    handler = x => { StopOnFirstError = x }),
+        CliOption.Boolean(name = "-verbose",
+                    aliases = ["-v"],
+                    help = "Verbose output",
+                    handler = x => { Verbose = x })
         ];
       
       Getopt.Parse(options);

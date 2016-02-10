@@ -16,7 +16,7 @@ namespace MiniC.TestRunner
 {
   module ProcessRunner
   {
-    public Run(exePath: string, timeout: TimeSpan, arguments: string = null): Result[Output, string]
+    public Run(exePath: FilePath, timeout: TimeSpan, arguments: string = null): Result[Output, string]
     {
         def startInfo = ProcessStartInfo() <-
         {
