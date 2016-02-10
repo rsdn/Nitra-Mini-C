@@ -2,6 +2,7 @@
 using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
+using Nemerle.Extensions;
 
 using System;
 using System.Diagnostics;
@@ -86,20 +87,11 @@ namespace MiniC.TestRunner
     }
   }
   
-  public variant TestStage
+    public enum TestStage
   {
     | Compile
     | Verify
     | OutputCheck
-    public override ToString(): string
-    {
-      match (this)
-      {
-        | Compile => "Compilation"
-        | Verify => "PeVerify"
-        | OutputCheck => "Run generated assembly"
-      }
-    }
   }
   
   [Record]
@@ -130,9 +122,9 @@ namespace MiniC.TestRunner
     public Run(case: TestCase, outputDir: DirPath): TestResult
     {
       def result =
-        TestStageResult.Time(TestStage.Compile(), () => Compiler.Compile(case.SourceFile, outputDir))
-          .Bind(assembly => TestStageResult.Time(TestStage.Verify(), () => PeVerify.VerifyAssembly(assembly)))
-          .Bind(assembly => TestStageResult.Time(TestStage.OutputCheck(), () => OutputChecker.CheckAssemblyOutput(assembly, case.ExpectedOutput)));
+        TestStageResult.Time(TestStage.Compile, () => Compiler.Compile(case.SourceFile, outputDir))
+          .Bind(assembly => TestStageResult.Time(TestStage.Verify, () => PeVerify.VerifyAssembly(assembly)))
+          .Bind(assembly => TestStageResult.Time(TestStage.OutputCheck, () => OutputChecker.CheckAssemblyOutput(assembly, case.ExpectedOutput)));
           
       TestResult(result.Result, result.Writer)
     }
