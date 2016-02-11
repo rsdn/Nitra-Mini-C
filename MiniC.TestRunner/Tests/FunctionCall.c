@@ -7,8 +7,10 @@ int g(int i) {
 }
 
 int main() {
+    int i;
 	f();
     g(1);
+    i = g(2);
 	return 0;
 }
 

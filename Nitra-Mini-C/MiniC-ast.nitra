@@ -110,6 +110,7 @@ namespace MiniC
     | If 
       {
         Condition.Scope = Scope;
+        Condition.Used = true;
         TrueBranch.Scope  = Scope;
         FalseBranch.Scope = Scope;
         TrueBranch.DeclaredIn = DeclaredIn;
@@ -124,6 +125,7 @@ namespace MiniC
     | While 
       {
         Condition.Scope = Scope;
+        Condition.Used = true;
         Body.Scope = Scope;
         Body.DeclaredIn = DeclaredIn;
         Body.Loop = Some(this);
@@ -135,6 +137,7 @@ namespace MiniC
     | Return 
       { 
         Value.Scope = Scope;
+        Value.Used = true;
 
         unless (MiniCTypeUnifier.Instance.TryUnify(Value.Type, DeclaredIn.ReturnType))
           Value.Error($"Expected $(DeclaredIn.ReturnType) but found $(Value.Type)");
@@ -151,6 +154,7 @@ namespace MiniC
   abstract ast Unary : Expr 
   { 
     Expr1.Scope = Scope;
+    Expr1.Used = Used;
     Type = Expr1.Type;
 
     unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetIntSymbol()) ||
@@ -164,6 +168,9 @@ namespace MiniC
   { 
     Expr1.Scope = Scope;
     Expr2.Scope = Scope;
+    Expr1.Used = Used;
+    Expr2.Used = Used;
+
     Expr1 : Expr;
     Expr2 : Expr; 
   }
@@ -200,6 +207,7 @@ namespace MiniC
   {
     in Type: TypeSymbol = context.GetVoidSymbol();
     in ExpectedType: TypeSymbol = MiniCTypeUnifier.Instance.CreateTypeVar();
+    in Used: bool = false;
 
     unless (MiniCTypeUnifier.Instance.TryUnify(Type, ExpectedType))
         Error($"Expected $(self.ExpectedType) but got $(self.Type)");
@@ -253,6 +261,7 @@ namespace MiniC
         
         Arguments.IndexIn = 0;
         Arguments.Func = Ref.Symbol;
+        Arguments.Used = true;
         Type = Ref.Symbol.ReturnType;
 
         Arguments: Expr.Argument*;
@@ -265,6 +274,7 @@ namespace MiniC
         in Func : FunDeclarationSymbol;
 
         Expr.Scope = Scope;
+        Expr.Used = true;
 
         IndexOut = IndexIn + 1;
         ExpectedType = AstUtils.GetParameterType(Func, IndexIn);
@@ -287,6 +297,7 @@ namespace MiniC
         Type = TypeRef.Type;
         Size.Scope = Scope;
         Size.ExpectedType = context.GetIntSymbol();
+        Size.Used = true;
 
         TypeRef: TypeReference;
         Size: Expr;
@@ -297,6 +308,7 @@ namespace MiniC
         Reference.Scope = Scope;
         Value.Scope = Scope;
         Value.ExpectedType = Ref.Symbol.Type;
+        Value.Used = true;
 
         Reference: Reference;
         Value: Expr;
@@ -307,8 +319,10 @@ namespace MiniC
         Reference.Scope = Scope;
         Index.Scope = Scope;
         Index.ExpectedType = context.GetIntSymbol();
+        Index.Used = true;
         Value.Scope = Scope;
         Value.ExpectedType = Ref.Symbol.Type;
+        Value.Used = true;
         
         Reference: Reference;
         Index: Expr;

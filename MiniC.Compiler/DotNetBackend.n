@@ -239,7 +239,7 @@ namespace MiniC.Compiler
         def writeLineFun =
         {
           def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
-          TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemString);
+          TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemInt32);
         }
       
         _functionMap[_context.Print] = writeLineFun;
@@ -311,6 +311,9 @@ namespace MiniC.Compiler
         
         | _ => WriteLine($"Unhandled expression! $expr");
       }
+      
+      when (!expr.Used && !MiniCTypeUnifier.Instance.TryUnify(expr.Type, _context.Void))
+        ilGenerator.Emit(OperationCode.Pop);
     }
     
     LoadVar(ilGenerator: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
