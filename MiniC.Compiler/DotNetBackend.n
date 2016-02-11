@@ -306,9 +306,26 @@ namespace MiniC.Compiler
 
             ilGenerator.Emit(OperationCode.Call, _functionMap[call.Ref.Symbol])
         
-        | Argument as arg =>
-            GenerateExpression(methodContext, arg.Expr);
-        
+        | Argument as arg => GenerateExpression(methodContext, arg.Expr);
+        | Binary as bin =>
+            GenerateExpression(methodContext, bin.Expr1);
+            GenerateExpression(methodContext, bin.Expr2);
+            def opCode =
+              match (bin) 
+              {
+                //| LessEqual => OperationCode
+                | Less => OperationCode.Clt
+                //| GreaterEqual =>
+                | Greater => OperationCode.Cgt
+                | Sum => OperationCode.Add
+                | Sub => OperationCode.Sub
+                //| Modulus =>
+                | Multiply => OperationCode.Mul
+                | Divide => OperationCode.Div
+              }
+              
+            ilGenerator.Emit(opCode);
+            
         | _ => WriteLine($"Unhandled expression! $expr");
       }
       
