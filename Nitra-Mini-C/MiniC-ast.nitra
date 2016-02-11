@@ -212,6 +212,9 @@ namespace MiniC
     unless (MiniCTypeUnifier.Instance.TryUnify(Type, ExpectedType))
         Error($"Expected $(self.ExpectedType) but got $(self.Type)");
 
+    //unless (Used || MiniCTypeUnifier.Instance.TryUnify(Type, context.GetVoidSymbol()))
+        //Warning("Result of expression is not used.");
+
     | IntegerLiteral 
       { 
         Type = context.GetIntSymbol();
@@ -244,6 +247,7 @@ namespace MiniC
         Reference.Scope = Scope;
         Index.Scope = Scope;
         Index.ExpectedType = context.GetIntSymbol();
+        Index.Used = true;
         Type = Ref.Symbol.Type;
         
         Reference: Reference;
@@ -309,6 +313,7 @@ namespace MiniC
         Value.Scope = Scope;
         Value.ExpectedType = Ref.Symbol.Type;
         Value.Used = true;
+        Used = true;
 
         Reference: Reference;
         Value: Expr;
@@ -323,6 +328,7 @@ namespace MiniC
         Value.Scope = Scope;
         Value.ExpectedType = Ref.Symbol.Type;
         Value.Used = true;
+        Used = true;
         
         Reference: Reference;
         Index: Expr;
