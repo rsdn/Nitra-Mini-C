@@ -11,7 +11,7 @@ namespace MiniC
   
   map syntax MiniCSyntax.TopDeclaration -> TopDeclaration
   {
-    | VarDeclaration -> VarDeclaration 
+    | VarDeclaration -> VarDeclaration(VarHeader { true -> IsGlobal })
     | FunDeclaration -> FunDeclaration 
       {
         Name                  -> Name;
@@ -23,7 +23,7 @@ namespace MiniC
   
   map syntax MiniCSyntax.CompoundStatement -> CompoundStatement
   {
-    VarDeclarations -> LocalVariables;
+    VarDeclarations -> LocalVariables(VarHeader { false -> IsGlobal });
     Statements -> Statements;
   }
 
@@ -115,18 +115,20 @@ namespace MiniC
     | LogicalNegate { Expr -> Expr1; }
   }
   
-  map syntax MiniCSyntax.VarDeclaration -> VarDeclaration
+  map syntax MiniCSyntax.VarDeclaration(header: VarHeader) -> VarDeclaration
   {
     | Scalar -> ScalarDeclaration
       {
         Name    -> Name;
         TypeRef -> TypeRef;
+        header  -> Header;
       }
   
     | Array -> ArrayDeclaration
       {
         Name    -> Name;
         TypeRef -> TypeRef;
+        header  -> Header;
       }
   }
   

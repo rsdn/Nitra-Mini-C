@@ -12,23 +12,29 @@ namespace MiniC
     TopDeclarations: TopDeclaration*;
   }
 
-  abstract declaration TopDeclaration
+  abstract declaration TopDeclaration {}
+
+  ast VarHeader 
   {
+    in IsGlobal: bool;
   }
-  
+
   abstract declaration VarDeclaration: TopDeclaration 
   {
     symbol
     {
       in Type: TypeSymbol;
+      in IsGlobal: bool;
 
       SpanClass = MiniC.VariableSpanClass;
       Kind = "variable";
     }
 
     Symbol.Type = TypeRef.Type;
+    Symbol.IsGlobal = Header.IsGlobal;
 
     TypeRef : TypeReference;
+    Header  : VarHeader;
 
     | ScalarDeclaration {}
     | ArrayDeclaration {}
