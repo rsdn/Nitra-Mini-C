@@ -290,41 +290,41 @@ namespace MiniC.Compiler
       match (expr)
       {
         | IntegerLiteral as e => ilGenerator.Emit(OperationCode.Ldc_I4, e.Value.Value);
-        | VariableRef as e =>
-          match (e.Ref.Symbol.VarKind)
-          {
-            | Global =>
-              {
-                def cciVar = _globalVarMap[e.Ref.Symbol];
-                ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
-              }
-            | Local =>
-              {
-                def cciVar = methodContext.GetCciLocalVar(e.Ref.Symbol);
-                ilGenerator.Emit(OperationCode.Ldloc, cciVar);
-              }
-            | Parameter =>
-              {
-                def cciParam = methodContext.GetCciParameter(e.Ref.Symbol);
-                ilGenerator.Emit(OperationCode.Ldarg, cciParam);
-              }
-          }
-          
+        | VariableRef as e => LoadVar(ilGenerator, methodContext, e.Ref.Symbol);
         | ScalarAssignment as assignment =>
-          GenerateExpression(methodContext, assignment.Value);
-          def cciVar = methodContext.GetCciLocalVar(assignment.Ref.Symbol);
-          ilGenerator.Emit(OperationCode.Stloc, cciVar);
+            GenerateExpression(methodContext, assignment.Value);
+            def cciVar = methodContext.GetCciLocalVar(assignment.Ref.Symbol);
+            ilGenerator.Emit(OperationCode.Stloc, cciVar);
           
         | FunCall as call =>
-          foreach (p in call.Ref.Symbol.Parameters)
-            if (true) // if (p.Ref.Symbol.IsGlobal
-              ilGenerator.Emit(OperationCode.Ldsfld, _globalVarMap[p])
-            else
-              ilGenerator.Emit(OperationCode.Stloc, methodContext.GetCciLocalVar(p));
-          
-          ilGenerator.Emit(OperationCode.Call, _functionMap[call.Ref.Symbol])
+            foreach (p in call.Ref.Symbol.Parameters)
+              LoadVar(ilGenerator, methodContext, p);
+
+            ilGenerator.Emit(OperationCode.Call, _functionMap[call.Ref.Symbol])
         
         | _ => WriteLine($"Unhandled expression! $expr");
+      }
+    }
+    
+    LoadVar(ilGenerator: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
+    {
+      match (symbol.VarKind)
+      {
+        | Global =>
+          {
+            def cciVar = _globalVarMap[symbol];
+            ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
+          }
+        | Local =>
+          {
+            def cciVar = context.GetCciLocalVar(symbol);
+            ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+          }
+        | Parameter =>
+          {
+            def cciParam = context.GetCciParameter(symbol);
+            ilGenerator.Emit(OperationCode.Ldarg, cciParam);
+          }
       }
     }
     
