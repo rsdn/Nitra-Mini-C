@@ -5,6 +5,7 @@ bool gBool;
 int main() {
   int i;
   int j;
+  print();
   i = 42;
   j = i;
   j = gInt;

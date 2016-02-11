@@ -93,6 +93,7 @@ namespace MiniC.Compiler
     _mainClass         : NamespaceTypeDefinition;
     _coreAssembly      : IAssembly;
     _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition] = Dictionary();
+    _functionMap       : Dictionary[FunDeclarationSymbol, IMethodDefinition] = Dictionary();
     
     public static GenerateAssembly(project : Project, outputPath: string): void
     {
@@ -119,6 +120,15 @@ namespace MiniC.Compiler
     {
       _project = project;
       _coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
+      
+      def writeLineFun =
+      {
+        def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
+        TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemString);
+      }
+      
+       def (context, _) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+      _functionMap[context.Print] = writeLineFun;
 
       _assembly = Assembly() <- 
       {
@@ -218,6 +228,7 @@ namespace MiniC.Compiler
       when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
         _assembly.EntryPoint = method;
       _mainClass.Methods.Add(method);
+      _functionMap[func] = method;
     }
     
     MakeBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
@@ -254,7 +265,7 @@ namespace MiniC.Compiler
         | Return as s =>
           GenerateExpression(methodContext, s.Value);
           ilGenerator.Emit(OperationCode.Ret);
-          
+
         | _ => WriteLine($"Unhandlend statement! $statement");
       }
     }
@@ -267,7 +278,7 @@ namespace MiniC.Compiler
       {
         | IntegerLiteral as e => ilGenerator.Emit(OperationCode.Ldc_I4, e.Value.Value);
         | VariableRef as e =>
-          if (true)
+          if (true) // if (e.Ref.Symbol.IsGlobal
           {
             def cciVar = _globalVarMap[e.Ref.Symbol];
             ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
@@ -282,6 +293,15 @@ namespace MiniC.Compiler
           GenerateExpression(methodContext, assignment.Value);
           def cciVar = methodContext.GetCciLocalVar(assignment.Ref.Symbol);
           ilGenerator.Emit(OperationCode.Stloc, cciVar);
+          
+        | FunCall as call =>
+          foreach (p in call.Ref.Symbol.Parameters)
+            if (true) // if (p.Ref.Symbol.IsGlobal
+              ilGenerator.Emit(OperationCode.Ldsfld, _globalVarMap[p])
+            else
+              ilGenerator.Emit(OperationCode.Stloc, methodContext.GetCciLocalVar(p));
+          
+          ilGenerator.Emit(OperationCode.Call, _functionMap[call.Ref.Symbol])
         
         | _ => WriteLine($"Unhandled expression! $expr");
       }
@@ -299,7 +319,7 @@ namespace MiniC.Compiler
       }
     }
     
-   public Dispose(): void 
+    public Dispose(): void 
     { 
       _host.Dispose()
     }
