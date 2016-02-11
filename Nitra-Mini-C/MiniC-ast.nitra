@@ -154,7 +154,7 @@ namespace MiniC
   abstract ast Unary : Expr 
   { 
     Expr1.Scope = Scope;
-    Expr1.Used = Used;
+    Expr1.Used = true;
     Type = Expr1.Type;
 
     unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetIntSymbol()) ||
@@ -168,8 +168,8 @@ namespace MiniC
   { 
     Expr1.Scope = Scope;
     Expr2.Scope = Scope;
-    Expr1.Used = Used;
-    Expr2.Used = Used;
+    Expr1.Used = true;
+    Expr2.Used = true;
 
     Expr1 : Expr;
     Expr2 : Expr; 
