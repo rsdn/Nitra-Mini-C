@@ -12,6 +12,22 @@ using DotNet;
 
 namespace MiniC
 {
+  public variant VariableKind
+  {
+    | Global
+    | Parameter
+    | Local
+    public static FromHeader(header: VarHeader): VariableKind
+    {
+      match (header)
+      {
+        | Global => Global()
+        | Parameter => Parameter()
+        | Local => Local()
+      }
+    }
+  }
+  
   [Record]
   public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
   {

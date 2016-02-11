@@ -58,9 +58,13 @@ namespace MiniC.Compiler
     public Method      : MethodDefinition;
     public IlGenerator : ILGenerator;
     [RecordIgnore]
+    _parameterMap      : Dictionary[VarDeclarationSymbol, IParameterDefinition] = Dictionary();
+    [RecordIgnore]
     _localVars         : List[LocalDefinition] = List();
     [RecordIgnore]
     _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
+    [RecordIgnore]
+    _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
     
     public LocalVars : Seq[LocalDefinition] { get { _localVars } }
     
@@ -77,9 +81,24 @@ namespace MiniC.Compiler
         Name = _nameTable.GetNameFor(varDeclSymbol.Name);
         Type = _backend.GetType(varDeclSymbol.Type);
       };
+      
       IlGenerator.AddVariableToCurrentScope(cciLocalVar);
       _localVars.Add(cciLocalVar);
       _localVarMap.Add(varDeclSymbol, cciLocalVar);
+    }
+    
+    public AddParameter(paramSymbol : VarDeclarationSymbol) : void
+    {
+      def cciParameter = ParameterDefinition();
+      cciParameter.Name = _nameTable.GetNameFor(paramSymbol.Name);
+      cciParameter.Type = _backend.GetType(paramSymbol.Type);
+      Method.Parameters.Add(cciParameter);
+      _parameterMap[paramSymbol] = cciParameter;
+    }
+    
+    public GetCciParameter(paramSymbol : VarDeclarationSymbol) : IParameterDefinition
+    {
+      _parameterMap[paramSymbol]
     }
   }
   
@@ -215,14 +234,6 @@ namespace MiniC.Compiler
         Visibility = TypeMemberVisibility.Public
       };
       
-      foreach (p in func.Parameters)
-      {
-        def cciParametr = ParameterDefinition();
-        cciParametr.Name = _nameTable.GetNameFor(p.Name);
-        cciParametr.Type = GetType(p.Type);
-        method.Parameters.Add(cciParametr);
-      }
-      
       method.Body = MakeBody(func, method);
       
       when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
@@ -235,6 +246,8 @@ namespace MiniC.Compiler
     {
       def compoundStatement = func.Declarations.First().Body;
       def methodContext     = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
+      
+      func.Parameters.Iter(methodContext.AddParameter);
       GenerateCompoundStatement(methodContext, compoundStatement);
       ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
     }
@@ -278,15 +291,23 @@ namespace MiniC.Compiler
       {
         | IntegerLiteral as e => ilGenerator.Emit(OperationCode.Ldc_I4, e.Value.Value);
         | VariableRef as e =>
-          if (true) // if (e.Ref.Symbol.IsGlobal
+          match (e.Ref.Symbol.VarKind)
           {
-            def cciVar = _globalVarMap[e.Ref.Symbol];
-            ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
-          }
-          else
-          {
-            def cciVar = methodContext.GetCciLocalVar(e.Ref.Symbol);
-            ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+            | Global =>
+              {
+                def cciVar = _globalVarMap[e.Ref.Symbol];
+                ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
+              }
+            | Local =>
+              {
+                def cciVar = methodContext.GetCciLocalVar(e.Ref.Symbol);
+                ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+              }
+            | Parameter =>
+              {
+                def cciParam = methodContext.GetCciParameter(e.Ref.Symbol);
+                ilGenerator.Emit(OperationCode.Ldarg, cciParam);
+              }
           }
           
         | ScalarAssignment as assignment =>

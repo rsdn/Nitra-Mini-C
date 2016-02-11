@@ -26,14 +26,14 @@ namespace MiniC
     symbol
     {
       in Type: TypeSymbol;
-      //in IsGlobal: bool;
+      in VarKind: VariableKind;
 
       SpanClass = MiniC.VariableSpanClass;
       Kind = "variable";
     }
 
     Symbol.Type = TypeRef.Type;
-    //Symbol.IsGlobal = Header.IsGlobal;
+    Symbol.VarKind = VariableKind.FromHeader(Header);
 
     TypeRef : TypeReference;
     Header  : VarHeader;
