@@ -105,6 +105,7 @@ namespace MiniC.Compiler
   class DotNetBackend : IDisposable
   {
     _project           : Project;
+    _context           : MiniCDependentPropertyEvalContext;
     _nameTable         : NameTable = NameTable();
     _host              : PeReader.DefaultHost = PeReader.DefaultHost(_nameTable);
     _rootUnitNamespace : RootUnitNamespace;
@@ -138,17 +139,9 @@ namespace MiniC.Compiler
     public this(project : Project)
     {
       _project = project;
+      (_context, _) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
       _coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
       
-      def writeLineFun =
-      {
-        def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
-        TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemString);
-      }
-      
-       def (context, _) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
-      _functionMap[context.Print] = writeLineFun;
-
       _assembly = Assembly() <- 
       {
         Name = _nameTable.GetNameFor("hello");
@@ -202,8 +195,7 @@ namespace MiniC.Compiler
       using (peStream = IO.File.Create(outputPath))
         PeWriter.WritePeToStream(_assembly, _host, peStream);
     }
-    
-    
+        
     public Add(var : VarDeclarationSymbol): void
     {
       def field = FieldDefinition() <- {
@@ -220,26 +212,38 @@ namespace MiniC.Compiler
     
     public Add(func : FunDeclarationSymbol): void
     {
-      def name = func.Name;
-      //method.Body = GenerateCompoundStatement(method, fn.Body);
-      def method = MethodDefinition() <-
+      if (func.HasParsedDeclarations)
       {
-        ContainingTypeDefinition = _mainClass;
-        InternFactory = _host.InternFactory;
-        IsCil = true;
-        IsStatic = true;
-        Name = _nameTable.GetNameFor(name);
-        Type = GetType(func.ReturnType);
-        Parameters = List();
-        Visibility = TypeMemberVisibility.Public
-      };
+        def name = func.Name;
+        def method = MethodDefinition() <-
+        {
+          ContainingTypeDefinition = _mainClass;
+          InternFactory = _host.InternFactory;
+          IsCil = true;
+          IsStatic = true;
+          Name = _nameTable.GetNameFor(name);
+          Type = GetType(func.ReturnType);
+          Parameters = List();
+          Visibility = TypeMemberVisibility.Public
+        };
+     
+        method.Body = MakeBody(func, method);
       
-      method.Body = MakeBody(func, method);
+        when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
+          _assembly.EntryPoint = method;
+        _mainClass.Methods.Add(method);
+        _functionMap[func] = method;
+      }
+      else
+      {
+        def writeLineFun =
+        {
+          def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
+          TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemString);
+        }
       
-      when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
-        _assembly.EntryPoint = method;
-      _mainClass.Methods.Add(method);
-      _functionMap[func] = method;
+        _functionMap[_context.Print] = writeLineFun;
+      }
     }
     
     MakeBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
