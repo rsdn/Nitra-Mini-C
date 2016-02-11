@@ -58,9 +58,9 @@ namespace MiniC.Compiler
     public Method      : MethodDefinition;
     public IlGenerator : ILGenerator;
     [RecordIgnore]
-    _localVars   : List[LocalDefinition] = List();
+    _localVars         : List[LocalDefinition] = List();
     [RecordIgnore]
-    _localVarMap   : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
+    _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
     
     public LocalVars : Seq[LocalDefinition] { get { _localVars } }
     
@@ -92,6 +92,7 @@ namespace MiniC.Compiler
     _assembly          : Assembly;
     _mainClass         : NamespaceTypeDefinition;
     _coreAssembly      : IAssembly;
+    _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition];
     
     public static GenerateAssembly(project : Project, outputPath: string): void
     {
@@ -185,6 +186,7 @@ namespace MiniC.Compiler
         IsReadOnly = false;
       };
       _mainClass.Fields.Add(field);
+      _globalVarMap[var] = field
     }    
     
     public Add(func : FunDeclarationSymbol): void

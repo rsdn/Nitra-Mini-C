@@ -91,6 +91,9 @@
     <Content Include="Tests\EmptyFuncs.c">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Tests\GlobalVars.c">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Tests\LacalVars.c">
       <SubType>Content</SubType>
     </Content>
