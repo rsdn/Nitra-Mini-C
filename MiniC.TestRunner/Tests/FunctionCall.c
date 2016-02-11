@@ -8,6 +8,7 @@ int g(int i) {
 
 int main() {
 	f();
+    g(1);
 	return 0;
 }
 

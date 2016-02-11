@@ -301,10 +301,13 @@ namespace MiniC.Compiler
             ilGenerator.Emit(OperationCode.Stloc, cciVar);
           
         | FunCall as call =>
-            foreach (p in call.Ref.Symbol.Parameters)
-              LoadVar(ilGenerator, methodContext, p);
+            foreach (arg in call.Arguments)
+              GenerateExpression(methodContext, arg);
 
             ilGenerator.Emit(OperationCode.Call, _functionMap[call.Ref.Symbol])
+        
+        | Argument as arg =>
+            GenerateExpression(methodContext, arg.Expr);
         
         | _ => WriteLine($"Unhandled expression! $expr");
       }

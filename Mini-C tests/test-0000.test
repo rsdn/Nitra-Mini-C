@@ -8,7 +8,7 @@ int func(int i, int j) {
 
 int main(bool i) {
   int foo;
-  foo = func(2, true);
+  foo = func(2, 3);
   while (true) {
     while (foo) {
       func(1, 2);

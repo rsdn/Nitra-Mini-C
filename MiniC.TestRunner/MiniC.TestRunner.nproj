@@ -100,6 +100,9 @@
     <Content Include="Tests\LocalVars.c">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Tests\PrintFunction.c">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!--
