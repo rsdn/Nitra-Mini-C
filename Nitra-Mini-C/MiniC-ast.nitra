@@ -14,9 +14,11 @@ namespace MiniC
 
   abstract declaration TopDeclaration {}
 
-  ast VarHeader 
+  abstract ast VarHeader
   {
-    in IsGlobal: bool;
+    | Global
+    | Parameter
+    | Local
   }
 
   abstract declaration VarDeclaration: TopDeclaration 
@@ -34,7 +36,7 @@ namespace MiniC
     //Symbol.IsGlobal = Header.IsGlobal;
 
     TypeRef : TypeReference;
-    //Header  : VarHeader;
+    Header  : VarHeader;
 
     | ScalarDeclaration {}
     | ArrayDeclaration {}
