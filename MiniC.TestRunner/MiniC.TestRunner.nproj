@@ -94,7 +94,7 @@
     <Content Include="Tests\GlobalVars.c">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Tests\LacalVars.c">
+    <Content Include="Tests\LocalVars.c">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

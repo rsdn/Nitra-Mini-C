@@ -33,7 +33,9 @@ namespace MiniC.TestRunner
           PrintError($"$(e.Format(indent))")
       }
       
-      def tempDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+      def tempDir = GetTempDir();
+      when (config.Verbose) Print($"\nCompilation output dir = $(tempDir)");
+        
       WriteLine();
       def totalSw = Stopwatch.StartNew();
       
@@ -51,7 +53,7 @@ namespace MiniC.TestRunner
                 printErrors(es, 0);
                 TestResult(case.Map(_ => FakeVoid()), [])
             | Result.Ok(case) =>
-                def result = runTest(case, tempDir.FullName);
+                def result = runTest(case, tempDir);
                 def fileName = Path.GetFileNameWithoutExtension(case.SourceFile);
                 lock(typeof(TestRunner))
                 {
@@ -81,6 +83,13 @@ namespace MiniC.TestRunner
         .ToList()
         .ToNList();
         (results, totalSw.Elapsed)
+    }
+    
+    GetTempDir(): DirPath 
+    {
+      def dir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "minic_tests_temp"));
+      dir.GetFiles().Iter(_.Delete());
+      dir.FullName
     }
     
     PrintColored(message: string, color: ConsoleColor): void

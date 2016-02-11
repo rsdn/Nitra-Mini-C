@@ -92,7 +92,7 @@ namespace MiniC.Compiler
     _assembly          : Assembly;
     _mainClass         : NamespaceTypeDefinition;
     _coreAssembly      : IAssembly;
-    _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition];
+    _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition] = Dictionary();
     
     public static GenerateAssembly(project : Project, outputPath: string): void
     {
@@ -266,9 +266,17 @@ namespace MiniC.Compiler
       match (expr)
       {
         | IntegerLiteral as e => ilGenerator.Emit(OperationCode.Ldc_I4, e.Value.Value);
-        | VariableRef as e => 
-          def cciVar = methodContext.GetCciLocalVar(e.Ref.Symbol);
-          ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+        | VariableRef as e =>
+          if (true)
+          {
+            def cciVar = _globalVarMap[e.Ref.Symbol];
+            ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
+          }
+          else
+          {
+            def cciVar = methodContext.GetCciLocalVar(e.Ref.Symbol);
+            ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+          }
           
         | ScalarAssignment as assignment =>
           GenerateExpression(methodContext, assignment.Value);

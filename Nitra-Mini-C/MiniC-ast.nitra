@@ -24,17 +24,17 @@ namespace MiniC
     symbol
     {
       in Type: TypeSymbol;
-      in IsGlobal: bool;
+      //in IsGlobal: bool;
 
       SpanClass = MiniC.VariableSpanClass;
       Kind = "variable";
     }
 
     Symbol.Type = TypeRef.Type;
-    Symbol.IsGlobal = Header.IsGlobal;
+    //Symbol.IsGlobal = Header.IsGlobal;
 
     TypeRef : TypeReference;
-    Header  : VarHeader;
+    //Header  : VarHeader;
 
     | ScalarDeclaration {}
     | ArrayDeclaration {}
