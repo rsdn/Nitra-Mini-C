@@ -88,6 +88,9 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Tests\Break.c">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Tests\Comparison.c">
       <SubType>Content</SubType>
     </Content>

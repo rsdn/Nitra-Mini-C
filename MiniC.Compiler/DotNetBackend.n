@@ -67,6 +67,8 @@ namespace MiniC.Compiler
     _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
     [RecordIgnore]
     _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
+    [RecordIgnore]
+    _whileExitLabel    : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
     
     public LocalVars : Seq[LocalDefinition] { get { _localVars } }
     
@@ -101,6 +103,16 @@ namespace MiniC.Compiler
     public GetCciParameter(paramSymbol : VarDeclarationSymbol) : IParameterDefinition
     {
       _parameterMap[paramSymbol]
+    }
+    
+    public AddWhileExitLabel(w: Statement.While, label: ILGeneratorLabel): void
+    {
+      _whileExitLabel[w] = label;
+    }
+    
+    public GetWhileExitLabel(w: Statement.While): ILGeneratorLabel
+    {
+      _whileExitLabel[w]
     }
   }
   
@@ -311,15 +323,22 @@ namespace MiniC.Compiler
             GenerateStatement(methodContext, s.FalseBranch);
             gen.MarkLabel(exitLabel);
             
-         | While as w =>
+        | While as w =>
             def bodyLabel = ILGeneratorLabel();
             def conditionLabel = ILGeneratorLabel();
+            def exitLabel = ILGeneratorLabel();
             gen.Emit(Op.Br, conditionLabel);
             gen.MarkLabel(bodyLabel);
             GenerateStatement(methodContext, w.Body);
             gen.MarkLabel(conditionLabel);
             GenerateExpression(methodContext, w.Condition);
             gen.Emit(Op.Brtrue, bodyLabel);
+            gen.MarkLabel(exitLabel);
+            methodContext.AddWhileExitLabel(w, exitLabel);
+            
+        | Break (Loop = Some(loop)) =>
+            def whileExitLabel = methodContext.GetWhileExitLabel(loop);
+            gen.Emit(Op.Br, whileExitLabel);
             
         | _ => WriteLine($"Unhandlend statement! $statement");
       }
