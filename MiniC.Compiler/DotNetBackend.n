@@ -311,6 +311,16 @@ namespace MiniC.Compiler
             GenerateStatement(methodContext, s.FalseBranch);
             gen.MarkLabel(exitLabel);
             
+         | While as w =>
+            def bodyLabel = ILGeneratorLabel();
+            def conditionLabel = ILGeneratorLabel();
+            gen.Emit(Op.Br, conditionLabel);
+            gen.MarkLabel(bodyLabel);
+            GenerateStatement(methodContext, w.Body);
+            gen.MarkLabel(conditionLabel);
+            GenerateExpression(methodContext, w.Condition);
+            gen.Emit(Op.Brtrue, bodyLabel);
+            
         | _ => WriteLine($"Unhandlend statement! $statement");
       }
     }

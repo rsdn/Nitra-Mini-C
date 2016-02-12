@@ -109,6 +109,9 @@
     <Content Include="Tests\PrintFunctions.c">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Tests\While.c">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(Nemerle)\Nemerle.MSBuild.targets" />
   <!--
