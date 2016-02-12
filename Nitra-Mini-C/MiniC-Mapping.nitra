@@ -38,11 +38,16 @@ namespace MiniC
       {
         CompoundStatement -> Nested;
       }
-    | If -> If 
+    | If -> If
+      {
+        Expr -> Condition;
+        Statement -> Body;
+      }
+    | IfElse -> IfElse
       {
         Expr -> Condition; 
-        Statement -> TrueBranch;
-        Statement -> FalseBranch; 
+        TrueBranch -> TrueBranch;
+        FalseBranch -> FalseBranch; 
       }
     | While -> While
       {

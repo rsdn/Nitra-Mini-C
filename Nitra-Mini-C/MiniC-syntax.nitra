@@ -42,7 +42,8 @@
       | Expression = Expr ";"
       | Empty      = ";"
       | Compound   = CompoundStatement
-      | If         = "if" sm "(" Expr ")" sm Statement ("else" Statement)?
+      | If         = "if" sm "(" Expr ")" sm Statement
+      | IfElse     = "if" sm "(" Expr ")" sm TrueBranch=Statement "else" FalseBranch=Statement
       | While      = "while" sm "(" Expr ")" sm Statement
       | ReturnVoid = "return" ";"
       | Return     = "return" sm Expr ";"

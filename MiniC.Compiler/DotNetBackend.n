@@ -261,9 +261,8 @@ namespace MiniC.Compiler
     
     GenerateCompoundStatement(methodContext : MethodContext, compoundStatement: CompoundStatement) : void
     {
-      def ilGenerator = methodContext.IlGenerator;
-      
-      ilGenerator.BeginScope();
+      def gen = methodContext.IlGenerator;
+      gen.BeginScope();
       
       foreach (var in compoundStatement.LocalVariables)
         methodContext.AddLocalVar(var.Symbol);
@@ -271,21 +270,44 @@ namespace MiniC.Compiler
       foreach (statement in compoundStatement.Statements)
         GenerateStatement(methodContext, statement);
         
-      ilGenerator.EndScope();
+      gen.EndScope();
     }
     
     GenerateStatement(methodContext : MethodContext, statement : Statement): void 
     {
-      def ilGenerator = methodContext.IlGenerator;
+      def gen = methodContext.IlGenerator;
       
       match (statement)
       {
-        | Expression as expr => GenerateExpression(methodContext, expr.Body);
-        | ReturnVoid         => ilGenerator.Emit(Op.Ret);
+        | Expression as e => GenerateExpression(methodContext, e.Body);
+        | ReturnVoid => gen.Emit(Op.Ret);
+        
         | Return as s =>
-          GenerateExpression(methodContext, s.Value);
-          ilGenerator.Emit(Op.Ret);
-
+            GenerateExpression(methodContext, s.Value);
+            gen.Emit(Op.Ret);
+        
+        | If as e =>
+            def exitLabel = ILGeneratorLabel();
+            GenerateExpression(methodContext, e.Condition);
+            gen.Emit(Op.Brfalse, exitLabel);
+            // if true
+            GenerateStatement(methodContext, e.Body);
+            gen.Emit(Op.Br, exitLabel);
+            gen.MarkLabel(exitLabel);
+        
+        | IfElse as e =>
+            def falseBranchLabel = ILGeneratorLabel();
+            def exitLabel = ILGeneratorLabel();
+            GenerateExpression(methodContext, e.Condition);
+            gen.Emit(Op.Brfalse, falseBranchLabel);
+            // true branch
+            GenerateStatement(methodContext, e.TrueBranch);
+            gen.Emit(Op.Br, exitLabel);
+            // false branch
+            gen.MarkLabel(falseBranchLabel);
+            GenerateStatement(methodContext, e.FalseBranch);
+            gen.MarkLabel(exitLabel);
+            
         | _ => WriteLine($"Unhandlend statement! $statement");
       }
     }
@@ -349,8 +371,7 @@ namespace MiniC.Compiler
             {
               | Plus => ()
               | Minus => gen.Emit(Op.Neg)
-              | Negate => gen.Emit(Op.Neg)
-              | LogicalNegate =>
+              | Negate =>
                   gen.Emit(Op.Ldc_I4_0);
                   gen.Emit(Op.Ceq)
               | _ => assert(false, $"Unhandled unary expression $unary")

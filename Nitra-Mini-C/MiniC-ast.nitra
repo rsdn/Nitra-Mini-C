@@ -107,7 +107,18 @@ namespace MiniC
 
         Nested : CompoundStatement; 
       }
-    | If 
+    | If
+      {
+        Condition.Scope = Scope;
+        Condition.Used = true;
+        Body.Scope  = Scope;
+        Body.DeclaredIn = DeclaredIn;
+        Body.Loop = Loop;
+
+        Condition : Expr;
+        Body      : Statement;
+      }
+    | IfElse 
       {
         Condition.Scope = Scope;
         Condition.Used = true;
@@ -118,7 +129,7 @@ namespace MiniC
         TrueBranch.Loop = Loop;
         FalseBranch.Loop = Loop;
 
-        Condition: Expr;
+        Condition   : Expr;
         TrueBranch  : Statement;
         FalseBranch : Statement;
       }
@@ -156,14 +167,23 @@ namespace MiniC
     Expr1.Scope = Scope;
     Expr1.Used = true;
     Type = Expr1.Type;
+    
+    Expr1 : Expr; 
+  }
 
+  abstract ast NumericUnary : Unary
+  {
     unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetIntSymbol()) ||
             MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetFloatSymbol()))
       Expr1.Error($"Expected int or float, but found $(self.Expr1.Type)");
-
-    Expr1 : Expr; 
   }
   
+  abstract ast BoolUnary : Unary
+  {
+    unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetBoolSymbol()))
+      Expr1.Error($"Expected bool but found $(self.Expr1.Type)");
+  }
+
   abstract ast Binary : Expr
   { 
     Expr1.Scope = Scope;
@@ -357,10 +377,10 @@ namespace MiniC
     | Multiply     : Arithmetic {}
     | Divide       : Arithmetic {}
 
-    | Plus          : Unary {}
-    | Minus         : Unary {}
-    | Negate        : Unary {}
-    | LogicalNegate : Unary {}
+    | Plus          : NumericUnary {}
+    | Minus         : NumericUnary {}
+    | LogicalNegate : NumericUnary {}
+    | Negate        : BoolUnary {}
   }
 
   abstract ast TypeReference 

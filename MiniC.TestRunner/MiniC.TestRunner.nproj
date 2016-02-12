@@ -100,6 +100,9 @@
     <Content Include="Tests\GlobalVars.c">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Tests\IfElse.c">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Tests\LocalVars.c">
       <SubType>Content</SubType>
     </Content>
