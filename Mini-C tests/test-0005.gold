@@ -1,11 +1,10 @@
 int gInt;
 float gFloat;
 bool gBool;
-
-int main() {
+int main(){
   int i;
   int j;
-  print_int(1);
+  print(1);
   i = 42;
   j = i;
   j = gInt;

@@ -1,8 +1,9 @@
 ﻿int main() {
-    bool b1;
-    bool b2;
-    b1 = 1 < 2;
-    b2 = 3 > 10;
+    bool b;
+    b = 1 < 2;
+    b = 1 <= 2;
+    b = 3 > 10;
+    b = 3 >= 10;
     return 0;
 }
 

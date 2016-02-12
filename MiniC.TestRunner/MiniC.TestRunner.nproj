@@ -103,7 +103,7 @@
     <Content Include="Tests\LocalVars.c">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Tests\PrintFunction.c">
+    <Content Include="Tests\PrintFunctions.c">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

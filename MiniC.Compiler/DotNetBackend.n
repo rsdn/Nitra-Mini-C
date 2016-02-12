@@ -18,6 +18,8 @@ using System.Linq;
 
 namespace MiniC.Compiler
 {
+  type Op = OperationCode;
+  
   class FuncBodyAstVisitor : IAstVisitor
   {
     public Visit(ast: IAst) : void
@@ -236,13 +238,14 @@ namespace MiniC.Compiler
       }
       else
       {
-        def writeLineFun =
+        def writeLineFun(returnType)
         {
           def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
-          TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), _host.PlatformType.SystemInt32);
+          TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), returnType);
         }
       
-        _functionMap[_context.Print] = writeLineFun;
+        _functionMap[_context.PrintInt] = writeLineFun(_host.PlatformType.SystemInt32);
+        _functionMap[_context.PrintBool] = writeLineFun(_host.PlatformType.SystemBoolean);
       }
     }
     
@@ -278,10 +281,10 @@ namespace MiniC.Compiler
       match (statement)
       {
         | Expression as expr => GenerateExpression(methodContext, expr.Body);
-        | ReturnVoid         => ilGenerator.Emit(OperationCode.Ret);
+        | ReturnVoid         => ilGenerator.Emit(Op.Ret);
         | Return as s =>
           GenerateExpression(methodContext, s.Value);
-          ilGenerator.Emit(OperationCode.Ret);
+          ilGenerator.Emit(Op.Ret);
 
         | _ => WriteLine($"Unhandlend statement! $statement");
       }
@@ -289,48 +292,75 @@ namespace MiniC.Compiler
     
     GenerateExpression(methodContext : MethodContext, expr : Expr) : void
     {
-      def ilGenerator = methodContext.IlGenerator;
-      
+      def gen = methodContext.IlGenerator;
+
       match (expr)
       {
-        | IntegerLiteral as e => ilGenerator.Emit(OperationCode.Ldc_I4, e.Value.Value);
-        | VariableRef as e => LoadVar(ilGenerator, methodContext, e.Ref.Symbol);
+        | IntegerLiteral as e => gen.Emit(Op.Ldc_I4, e.Value.Value)
+        | TrueLiteral => gen.Emit(Op.Ldc_I4_1)
+        | FalseLiteral => gen.Emit(Op.Ldc_I4_0)
+        | VariableRef as e => LoadVar(gen, methodContext, e.Ref.Symbol)
         | ScalarAssignment as assignment =>
             GenerateExpression(methodContext, assignment.Value);
             def cciVar = methodContext.GetCciLocalVar(assignment.Ref.Symbol);
-            ilGenerator.Emit(OperationCode.Stloc, cciVar);
+            gen.Emit(Op.Stloc, cciVar);
           
         | FunCall as call =>
             foreach (arg in call.Arguments)
               GenerateExpression(methodContext, arg);
 
-            ilGenerator.Emit(OperationCode.Call, _functionMap[call.Ref.Symbol])
+            gen.Emit(Op.Call, _functionMap[call.Ref.Symbol])
         
-        | Argument as arg => GenerateExpression(methodContext, arg.Expr);
+        | Argument as arg => GenerateExpression(methodContext, arg.Expr)
         | Binary as bin =>
             GenerateExpression(methodContext, bin.Expr1);
             GenerateExpression(methodContext, bin.Expr2);
             def opCode =
               match (bin) 
               {
-                //| LessEqual => OperationCode
-                | Less => OperationCode.Clt
-                //| GreaterEqual =>
-                | Greater => OperationCode.Cgt
-                | Sum => OperationCode.Add
-                | Sub => OperationCode.Sub
-                //| Modulus =>
-                | Multiply => OperationCode.Mul
-                | Divide => OperationCode.Div
+                | Or => Op.Or
+                | And => Op.And
+                | Equal => Op.Ceq
+                | NotEqual =>
+                    gen.Emit(Op.Ceq);
+                    gen.Emit(Op.Ldc_I4_0);
+                    Op.Ceq;
+                | LessEqual => 
+                    gen.Emit(Op.Cgt);
+                    gen.Emit(Op.Ldc_I4_0);
+                    Op.Ceq
+                | Less => Op.Clt
+                | GreaterEqual =>
+                    gen.Emit(Op.Clt);
+                    gen.Emit(Op.Ldc_I4_0);
+                    Op.Ceq
+                | Greater => Op.Cgt
+                | Sum => Op.Add
+                | Sub => Op.Sub
+                | Modulus => Op.Rem
+                | Multiply => Op.Mul
+                | Divide => Op.Div
+                | _ => assert(false, $"Unhandled binary expression $bin")
               }
-              
-            ilGenerator.Emit(opCode);
+            gen.Emit(opCode);
+        | Unary as unary =>
+            GenerateExpression(methodContext, unary.Expr1);
+            match (unary) 
+            {
+              | Plus => ()
+              | Minus => gen.Emit(Op.Neg)
+              | Negate => gen.Emit(Op.Neg)
+              | LogicalNegate =>
+                  gen.Emit(Op.Ldc_I4_0);
+                  gen.Emit(Op.Ceq)
+              | _ => assert(false, $"Unhandled unary expression $unary")
+            }
             
-        | _ => WriteLine($"Unhandled expression! $expr");
+        | _ => WriteLine($"Unhandled expression! $expr")
       }
       
       when (!expr.Used && !MiniCTypeUnifier.Instance.TryUnify(expr.Type, _context.Void))
-        ilGenerator.Emit(OperationCode.Pop);
+        gen.Emit(Op.Pop);
     }
     
     LoadVar(ilGenerator: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
@@ -340,18 +370,19 @@ namespace MiniC.Compiler
         | Global =>
           {
             def cciVar = _globalVarMap[symbol];
-            ilGenerator.Emit(OperationCode.Ldsfld, cciVar);
+            ilGenerator.Emit(Op.Ldsfld, cciVar)
           }
         | Local =>
           {
             def cciVar = context.GetCciLocalVar(symbol);
-            ilGenerator.Emit(OperationCode.Ldloc, cciVar);
+            ilGenerator.Emit(Op.Ldloc, cciVar)
           }
         | Parameter =>
           {
             def cciParam = context.GetCciParameter(symbol);
-            ilGenerator.Emit(OperationCode.Ldarg, cciParam);
+            ilGenerator.Emit(Op.Ldarg, cciParam)
           }
+        | _ => assert(false, $"Unhandled $(symbol.VarKind)")
       }
     }
     
@@ -359,11 +390,11 @@ namespace MiniC.Compiler
     {
       match (typeSymbol)
       {
-        | IntSymbol   => _host.PlatformType.SystemInt32;
-        | FloatSymbol => _host.PlatformType.SystemFloat64;
-        | BoolSymbol  => _host.PlatformType.SystemBoolean;
-        | VoidSymbol  => _host.PlatformType.SystemVoid;
-        | _           => assert(false)
+        | IntSymbol   => _host.PlatformType.SystemInt32
+        | FloatSymbol => _host.PlatformType.SystemFloat64
+        | BoolSymbol  => _host.PlatformType.SystemBoolean
+        | VoidSymbol  => _host.PlatformType.SystemVoid
+        | _           => assert(false, $"Unhandled $typeSymbol")
       }
     }
     

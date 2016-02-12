@@ -194,12 +194,20 @@ namespace MiniC
     Type = context.GetBoolSymbol();
   }
 
-  abstract ast ArithmeticBinary : SameTypesExpr
+  abstract ast NumericBinary : SameTypesExpr
   {
     unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetIntSymbol()) ||
             MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetFloatSymbol()))
       Expr1.Error($"Expected int or float, but found $(self.Expr1.Type)");
+  }
 
+  abstract ast Comparison : NumericBinary 
+  {
+    Type = context.GetBoolSymbol();
+  }
+
+  abstract ast Arithmetic : NumericBinary
+  {
     Type = Expr1.Type;
   }
 
@@ -335,19 +343,19 @@ namespace MiniC
         Value: Expr;
       }
 
-    | Or : OrAndExpr {}
-    | And : OrAndExpr {}
-    | Equal : EqualExpr {}
-    | NotEqual : EqualExpr {}
-    | LessEqual    : ArithmeticBinary {}
-    | Less         : ArithmeticBinary {}
-    | GreaterEqual : ArithmeticBinary {}
-    | Greater      : ArithmeticBinary {}
-    | Sum          : ArithmeticBinary {}
-    | Sub          : ArithmeticBinary {}
-    | Modulus      : ArithmeticBinary {}
-    | Multiply     : ArithmeticBinary {}
-    | Divide       : ArithmeticBinary {}
+    | Or           : OrAndExpr {}
+    | And          : OrAndExpr {}
+    | Equal        : EqualExpr {}
+    | NotEqual     : EqualExpr {}
+    | LessEqual    : Comparison {}
+    | Less         : Comparison {}
+    | GreaterEqual : Comparison {}
+    | Greater      : Comparison {}
+    | Sum          : Arithmetic {}
+    | Sub          : Arithmetic {}
+    | Modulus      : Arithmetic {}
+    | Multiply     : Arithmetic {}
+    | Divide       : Arithmetic {}
 
     | Plus          : Unary {}
     | Minus         : Unary {}
