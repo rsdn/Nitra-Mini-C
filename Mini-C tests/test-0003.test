@@ -1,7 +1,0 @@
-void main(int i, int j[]) {
-  int k;
-  j = new int[j.size * 2];
-  k = i = j[i + 1];
-  j[i + 1] = k;
-  i = j.size;
-}

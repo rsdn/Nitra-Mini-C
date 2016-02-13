@@ -110,9 +110,10 @@ namespace MiniC.Compiler
       _whileExitLabel[w] = label;
     }
     
-    public GetWhileExitLabel(w: Statement.While): ILGeneratorLabel
+    public TryFindWhileExitLabel(w: Statement.While): option[ILGeneratorLabel]
     {
-      _whileExitLabel[w]
+      mutable label;
+      if (_whileExitLabel.TryGetValue(w, out label)) Some(label) else None()
     }
   }
   
@@ -334,10 +335,14 @@ namespace MiniC.Compiler
             GenerateExpression(methodContext, w.Condition);
             gen.Emit(Op.Brtrue, bodyLabel);
             gen.MarkLabel(exitLabel);
-            methodContext.AddWhileExitLabel(w, exitLabel);
+            //match (methodContext.TryGetWhileExitLabel(w)
+            //{
+              //| Some(label) => gen.Emit(Op.Br, whileExitLabel);
+            //}
             
         | Break (Loop = Some(loop)) =>
-            def whileExitLabel = methodContext.GetWhileExitLabel(loop);
+            def whileExitLabel = ILGeneratorLabel();
+            methodContext.AddWhileExitLabel(loop, whileExitLabel);
             gen.Emit(Op.Br, whileExitLabel);
             
         | _ => WriteLine($"Unhandlend statement! $statement");

@@ -1,7 +1,0 @@
-int main() {
-	bool b;
-	b = true;
-	if (b) print_bool(!b);
-	//else print_bool(b);
-	return 0;
-}
