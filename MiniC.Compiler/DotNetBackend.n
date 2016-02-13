@@ -423,6 +423,10 @@ namespace MiniC.Compiler
             LoadVar(gen, methodContext, e.Ref.Symbol);
             gen.Emit(Op.Ldlen);
             
+        | ArrayAllocation as a =>
+            GenerateExpression(methodContext, a.Size);
+            gen.Emit(Op.Newarr, GetArrayType(a.Type));
+            
         | _ => WriteLine($"Unhandled expression! $expr")
       }
       
