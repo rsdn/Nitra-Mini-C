@@ -427,6 +427,17 @@ namespace MiniC.Compiler
             GenerateExpression(methodContext, a.Size);
             gen.Emit(Op.Newarr, GetArrayType(a.Type));
             
+        | ArrayAssignment as a =>
+            LoadVar(gen, methodContext, a.Ref.Symbol);
+            GenerateExpression(methodContext, a.Index);
+            GenerateExpression(methodContext, a.Value);
+            gen.Emit(Op.Stelem_I4);
+            
+        | ArrayRef as a =>
+            LoadVar(gen, methodContext, a.Ref.Symbol);
+            GenerateExpression(methodContext, a.Index);
+            gen.Emit(Op.Ldelem, GetType(a.Type));
+            
         | _ => WriteLine($"Unhandled expression! $expr")
       }
       

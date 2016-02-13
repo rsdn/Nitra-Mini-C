@@ -2,11 +2,16 @@ void main() {
 	int i[];
 	int len;
 	i = new int[5];
+	i[0] = 7;
 	len = i.size;
+	print_int(i[0]);
+	print_int(len);
 	return;
 }
 
 /*
 BEGIN-OUTPUT
+7
+5
 END-OUTPUT
 */
