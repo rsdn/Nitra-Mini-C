@@ -248,7 +248,7 @@ namespace MiniC.Compiler
           Visibility = TypeMemberVisibility.Public
         };
      
-        method.Body = MakeBody(func, method);
+        method.Body = GenerateBody(func, method);
       
         when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
           _assembly.EntryPoint = method;
@@ -268,11 +268,10 @@ namespace MiniC.Compiler
       }
     }
     
-    MakeBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
+    GenerateBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
     {
       def compoundStatement = func.Declarations.First().Body;
-      def methodContext     = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
-      
+      def methodContext = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
       func.Parameters.Iter(methodContext.AddParameter);
       GenerateCompoundStatement(methodContext, compoundStatement);
       ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
@@ -347,7 +346,6 @@ namespace MiniC.Compiler
             }
             
         | Break (Loop = Some(loop)) =>
-            def whileExitLabel = ILGeneratorLabel();
             def whileExitLabel = methodContext.GetOrNewWhileExitLabel(loop);
             gen.Emit(Op.Br, whileExitLabel);
             
@@ -419,6 +417,10 @@ namespace MiniC.Compiler
                   gen.Emit(Op.Ceq)
               | _ => assert(false, $"Unhandled unary expression $unary")
             }
+            
+        | ArraySize as e =>
+            LoadVar(gen, methodContext, e.Ref.Symbol);
+            gen.Emit(Op.Ldlen);
             
         | _ => WriteLine($"Unhandled expression! $expr")
       }

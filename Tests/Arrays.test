@@ -1,5 +1,7 @@
 void main() {
 	int i[];
+	int len;
+	len = i.size;
 	return;
 }
 
