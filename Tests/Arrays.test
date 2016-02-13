@@ -1,0 +1,11 @@
+void main() {
+	int i[];
+	return;
+}
+
+/*
+BEGIN-OUTPUT
+True
+20
+END-OUTPUT
+*/
