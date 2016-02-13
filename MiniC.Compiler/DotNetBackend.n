@@ -378,6 +378,7 @@ namespace MiniC.Compiler
             gen.Emit(Op.Call, _functionMap[call.Ref.Symbol])
         
         | Argument as arg => EmitExpression(methodContext, arg.Expr)
+        
         | Binary as bin =>
             EmitExpression(methodContext, bin.Expr1);
             EmitExpression(methodContext, bin.Expr2);
@@ -442,51 +443,51 @@ namespace MiniC.Compiler
         | _ => WriteLine($"Unhandled expression! $expr")
       }
       
-      when (!expr.Used && !MiniCTypeUnifier.Instance.TryUnify(expr.Type, _context.Void))
+      unless (expr.Used || MiniCTypeUnifier.Instance.TryUnify(expr.Type, _context.Void))
         gen.Emit(Op.Pop);
     }
     
-    LoadVar(ilGenerator: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
+    LoadVar(gen: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
     {
       match (symbol.VarKind)
       {
         | Global =>
           {
-            def cciVar = _globalVarMap[symbol];
-            ilGenerator.Emit(Op.Ldsfld, cciVar)
+            def cciField = _globalVarMap[symbol];
+            gen.Emit(Op.Ldsfld, cciField)
           }
         | Local =>
           {
             def cciVar = context.GetCciLocalVar(symbol);
-            ilGenerator.Emit(Op.Ldloc, cciVar)
+            gen.Emit(Op.Ldloc, cciVar)
           }
         | Parameter =>
           {
             def cciParam = context.GetCciParameter(symbol);
-            ilGenerator.Emit(Op.Ldarg, cciParam)
+            gen.Emit(Op.Ldarg, cciParam)
           }
         | _ => assert(false, $"Unhandled $(symbol.VarKind)")
       }
     }
  
-    SetVarValue(ilGenerator: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
+    SetVarValue(gen: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
     {
       match (symbol.VarKind)
       {
         | Global =>
           {
-            def cciVar = _globalVarMap[symbol];
-            ilGenerator.Emit(Op.Stsfld, cciVar)
+            def cciField = _globalVarMap[symbol];
+            gen.Emit(Op.Stsfld, cciField)
           }
         | Local =>
           {
             def cciVar = context.GetCciLocalVar(symbol);
-            ilGenerator.Emit(Op.Stloc, cciVar)
+            gen.Emit(Op.Stloc, cciVar)
           }
         | Parameter =>
           {
             def cciParam = context.GetCciParameter(symbol);
-            ilGenerator.Emit(Op.Starg, cciParam)
+            gen.Emit(Op.Starg, cciParam)
           }
         | _ => assert(false, $"Unhandled $(symbol.VarKind)")
       }
