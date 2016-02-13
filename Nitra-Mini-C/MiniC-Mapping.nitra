@@ -116,7 +116,6 @@ namespace MiniC
 
     | Plus          { Expr -> Expr1; }
     | Minus         { Expr -> Expr1; }
-    | Negate        { Expr -> Expr1; }
     | LogicalNegate { Expr -> Expr1; }
   }
   

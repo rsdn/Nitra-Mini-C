@@ -110,8 +110,7 @@
       precedence Unary:
       | Plus          = "+" Expr
       | Minus         = "-" Expr
-      | Negate        = "!" Expr
-      | LogicalNegate = "~" Expr
+      | LogicalNegate = "!" Expr
     }
   }
 }

@@ -413,7 +413,7 @@ namespace MiniC.Compiler
             {
               | Plus => ()
               | Minus => gen.Emit(Op.Neg)
-              | Negate =>
+              | LogicalNegate =>
                   gen.Emit(Op.Ldc_I4_0);
                   gen.Emit(Op.Ceq)
               | _ => assert(false, $"Unhandled unary expression $unary")

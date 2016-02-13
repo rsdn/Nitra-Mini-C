@@ -379,8 +379,7 @@ namespace MiniC
 
     | Plus          : NumericUnary {}
     | Minus         : NumericUnary {}
-    | LogicalNegate : NumericUnary {}
-    | Negate        : BoolUnary {}
+    | LogicalNegate : BoolUnary {}
   }
 
   abstract ast TypeReference 
