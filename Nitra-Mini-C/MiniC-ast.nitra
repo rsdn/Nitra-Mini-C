@@ -363,21 +363,19 @@ namespace MiniC
         Value: Expr;
       }
 
-    | Or           : OrAndExpr {}
-    | And          : OrAndExpr {}
-    | Equal        : EqualExpr {}
-    | NotEqual     : EqualExpr {}
-    | LessEqual    : Comparison {}
-    | Less         : Comparison {}
-    | GreaterEqual : Comparison {}
-    | Greater      : Comparison {}
-    | Sum          : Arithmetic {}
-    | Sub          : Arithmetic {}
-    | Modulus      : Arithmetic {}
-    | Multiply     : Arithmetic {}
-    | Divide       : Arithmetic {}
-
-    | Plus          : NumericUnary {}
+    | Or            : OrAndExpr {}
+    | And           : OrAndExpr {}
+    | Equal         : EqualExpr {}
+    | NotEqual      : EqualExpr {}
+    | LessEqual     : Comparison {}
+    | Less          : Comparison {}
+    | GreaterEqual  : Comparison {}
+    | Greater       : Comparison {}
+    | Sum           : Arithmetic {}
+    | Sub           : Arithmetic {}
+    | Modulus       : Arithmetic {}
+    | Multiply      : Arithmetic {}
+    | Divide        : Arithmetic {}
     | Minus         : NumericUnary {}
     | LogicalNegate : BoolUnary {}
   }

@@ -146,7 +146,7 @@ namespace MiniC.Compiler
           foreach (toDeclSymbol in symbols)
           {
             | funcDecl is FunDeclarationSymbol => backend.Add(funcDecl)
-            | varDecl  is VarDeclarationSymbol => backend.Add(varDecl)
+            | varDecl is VarDeclarationSymbol => backend.Add(varDecl)
             | s when ReferenceEquals(s, context.Void)
                   || ReferenceEquals(s, context.Bool)
                   || ReferenceEquals(s, context.Int)
@@ -249,7 +249,7 @@ namespace MiniC.Compiler
           Visibility = TypeMemberVisibility.Public
         };
      
-        method.Body = GenerateBody(func, method);
+        method.Body = EmitBody(func, method);
       
         when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
           _assembly.EntryPoint = method;
@@ -266,19 +266,20 @@ namespace MiniC.Compiler
       
         _functionMap[_context.PrintInt] = writeLineFun(_host.PlatformType.SystemInt32);
         _functionMap[_context.PrintBool] = writeLineFun(_host.PlatformType.SystemBoolean);
+        _functionMap[_context.PrintFloat] = writeLineFun(_host.PlatformType.SystemFloat64);
       }
     }
     
-    GenerateBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
+    EmitBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
     {
       def compoundStatement = func.Declarations.First().Body;
       def methodContext = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
       func.Parameters.Iter(methodContext.AddParameter);
-      GenerateCompoundStatement(methodContext, compoundStatement);
+      EmitCompoundStatement(methodContext, compoundStatement);
       ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
     }
     
-    GenerateCompoundStatement(methodContext : MethodContext, compoundStatement: CompoundStatement) : void
+    EmitCompoundStatement(methodContext : MethodContext, compoundStatement: CompoundStatement) : void
     {
       def gen = methodContext.IlGenerator;
       gen.BeginScope();
@@ -287,47 +288,47 @@ namespace MiniC.Compiler
         methodContext.AddLocalVar(var.Symbol);
       
       foreach (statement in compoundStatement.Statements)
-        GenerateStatement(methodContext, statement);
+        EmitStatement(methodContext, statement);
         
       gen.EndScope();
     }
     
-    GenerateStatement(methodContext : MethodContext, statement : Statement): void 
+    EmitStatement(methodContext : MethodContext, statement : Statement): void 
     {
       def gen = methodContext.IlGenerator;
       
       match (statement)
       {
-        | Expression as s => GenerateExpression(methodContext, s.Body);
+        | Expression as s => EmitExpression(methodContext, s.Body);
         | ReturnVoid => gen.Emit(Op.Ret);
         
         | Return as s =>
-            GenerateExpression(methodContext, s.Value);
+            EmitExpression(methodContext, s.Value);
             gen.Emit(Op.Ret);
             
         | Compound as s =>
-            GenerateCompoundStatement(methodContext, s.Nested);
+            EmitCompoundStatement(methodContext, s.Nested);
         
         | If as s =>
             def exitLabel = ILGeneratorLabel();
-            GenerateExpression(methodContext, s.Condition);
+            EmitExpression(methodContext, s.Condition);
             gen.Emit(Op.Brfalse, exitLabel);
             // if true
-            GenerateStatement(methodContext, s.Body);
+            EmitStatement(methodContext, s.Body);
             gen.Emit(Op.Br, exitLabel);
             gen.MarkLabel(exitLabel);
         
         | IfElse as s =>
             def falseBranchLabel = ILGeneratorLabel();
             def exitLabel = ILGeneratorLabel();
-            GenerateExpression(methodContext, s.Condition);
+            EmitExpression(methodContext, s.Condition);
             gen.Emit(Op.Brfalse, falseBranchLabel);
             // true branch
-            GenerateStatement(methodContext, s.TrueBranch);
+            EmitStatement(methodContext, s.TrueBranch);
             gen.Emit(Op.Br, exitLabel);
             // false branch
             gen.MarkLabel(falseBranchLabel);
-            GenerateStatement(methodContext, s.FalseBranch);
+            EmitStatement(methodContext, s.FalseBranch);
             gen.MarkLabel(exitLabel);
             
         | While as w =>
@@ -335,9 +336,9 @@ namespace MiniC.Compiler
             def conditionLabel = ILGeneratorLabel();
             gen.Emit(Op.Br, conditionLabel);
             gen.MarkLabel(bodyLabel);
-            GenerateStatement(methodContext, w.Body);
+            EmitStatement(methodContext, w.Body);
             gen.MarkLabel(conditionLabel);
-            GenerateExpression(methodContext, w.Condition);
+            EmitExpression(methodContext, w.Condition);
             gen.Emit(Op.Brtrue, bodyLabel);
             
             match (methodContext.TryFindWhileExitLabel(w))
@@ -354,31 +355,32 @@ namespace MiniC.Compiler
       }
     }
     
-    GenerateExpression(methodContext : MethodContext, expr : Expr) : void
+    EmitExpression(methodContext : MethodContext, expr : Expr) : void
     {
       def gen = methodContext.IlGenerator;
 
       match (expr)
       {
         | IntegerLiteral as e => gen.Emit(Op.Ldc_I4, e.Value.Value)
+        | FloatLiteral as e => gen.Emit(Op.Ldc_R8, e.Value.Value)
         | TrueLiteral => gen.Emit(Op.Ldc_I4_1)
         | FalseLiteral => gen.Emit(Op.Ldc_I4_0)
         | VariableRef as e => LoadVar(gen, methodContext, e.Ref.Symbol)
+        
         | ScalarAssignment as assignment =>
-            GenerateExpression(methodContext, assignment.Value);
-            def cciVar = methodContext.GetCciLocalVar(assignment.Ref.Symbol);
-            gen.Emit(Op.Stloc, cciVar);
+            EmitExpression(methodContext, assignment.Value);
+            SetVarValue(gen, methodContext, assignment.Ref.Symbol);
           
         | FunCall as call =>
             foreach (arg in call.Arguments)
-              GenerateExpression(methodContext, arg);
+              EmitExpression(methodContext, arg);
 
             gen.Emit(Op.Call, _functionMap[call.Ref.Symbol])
         
-        | Argument as arg => GenerateExpression(methodContext, arg.Expr)
+        | Argument as arg => EmitExpression(methodContext, arg.Expr)
         | Binary as bin =>
-            GenerateExpression(methodContext, bin.Expr1);
-            GenerateExpression(methodContext, bin.Expr2);
+            EmitExpression(methodContext, bin.Expr1);
+            EmitExpression(methodContext, bin.Expr2);
             def opCode =
               match (bin) 
               {
@@ -408,10 +410,9 @@ namespace MiniC.Compiler
               }
             gen.Emit(opCode);
         | Unary as unary =>
-            GenerateExpression(methodContext, unary.Expr1);
+            EmitExpression(methodContext, unary.Expr1);
             match (unary) 
             {
-              | Plus => ()
               | Minus => gen.Emit(Op.Neg)
               | LogicalNegate =>
                   gen.Emit(Op.Ldc_I4_0);
@@ -424,18 +425,18 @@ namespace MiniC.Compiler
             gen.Emit(Op.Ldlen);
             
         | ArrayAllocation as a =>
-            GenerateExpression(methodContext, a.Size);
+            EmitExpression(methodContext, a.Size);
             gen.Emit(Op.Newarr, GetArrayType(a.Type));
             
         | ArrayAssignment as a =>
             LoadVar(gen, methodContext, a.Ref.Symbol);
-            GenerateExpression(methodContext, a.Index);
-            GenerateExpression(methodContext, a.Value);
+            EmitExpression(methodContext, a.Index);
+            EmitExpression(methodContext, a.Value);
             gen.Emit(Op.Stelem_I4);
             
         | ArrayRef as a =>
             LoadVar(gen, methodContext, a.Ref.Symbol);
-            GenerateExpression(methodContext, a.Index);
+            EmitExpression(methodContext, a.Index);
             gen.Emit(Op.Ldelem, GetType(a.Type));
             
         | _ => WriteLine($"Unhandled expression! $expr")
@@ -463,6 +464,29 @@ namespace MiniC.Compiler
           {
             def cciParam = context.GetCciParameter(symbol);
             ilGenerator.Emit(Op.Ldarg, cciParam)
+          }
+        | _ => assert(false, $"Unhandled $(symbol.VarKind)")
+      }
+    }
+ 
+    SetVarValue(ilGenerator: ILGenerator, context: MethodContext, symbol: VarDeclarationSymbol): void
+    {
+      match (symbol.VarKind)
+      {
+        | Global =>
+          {
+            def cciVar = _globalVarMap[symbol];
+            ilGenerator.Emit(Op.Stsfld, cciVar)
+          }
+        | Local =>
+          {
+            def cciVar = context.GetCciLocalVar(symbol);
+            ilGenerator.Emit(Op.Stloc, cciVar)
+          }
+        | Parameter =>
+          {
+            def cciParam = context.GetCciParameter(symbol);
+            ilGenerator.Emit(Op.Starg, cciParam)
           }
         | _ => assert(false, $"Unhandled $(symbol.VarKind)")
       }

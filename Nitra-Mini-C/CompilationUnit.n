@@ -32,12 +32,13 @@ namespace MiniC
   [Record]
   public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
   {
-    public Void      : VoidSymbol;
-    public Int       : IntSymbol;
-    public Float     : FloatSymbol;
-    public Bool      : BoolSymbol;
-    public PrintInt  : FunDeclarationSymbol;
-    public PrintBool : FunDeclarationSymbol;
+    public Void       : VoidSymbol;
+    public Int        : IntSymbol;
+    public Float      : FloatSymbol;
+    public Bool       : BoolSymbol;
+    public PrintInt   : FunDeclarationSymbol;
+    public PrintBool  : FunDeclarationSymbol;
+    public PrintFloat : FunDeclarationSymbol;
   }
 
   public module Evaluator
@@ -51,10 +52,14 @@ namespace MiniC
       def root = RootSymbol();
       def rootScope = TableScope("<root>", root);
       
-      def defineSymbol[Type](name : string) : Type where Type: DeclarationSymbol
+      def defineSymbol[Type](name : string, putToRootScope: bool = true) : Type where Type: DeclarationSymbol
       {
         def name = Name(NoFile, NoSpan, name);
-        def symbol = ExternalDeclaration.[Type](name).DefineSymbol(rootScope);
+        def symbol = 
+          if (putToRootScope)
+            ExternalDeclaration.[Type](name).DefineSymbol(rootScope)
+          else
+            ExternalDeclaration.[Type](name).DefineSymbol();
         symbol
       }
       
@@ -67,15 +72,16 @@ namespace MiniC
       {
         def symbol = defineSymbol.[FunDeclarationSymbol](name);
         symbol.ReturnType = voidSymbol;
-        def printParam = defineSymbol.[VarDeclaration.ScalarDeclarationSymbol]("value");
+        def printParam = defineSymbol.[VarDeclaration.ScalarDeclarationSymbol]("value", false);
         printParam.Type = argType;
         symbol.Parameters = array[printParam];
         symbol
       }
       
-      def printIntSymbol = definePrintSymbol("print_int", intSymbol);
-      def printBoolSymbol = definePrintSymbol("print_bool", boolSymbol);
-      def context = MiniCDependentPropertyEvalContext(voidSymbol, intSymbol, floatSymbol, boolSymbol, printIntSymbol, printBoolSymbol);
+      def printIntSymbol = definePrintSymbol("iprint", intSymbol);
+      def printBoolSymbol = definePrintSymbol("bprint", boolSymbol);
+      def printFloatSymbol = definePrintSymbol("fprint", floatSymbol);
+      def context = MiniCDependentPropertyEvalContext(voidSymbol, intSymbol, floatSymbol, boolSymbol, printIntSymbol, printBoolSymbol, printFloatSymbol);
 
       root.MemberTable = rootScope;
       root.Scope       = rootScope;
@@ -89,6 +95,7 @@ namespace MiniC
       boolSymbol.EvalProperties(context);
       printIntSymbol.EvalProperties(context);
       printBoolSymbol.EvalProperties(context);
+      printFloatSymbol.EvalProperties(context);
       root.EvalProperties(context);
 
       project.Data = (context, root);

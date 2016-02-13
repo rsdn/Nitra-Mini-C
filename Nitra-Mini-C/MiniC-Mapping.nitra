@@ -1,6 +1,7 @@
 ﻿using Nitra;
 using Nitra.Runtime;
 using Nitra.Declarations;
+using System.Globalization;
 
 namespace MiniC 
 {
@@ -67,7 +68,7 @@ namespace MiniC
   map syntax MiniCSyntax.Expr -> Expr
   {
     | IntegerLiteral -> IntegerLiteral { Value = ParsedValue(Digits, int.Parse(GetText(Digits))); }
-    | FloatLiteral   -> FloatLiteral   { Value = ParsedValue(Digits, double.Parse(GetText(Digits))); }
+    | FloatLiteral   -> FloatLiteral   { Value = ParsedValue(Digits, double.Parse(GetText(Digits), CultureInfo.InvariantCulture)); }
     | True           -> TrueLiteral    { }
     | False          -> FalseLiteral   { }
     | VariableRef    -> VariableRef    { Reference -> Reference; }
@@ -114,9 +115,9 @@ namespace MiniC
     | Multiply     { Expr1 -> Expr1; Expr2 -> Expr2; }
     | Divide       { Expr1 -> Expr1; Expr2 -> Expr2; }
 
-    | Plus          { Expr -> Expr1; }
     | Minus         { Expr -> Expr1; }
     | LogicalNegate { Expr -> Expr1; }
+    | Plus -> this.Expr
   }
   
   map syntax MiniCSyntax.VarDeclaration (header: VarHeader) -> VarDeclaration

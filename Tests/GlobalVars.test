@@ -1,12 +1,18 @@
 int i;
+float f;
 
 void main() {
-	int j;
-	j = i;
+	//int j;
+	//i = 2;
+	//j = i;
+	f = 1.0;
+	//iprint(j);
+	//fprint(f);
 	return;
 }
-
 /*
 BEGIN-OUTPUT
+2
+1.0
 END-OUTPUT
 */

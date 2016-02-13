@@ -1,9 +1,11 @@
 int main() {
     1 + 2 + (3 - 2);
-    print_int(1);
-    print_int(2 + 3);
-	print_bool(true);
-	print_bool(2 > 3);
+    iprint(1);
+    iprint(2 + 3);
+	  bprint(true);
+	  bprint(2 > 3);
+	  fprint(2.3);
+	  fprint(2.1 + 3.2 * 10.0);
     return 0;
 }
 
@@ -13,5 +15,7 @@ BEGIN-OUTPUT
 5
 True
 False
+2,3
+34,1
 END-OUTPUT
 */

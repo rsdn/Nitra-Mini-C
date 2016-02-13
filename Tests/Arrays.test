@@ -4,8 +4,8 @@ void main() {
 	i = new int[5];
 	i[0] = -7;
 	len = i.size;
-	print_int(i[0]);
-	print_int(len);
+	iprint(i[0]);
+	iprint(len);
 	return;
 }
 
