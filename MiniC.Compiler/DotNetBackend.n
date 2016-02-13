@@ -68,7 +68,7 @@ namespace MiniC.Compiler
     [RecordIgnore]
     _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
     [RecordIgnore]
-    _whileExitLabel    : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
+    _whileExitLabelMap : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
     
     public LocalVars : Seq[LocalDefinition] { get { _localVars } }
     
@@ -105,15 +105,21 @@ namespace MiniC.Compiler
       _parameterMap[paramSymbol]
     }
     
-    public AddWhileExitLabel(w: Statement.While, label: ILGeneratorLabel): void
+    public GetOrNewWhileExitLabel(w: Statement.While): ILGeneratorLabel
     {
-      _whileExitLabel[w] = label;
+      mutable label;
+      unless (_whileExitLabelMap.TryGetValue(w, out label))
+      {
+        label = ILGeneratorLabel();
+        _whileExitLabelMap[w] = label;
+      }
+      label
     }
     
     public TryFindWhileExitLabel(w: Statement.While): option[ILGeneratorLabel]
     {
       mutable label;
-      if (_whileExitLabel.TryGetValue(w, out label)) Some(label) else None()
+      if (_whileExitLabelMap.TryGetValue(w, out label)) Some(label) else None()
     }
   }
   
@@ -327,22 +333,22 @@ namespace MiniC.Compiler
         | While as w =>
             def bodyLabel = ILGeneratorLabel();
             def conditionLabel = ILGeneratorLabel();
-            def exitLabel = ILGeneratorLabel();
             gen.Emit(Op.Br, conditionLabel);
             gen.MarkLabel(bodyLabel);
             GenerateStatement(methodContext, w.Body);
             gen.MarkLabel(conditionLabel);
             GenerateExpression(methodContext, w.Condition);
             gen.Emit(Op.Brtrue, bodyLabel);
-            gen.MarkLabel(exitLabel);
-            //match (methodContext.TryGetWhileExitLabel(w)
-            //{
-              //| Some(label) => gen.Emit(Op.Br, whileExitLabel);
-            //}
+            
+            match (methodContext.TryFindWhileExitLabel(w))
+            {
+              | Some(label) => gen.MarkLabel(label)
+              | None => ()
+            }
             
         | Break (Loop = Some(loop)) =>
             def whileExitLabel = ILGeneratorLabel();
-            methodContext.AddWhileExitLabel(loop, whileExitLabel);
+            def whileExitLabel = methodContext.GetOrNewWhileExitLabel(loop);
             gen.Emit(Op.Br, whileExitLabel);
             
         | _ => WriteLine($"Unhandlend statement! $statement");
