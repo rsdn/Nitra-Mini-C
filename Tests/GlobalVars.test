@@ -1,18 +1,35 @@
 int i;
 float f;
+bool b;
+int ia[];
+float fa[];
+bool ba[];
 
 void main() {
-	//int j;
-	//i = 2;
-	//j = i;
-	f = 1.0;
-	//iprint(j);
-	//fprint(f);
+	i = 2;
+	f = 3.0;
+	b = true;
+	ia = new int[1];
+	fa = new float[1];
+	ba = new bool[1];
+	ia[0] = 20;
+	fa[0] = 30.0;
+	ba[0] = true;
+	iprint(i);
+	fprint(f);
+	bprint(b);
+	iprint(ia[0]);
+	fprint(fa[0]);
+	bprint(ba[0]);
 	return;
 }
 /*
 BEGIN-OUTPUT
 2
-1.0
+3
+True
+20
+30
+True
 END-OUTPUT
 */

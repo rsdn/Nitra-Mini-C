@@ -226,6 +226,7 @@ namespace MiniC.Compiler
         IsStatic = true;
         Visibility = TypeMemberVisibility.Public;
         IsReadOnly = false;
+        InternFactory = _host.InternFactory;
       };
       
       _mainClass.Fields.Add(field);
@@ -246,7 +247,8 @@ namespace MiniC.Compiler
           Name = _nameTable.GetNameFor(name);
           Type = GetType(func.ReturnType);
           Parameters = List();
-          Visibility = TypeMemberVisibility.Public
+          Visibility = TypeMemberVisibility.Public;
+          InternFactory = _host.InternFactory;
         };
      
         method.Body = EmitBody(func, method);
@@ -433,7 +435,7 @@ namespace MiniC.Compiler
             LoadVar(gen, methodContext, a.Ref.Symbol);
             EmitExpression(methodContext, a.Index);
             EmitExpression(methodContext, a.Value);
-            gen.Emit(Op.Stelem_I4);
+            gen.Emit(Op.Stelem, GetType(a.Ref.Symbol.Type));
             
         | ArrayRef as a =>
             LoadVar(gen, methodContext, a.Ref.Symbol);
@@ -477,7 +479,7 @@ namespace MiniC.Compiler
         | Global =>
           {
             def cciField = _globalVarMap[symbol];
-            gen.Emit(Op.Stsfld, cciField)
+            gen.Emit(Op.Stsfld, cciField);
           }
         | Local =>
           {
