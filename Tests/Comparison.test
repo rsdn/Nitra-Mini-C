@@ -1,4 +1,4 @@
-﻿int main() {
+int main() {
     bool b;
     b = 1 < 2;
     b = 1 <= 2;

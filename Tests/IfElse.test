@@ -1,4 +1,4 @@
-﻿int main() {
+int main() {
 	bool b;
 	b = true;
 	if (b) print_bool(b);

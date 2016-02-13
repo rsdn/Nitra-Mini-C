@@ -1,4 +1,4 @@
-﻿int i;
+int i;
 
 void main() {
 	int j;

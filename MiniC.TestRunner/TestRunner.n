@@ -41,7 +41,7 @@ namespace MiniC.TestRunner
       
       def results =
         TestReader
-        .ReadTests(config.SourceDir, "*.c")
+        .ReadTests(config.SourceDir, config.SearchPattern)
         .AsParallel()
         .WithExecutionMode(ParallelExecutionMode.ForceParallelism)
         .Select(case => 

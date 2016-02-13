@@ -1,1 +1,1 @@
-MiniC.TestRunner\bin\Debug\MiniC.TestRunner.exe -dir MiniC.TestRunner\Tests -c MiniC.Compiler\bin\Debug\MiniC.Compiler.exe %*
+MiniC.TestRunner\bin\Debug\MiniC.TestRunner.exe -dir Tests -p *.test -c MiniC.Compiler\bin\Debug\MiniC.Compiler.exe %*
