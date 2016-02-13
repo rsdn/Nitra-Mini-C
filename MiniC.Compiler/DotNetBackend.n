@@ -83,7 +83,7 @@ namespace MiniC.Compiler
       {
         MethodDefinition = Method;
         Name = _nameTable.GetNameFor(varDeclSymbol.Name);
-        Type = _backend.GetType(varDeclSymbol.Type);
+        Type = _backend.GetVariableType(varDeclSymbol);
       };
       
       IlGenerator.AddVariableToCurrentScope(cciLocalVar);
@@ -95,7 +95,7 @@ namespace MiniC.Compiler
     {
       def cciParameter = ParameterDefinition();
       cciParameter.Name = _nameTable.GetNameFor(paramSymbol.Name);
-      cciParameter.Type = _backend.GetType(paramSymbol.Type);
+      cciParameter.Type = _backend.GetVariableType(paramSymbol);
       Method.Parameters.Add(cciParameter);
       _parameterMap[paramSymbol] = cciParameter;
     }
@@ -216,17 +216,18 @@ namespace MiniC.Compiler
       using (peStream = IO.File.Create(outputPath))
         PeWriter.WritePeToStream(_assembly, _host, peStream);
     }
-        
+    
     public Add(var : VarDeclarationSymbol): void
     {
       def field = FieldDefinition() <- {
         ContainingTypeDefinition = _mainClass;
         Name = _nameTable.GetNameFor(var.Name);
-        Type = GetType(var.Type);
+        Type = GetVariableType(var);
         IsStatic = true;
         Visibility = TypeMemberVisibility.Public;
         IsReadOnly = false;
       };
+      
       _mainClass.Fields.Add(field);
       _globalVarMap[var] = field
     }    
@@ -461,6 +462,27 @@ namespace MiniC.Compiler
         | BoolSymbol  => _host.PlatformType.SystemBoolean
         | VoidSymbol  => _host.PlatformType.SystemVoid
         | _           => assert(false, $"Unhandled $typeSymbol")
+      }
+    }
+    
+    GetArrayType(typeSymbol: TypeSymbol): IArrayTypeReference
+    {
+      def elementType = GetType(typeSymbol);
+      VectorTypeReference() <-
+      {
+        TypeCode = PrimitiveTypeCode.NotPrimitive;
+        PlatformType = _host.PlatformType;
+        ElementType = elementType;
+        InternFactory = _host.InternFactory;
+      }
+    }
+    
+    public GetVariableType(var: VarDeclarationSymbol): ITypeReference
+    {
+      match (var)
+      {
+        | VarDeclaration.ScalarDeclarationSymbol => GetType(var.Type)
+        | VarDeclaration.ArrayDeclarationSymbol => GetArrayType(var.Type)
       }
     }
     
