@@ -146,13 +146,13 @@ namespace MiniC.Compiler
           InternFactory = _host.InternFactory;
         };
      
+        _mainClass.Methods.Add(method);
+        _functionMap[func] = method;
         method.Body = EmitFunctionBody(func, method);
       
         when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
           _assembly.EntryPoint = method;
           
-        _mainClass.Methods.Add(method);
-        _functionMap[func] = method;
       }
       else
       {
