@@ -15,7 +15,7 @@ BEGIN-OUTPUT
 5
 True
 False
-2,3
-34,1
+2.3
+34.1
 END-OUTPUT
 */

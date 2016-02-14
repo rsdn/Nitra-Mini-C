@@ -6,8 +6,10 @@ using Nemerle;
 using System;
 using System.Collections.Generic;
 using System.Console;
-using System.Linq;
 using System.IO;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
 
 namespace MiniC.TestRunner 
 {
@@ -15,6 +17,7 @@ namespace MiniC.TestRunner
   {
     Main() : void
     {
+      Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
       def config = Config();
       when (config.Success)
       {
