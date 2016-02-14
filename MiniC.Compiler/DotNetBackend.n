@@ -176,9 +176,11 @@ namespace MiniC.Compiler
     EmitFunctionBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
     {
       def compoundStatement = func.Declarations.First().Body;
-      def methodContext = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
+      def isVoid = ReferenceEquals(method.Type, _host.PlatformType.SystemVoid);
+      def methodContext = MethodContext(this, _nameTable, method, isVoid, ILGenerator(_host, method));
       func.Parameters.Iter(methodContext.AddParameter);
       EmitCompoundStatement(methodContext, compoundStatement);
+      methodContext.EmitReturn();
       ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
     }
     
@@ -207,7 +209,11 @@ namespace MiniC.Compiler
         
         | Return as s =>
             EmitExpression(methodContext, s.Value);
-            gen.Emit(Op.Ret);
+            methodContext.Return.Value.Iter(ret =>
+            {
+              gen.Emit(Op.Stloc, ret.Var);
+              gen.Emit(Op.Br, ret.Label);
+            })
             
         | Compound as s =>
             EmitCompoundStatement(methodContext, s.Nested);
@@ -218,7 +224,6 @@ namespace MiniC.Compiler
             gen.Emit(Op.Brfalse, exitLabel);
             // if true
             EmitStatement(methodContext, s.Body);
-            gen.Emit(Op.Br, exitLabel);
             gen.MarkLabel(exitLabel);
         
         | IfElse as s =>

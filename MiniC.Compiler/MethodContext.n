@@ -16,17 +16,28 @@ using System.Linq;
 namespace MiniC.Compiler
 {
   [Record]
+  class Return
+  {
+    public Label: ILGeneratorLabel;
+    public Var: LocalDefinition;
+  }
+  
+  [Record]
   class MethodContext
   {
     _backend           : DotNetBackend;
     _nameTable         : NameTable;
     public Method      : MethodDefinition;
+    _isVoid            : bool;
     public IlGenerator : ILGenerator;
     [RecordIgnore] _parameterMap      : Dictionary[VarDeclarationSymbol, IParameterDefinition] = Dictionary();
     [RecordIgnore] _localVars         : List[LocalDefinition] = List();
     [RecordIgnore] _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
     [RecordIgnore] _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
     [RecordIgnore] _whileExitLabelMap : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
+    [RecordIgnore, Accessor] 
+    _return : LazyValue[option[Return]] = 
+      lazy (if (_isVoid) None() else Some(Return(ILGeneratorLabel(), CreateLocalVar("_return_", Method.Type))));
     
     public LocalVars : Seq[LocalDefinition] { get { _localVars } }
     
@@ -35,17 +46,23 @@ namespace MiniC.Compiler
       _localVarMap[varDeclSymbol]
     }
     
-    public AddLocalVar(varDeclSymbol : VarDeclarationSymbol) : void
+    CreateLocalVar(name: string, ty: ITypeReference): LocalDefinition 
     {
       def cciLocalVar = LocalDefinition() <-
       {
         MethodDefinition = Method;
-        Name = _nameTable.GetNameFor(varDeclSymbol.Name);
-        Type = _backend.GetVariableType(varDeclSymbol);
+        Name = _nameTable.GetNameFor(name);
+        Type = ty
       };
       
       IlGenerator.AddVariableToCurrentScope(cciLocalVar);
       _localVars.Add(cciLocalVar);
+      cciLocalVar
+    }
+    
+    public AddLocalVar(varDeclSymbol : VarDeclarationSymbol) : void
+    {
+      def cciLocalVar = CreateLocalVar(varDeclSymbol.Name, _backend.GetVariableType(varDeclSymbol));
       _localVarMap[varDeclSymbol] = cciLocalVar;
     }
     
@@ -78,6 +95,16 @@ namespace MiniC.Compiler
     public TryFindWhileExitLabel(w: Statement.While): option[ILGeneratorLabel]
     {
       _whileExitLabelMap.TryFind(w);
+    }
+    
+    public EmitReturn(): void
+    {
+      Return.Value.Iter(ret =>
+      {
+        IlGenerator.MarkLabel(ret.Label);
+        IlGenerator.Emit(Op.Ldloc, ret.Var);
+        IlGenerator.Emit(Op.Ret);
+      });
     }
   }  
 }
