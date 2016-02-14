@@ -21,7 +21,7 @@ namespace MiniC.Compiler
   {
     Main() : void
     {
-      def config = CommandPromptReader();
+      def config = Config();
       when (config.Success)
       {
         def solution = GenerateSolution(config);
@@ -43,7 +43,7 @@ namespace MiniC.Compiler
       }
     }
         
-    GenerateSolution(cfg: CommandPromptReader): FsSolution[IAst]
+    GenerateSolution(cfg: Config): FsSolution[IAst]
     {
       def solution = FsSolution();
       _ = FsProject(solution, Path.GetDirectoryName(cfg.FileName), [FsFile(cfg.FileName, MiniC.Instance)], []);

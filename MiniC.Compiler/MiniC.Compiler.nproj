@@ -123,14 +123,20 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandPromptReader.n">
+    <Compile Include="Config.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DotNetBackend.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Main.n" />
+    <Compile Include="MethodContext.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
+    <Compile Include="Utils.n">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

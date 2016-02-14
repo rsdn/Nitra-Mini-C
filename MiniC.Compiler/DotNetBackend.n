@@ -1,15 +1,12 @@
 ﻿using Microsoft.Cci;
 using Microsoft.Cci.MutableCodeModel;
-
 using Nemerle;
 using Nemerle.Collections;
 using Nemerle.Text;
 using Nemerle.Utility;
 using Nemerle.Extensions;
-
 using Nitra.Declarations;
 using Nitra.ProjectSystem;
-
 using System;
 using System.Console;
 using System.Collections.Generic;
@@ -19,110 +16,7 @@ using System.Linq;
 namespace MiniC.Compiler
 {
   type Op = OperationCode;
-  
-  class FuncBodyAstVisitor : IAstVisitor
-  {
-    public Visit(ast: IAst) : void
-    {
-      WriteLine(ast);
-      
-      match (ast)
-      {
-        | decls is TopDeclaration.AstList => decls.Accept(this);
-        | _ => WriteLine($"Unhandled! $ast");
-      }
-      
-      ast.Accept(this);
-    }
     
-    public Visit(r: IRef): void
-    {
-      _ = r;
-    }
-    
-    public Visit(name: Name): void implements IAstVisitor.Visit
-    {
-      _ = name;
-    }
-    
-    public Visit(reference: Reference): void implements IAstVisitor.Visit
-    {
-      _ = reference;
-    }
-    
-  }
-  
-  [Record]
-  class MethodContext
-  {
-    _backend           : DotNetBackend;
-    _nameTable         : NameTable;
-    public Method      : MethodDefinition;
-    public IlGenerator : ILGenerator;
-    [RecordIgnore]
-    _parameterMap      : Dictionary[VarDeclarationSymbol, IParameterDefinition] = Dictionary();
-    [RecordIgnore]
-    _localVars         : List[LocalDefinition] = List();
-    [RecordIgnore]
-    _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
-    [RecordIgnore]
-    _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
-    [RecordIgnore]
-    _whileExitLabelMap : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
-    
-    public LocalVars : Seq[LocalDefinition] { get { _localVars } }
-    
-    public GetCciLocalVar(varDeclSymbol : VarDeclarationSymbol) : ILocalDefinition
-    {
-      _localVarMap[varDeclSymbol]
-    }
-    
-    public AddLocalVar(varDeclSymbol : VarDeclarationSymbol) : void
-    {
-      def cciLocalVar = LocalDefinition() <-
-      {
-        MethodDefinition = Method;
-        Name = _nameTable.GetNameFor(varDeclSymbol.Name);
-        Type = _backend.GetVariableType(varDeclSymbol);
-      };
-      
-      IlGenerator.AddVariableToCurrentScope(cciLocalVar);
-      _localVars.Add(cciLocalVar);
-      _localVarMap.Add(varDeclSymbol, cciLocalVar);
-    }
-    
-    public AddParameter(paramSymbol : VarDeclarationSymbol) : void
-    {
-      def cciParameter = ParameterDefinition();
-      cciParameter.Name = _nameTable.GetNameFor(paramSymbol.Name);
-      cciParameter.Type = _backend.GetVariableType(paramSymbol);
-      Method.Parameters.Add(cciParameter);
-      _parameterMap[paramSymbol] = cciParameter;
-    }
-    
-    public GetCciParameter(paramSymbol : VarDeclarationSymbol) : IParameterDefinition
-    {
-      _parameterMap[paramSymbol]
-    }
-    
-    public GetOrNewWhileExitLabel(w: Statement.While): ILGeneratorLabel
-    {
-      mutable label;
-      unless (_whileExitLabelMap.TryGetValue(w, out label))
-      {
-        label = ILGeneratorLabel();
-        _whileExitLabelMap[w] = label;
-      }
-      label
-    }
-    
-    public TryFindWhileExitLabel(w: Statement.While): option[ILGeneratorLabel]
-    {
-      mutable label;
-      if (_whileExitLabelMap.TryGetValue(w, out label)) Some(label) else None()
-    }
-  }
-  
   class DotNetBackend : IDisposable
   {
     _project           : Project;
@@ -143,7 +37,7 @@ namespace MiniC.Compiler
       using (backend = DotNetBackend(project))
       {
         foreach (symbols in rootSymbol.MemberTable.Symbols)
-          foreach (toDeclSymbol in symbols)
+          foreach (topDeclSymbol in symbols)
           {
             | funcDecl is FunDeclarationSymbol => backend.Add(funcDecl)
             | varDecl is VarDeclarationSymbol => backend.Add(varDecl)
@@ -151,7 +45,7 @@ namespace MiniC.Compiler
                   || ReferenceEquals(s, context.Bool)
                   || ReferenceEquals(s, context.Int)
                   || ReferenceEquals(s, context.Float) => ()
-            | _ => assert(false);
+            | _ => assert(false, $"Unknown top declaration symbol type $topDeclSymbol");
           }
         backend.GenerateAssembly(outputPath);
       }
@@ -184,6 +78,7 @@ namespace MiniC.Compiler
         IsClass = true;
         Name = _nameTable.GetNameFor("<Module>")
       };
+      
       _assembly.AllTypes.Add(moduleClass);
 
       _mainClass = NamespaceTypeDefinition() <-
@@ -251,10 +146,11 @@ namespace MiniC.Compiler
           InternFactory = _host.InternFactory;
         };
      
-        method.Body = EmitBody(func, method);
+        method.Body = EmitFunctionBody(func, method);
       
         when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
           _assembly.EntryPoint = method;
+          
         _mainClass.Methods.Add(method);
         _functionMap[func] = method;
       }
@@ -265,14 +161,19 @@ namespace MiniC.Compiler
           def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
           TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), returnType);
         }
-      
-        _functionMap[_context.PrintInt] = writeLineFun(_host.PlatformType.SystemInt32);
-        _functionMap[_context.PrintBool] = writeLineFun(_host.PlatformType.SystemBoolean);
-        _functionMap[_context.PrintFloat] = writeLineFun(_host.PlatformType.SystemFloat64);
+        
+        _functionMap[func] = writeLineFun(GetType(func.Parameters[0].Type));
       }
     }
     
-    EmitBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
+    GetFunction(symbol: FunDeclarationSymbol): IMethodDefinition
+    {
+      _functionMap
+        .TryFind(symbol)
+        .Fill(() => throw Exception($"Cannot find function $symbol, known functions: $(_functionMap.Values.ToArray().ToNList())"));
+    }
+    
+    EmitFunctionBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
     {
       def compoundStatement = func.Declarations.First().Body;
       def methodContext = MethodContext(this, _nameTable, method, ILGenerator(_host, method));
@@ -337,17 +238,14 @@ namespace MiniC.Compiler
             def bodyLabel = ILGeneratorLabel();
             def conditionLabel = ILGeneratorLabel();
             gen.Emit(Op.Br, conditionLabel);
+            // loop body
             gen.MarkLabel(bodyLabel);
             EmitStatement(methodContext, w.Body);
+            // loop condition
             gen.MarkLabel(conditionLabel);
             EmitExpression(methodContext, w.Condition);
             gen.Emit(Op.Brtrue, bodyLabel);
-            
-            match (methodContext.TryFindWhileExitLabel(w))
-            {
-              | Some(label) => gen.MarkLabel(label)
-              | None => ()
-            }
+            methodContext.TryFindWhileExitLabel(w).Iter(gen.MarkLabel);
             
         | Break (Loop = Some(loop)) =>
             def whileExitLabel = methodContext.GetOrNewWhileExitLabel(loop);
@@ -377,7 +275,7 @@ namespace MiniC.Compiler
             foreach (arg in call.Arguments)
               EmitExpression(methodContext, arg);
 
-            gen.Emit(Op.Call, _functionMap[call.Ref.Symbol])
+            gen.Emit(Op.Call, GetFunction(call.Ref.Symbol))
         
         | Argument as arg => EmitExpression(methodContext, arg.Expr)
         
@@ -412,6 +310,7 @@ namespace MiniC.Compiler
                 | _ => assert(false, $"Unhandled binary expression $bin")
               }
             gen.Emit(opCode);
+            
         | Unary as unary =>
             EmitExpression(methodContext, unary.Expr1);
             match (unary) 
@@ -445,6 +344,7 @@ namespace MiniC.Compiler
         | _ => WriteLine($"Unhandled expression! $expr")
       }
       
+      // we must pop expression result out from stack if it's not used
       unless (expr.Used || MiniCTypeUnifier.Instance.TryUnify(expr.Type, _context.Void))
         gen.Emit(Op.Pop);
     }
@@ -453,22 +353,9 @@ namespace MiniC.Compiler
     {
       match (symbol.VarKind)
       {
-        | Global =>
-          {
-            def cciField = _globalVarMap[symbol];
-            gen.Emit(Op.Ldsfld, cciField)
-          }
-        | Local =>
-          {
-            def cciVar = context.GetCciLocalVar(symbol);
-            gen.Emit(Op.Ldloc, cciVar)
-          }
-        | Parameter =>
-          {
-            def cciParam = context.GetCciParameter(symbol);
-            gen.Emit(Op.Ldarg, cciParam)
-          }
-        | _ => assert(false, $"Unhandled $(symbol.VarKind)")
+        | Global => gen.Emit(Op.Ldsfld, _globalVarMap[symbol])
+        | Local => gen.Emit(Op.Ldloc, context.GetCciLocalVar(symbol))
+        | Parameter => gen.Emit(Op.Ldarg, context.GetCciParameter(symbol))
       }
     }
  
@@ -476,22 +363,9 @@ namespace MiniC.Compiler
     {
       match (symbol.VarKind)
       {
-        | Global =>
-          {
-            def cciField = _globalVarMap[symbol];
-            gen.Emit(Op.Stsfld, cciField);
-          }
-        | Local =>
-          {
-            def cciVar = context.GetCciLocalVar(symbol);
-            gen.Emit(Op.Stloc, cciVar)
-          }
-        | Parameter =>
-          {
-            def cciParam = context.GetCciParameter(symbol);
-            gen.Emit(Op.Starg, cciParam)
-          }
-        | _ => assert(false, $"Unhandled $(symbol.VarKind)")
+        | Global => gen.Emit(Op.Stsfld, _globalVarMap[symbol])
+        | Local => gen.Emit(Op.Stloc, context.GetCciLocalVar(symbol))
+        | Parameter => gen.Emit(Op.Starg, context.GetCciParameter(symbol))
       }
     }
     

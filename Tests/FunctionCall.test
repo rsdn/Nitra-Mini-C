@@ -1,20 +1,24 @@
-void f() {
-	return;
+float f(float x) {
+	return x * 2.0;
 }
 
 int g(int i) {
-	return i;
+	return i + 10;
 }
 
 int main() {
-    int i;
-	f();
-    g(1);
-    i = g(2);
+  float fx;
+  int ix;
+  fx = f(5.0);
+  ix = g(1);
+  fprint(fx);
+  iprint(ix);
 	return 0;
 }
 
 /*
 BEGIN-OUTPUT
+10
+11
 END-OUTPUT
 */

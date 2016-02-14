@@ -1,0 +1,83 @@
+﻿using Microsoft.Cci;
+using Microsoft.Cci.MutableCodeModel;
+using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Extensions;
+using Nitra.Declarations;
+using Nitra.ProjectSystem;
+using System;
+using System.Console;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace MiniC.Compiler
+{
+  [Record]
+  class MethodContext
+  {
+    _backend           : DotNetBackend;
+    _nameTable         : NameTable;
+    public Method      : MethodDefinition;
+    public IlGenerator : ILGenerator;
+    [RecordIgnore] _parameterMap      : Dictionary[VarDeclarationSymbol, IParameterDefinition] = Dictionary();
+    [RecordIgnore] _localVars         : List[LocalDefinition] = List();
+    [RecordIgnore] _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
+    [RecordIgnore] _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
+    [RecordIgnore] _whileExitLabelMap : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
+    
+    public LocalVars : Seq[LocalDefinition] { get { _localVars } }
+    
+    public GetCciLocalVar(varDeclSymbol : VarDeclarationSymbol) : ILocalDefinition
+    {
+      _localVarMap[varDeclSymbol]
+    }
+    
+    public AddLocalVar(varDeclSymbol : VarDeclarationSymbol) : void
+    {
+      def cciLocalVar = LocalDefinition() <-
+      {
+        MethodDefinition = Method;
+        Name = _nameTable.GetNameFor(varDeclSymbol.Name);
+        Type = _backend.GetVariableType(varDeclSymbol);
+      };
+      
+      IlGenerator.AddVariableToCurrentScope(cciLocalVar);
+      _localVars.Add(cciLocalVar);
+      _localVarMap[varDeclSymbol] = cciLocalVar;
+    }
+    
+    public AddParameter(paramSymbol : VarDeclarationSymbol) : void
+    {
+      def cciParameter = ParameterDefinition();
+      cciParameter.Name = _nameTable.GetNameFor(paramSymbol.Name);
+      cciParameter.Type = _backend.GetVariableType(paramSymbol);
+      Method.Parameters.Add(cciParameter);
+      _parameterMap[paramSymbol] = cciParameter;
+    }
+    
+    public GetCciParameter(paramSymbol : VarDeclarationSymbol) : IParameterDefinition
+    {
+      _parameterMap[paramSymbol]
+    }
+    
+    public GetOrNewWhileExitLabel(w: Statement.While): ILGeneratorLabel
+    {
+      _whileExitLabelMap
+        .TryFind(w)
+        .Fill(() =>
+        {
+            def label = ILGeneratorLabel();
+            _whileExitLabelMap[w] = label;
+            label
+        })
+    }
+    
+    public TryFindWhileExitLabel(w: Statement.While): option[ILGeneratorLabel]
+    {
+      _whileExitLabelMap.TryFind(w);
+    }
+  }  
+}

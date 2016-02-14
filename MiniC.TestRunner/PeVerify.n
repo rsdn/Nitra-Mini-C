@@ -25,7 +25,9 @@ namespace MiniC.TestRunner
         else $"$programFilesDir (x86)";
       
       def sdkDirs = [programFilesDir, otherProgramFilesDir].Map(x => DirectoryInfo(x + @"\Microsoft SDKs\Windows")).Filter(_.Exists);
-      if (sdkDirs.IsEmpty) Result.Fail([Error.VerifyError(["PeVerify.exe is needed to verify compiled assemblies, but no Microsoft SDK is found."])])
+      
+      if (sdkDirs.IsEmpty) 
+        Result.Fail([Error.VerifyError(["PeVerify.exe is needed to verify compiled assemblies, but no Microsoft SDK is found."])])
       else
       {
         def exePath = 
