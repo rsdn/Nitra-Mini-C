@@ -22,24 +22,34 @@ namespace MiniC.Compiler
     public Var: LocalDefinition;
   }
   
-  [Record]
   class MethodContext
   {
-    _backend           : DotNetBackend;
-    _nameTable         : NameTable;
-    public Method      : MethodDefinition;
-    _isVoid            : bool;
-    public IlGenerator : ILGenerator;
-    [RecordIgnore] _parameterMap      : Dictionary[VarDeclarationSymbol, IParameterDefinition] = Dictionary();
-    [RecordIgnore] _localVars         : List[LocalDefinition] = List();
-    [RecordIgnore] _localVarMap       : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
-    [RecordIgnore] _argMap            : Dictionary[VarDeclarationSymbol, ILocalDefinition] = Dictionary();
-    [RecordIgnore] _whileExitLabelMap : Dictionary[Statement.While, ILGeneratorLabel] = Dictionary();
-    [RecordIgnore, Accessor] 
-    _return : LazyValue[option[Return]] = 
-      lazy (if (_isVoid) None() else Some(Return(ILGeneratorLabel(), CreateLocalVar("_return_", Method.Type))));
+    _backend     : DotNetBackend;
+    _nameTable   : NameTable;
+    [Accessor] 
+    _method      : MethodDefinition;
+    _isVoid      : bool;
+    [Accessor] 
+    _ilGenerator : ILGenerator;
+    _parameterMap      : Hashtable[VarDeclarationSymbol, IParameterDefinition] = Hashtable();
+    _localVars         : List[LocalDefinition] = List();
+    _localVarMap       : Hashtable[VarDeclarationSymbol, ILocalDefinition] = Hashtable();
+    _argMap            : Hashtable[VarDeclarationSymbol, ILocalDefinition] = Hashtable();
+    _whileExitLabelMap : Hashtable[Statement.While, ILGeneratorLabel] = Hashtable();
+    [Accessor]
+    _return            : option[Return]; 
     
     public LocalVars : Seq[LocalDefinition] { get { _localVars } }
+    
+    public this(backend: DotNetBackend, nameTable: NameTable, method: MethodDefinition, isVoid: bool, ilGenerator: ILGenerator)
+    {
+      _backend = backend;
+      _nameTable = nameTable;
+      _method = method;
+      _isVoid = isVoid;
+      _ilGenerator = ilGenerator;
+      _return = if (_isVoid) None() else Some(Return(ILGeneratorLabel(), CreateLocalVar("_return_", Method.Type)));
+    }
     
     public GetCciLocalVar(varDeclSymbol : VarDeclarationSymbol) : ILocalDefinition
     {
@@ -83,7 +93,7 @@ namespace MiniC.Compiler
     public GetOrNewWhileExitLabel(w: Statement.While): ILGeneratorLabel
     {
       _whileExitLabelMap
-        .TryFind(w)
+        .Get(w)
         .Fill(() =>
         {
             def label = ILGeneratorLabel();
@@ -94,12 +104,12 @@ namespace MiniC.Compiler
     
     public TryFindWhileExitLabel(w: Statement.While): option[ILGeneratorLabel]
     {
-      _whileExitLabelMap.TryFind(w);
+      _whileExitLabelMap.Get(w);
     }
     
     public EmitReturn(): void
     {
-      Return.Value.Iter(ret =>
+      Return.Iter(ret =>
       {
         IlGenerator.MarkLabel(ret.Label);
         IlGenerator.Emit(Op.Ldloc, ret.Var);

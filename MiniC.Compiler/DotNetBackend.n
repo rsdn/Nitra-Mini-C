@@ -28,7 +28,7 @@ namespace MiniC.Compiler
     _mainClass         : NamespaceTypeDefinition;
     _coreAssembly      : IAssembly;
     _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition] = Dictionary();
-    _functionMap       : Dictionary[FunDeclarationSymbol, IMethodDefinition] = Dictionary();
+    _functionMap       : Hashtable[FunDeclarationSymbol, IMethodDefinition] = Hashtable();
     
     public static GenerateAssembly(project : Project, outputPath: string): void
     {
@@ -168,9 +168,8 @@ namespace MiniC.Compiler
     
     GetFunction(symbol: FunDeclarationSymbol): IMethodDefinition
     {
-      _functionMap
-        .TryFind(symbol)
-        .Fill(() => throw Exception($"Cannot find function $symbol, known functions: $(_functionMap.Values.ToArray().ToNList())"));
+      _functionMap.Get(symbol).Fill(
+        () => (throw Exception($"Cannot find function $symbol, known functions: $(_functionMap.Values.ToArray().ToNList())")));
     }
     
     EmitFunctionBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
@@ -209,7 +208,7 @@ namespace MiniC.Compiler
         
         | Return as s =>
             EmitExpression(methodContext, s.Value);
-            methodContext.Return.Value.Iter(ret =>
+            methodContext.Return.Iter(ret =>
             {
               gen.Emit(Op.Stloc, ret.Var);
               gen.Emit(Op.Br, ret.Label);

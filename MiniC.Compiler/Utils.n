@@ -9,15 +9,6 @@ using System.Linq;
 
 namespace MiniC.Compiler
 {
-  module DictionaryExtensions
-  {
-    public TryFind[K, V](this dic: IDictionary[K, V], key: K): option[V]
-    {
-      mutable value;
-      if (dic.TryGetValue(key, out value)) Some(value) else None()
-    }
-  }
-  
   module OptionExtensions
   {
     public Fill[T](this m: option[T], f: void -> T): T
@@ -28,7 +19,5 @@ namespace MiniC.Compiler
         | None => f()
       }
     }
-    
-    
   }
 }
