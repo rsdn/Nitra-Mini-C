@@ -32,3 +32,4 @@ Nitra.gpState
 *.nupkg
 packages
 Mini-C tests/*.exe
+Samples/*.exe
