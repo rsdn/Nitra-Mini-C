@@ -10,10 +10,12 @@ using Nitra.Declarations;
 using Nitra.ProjectSystem;
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Console;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System.Threading;
 
 namespace MiniC.Compiler
 {
@@ -50,10 +52,16 @@ namespace MiniC.Compiler
       solution
     }
     
-    public RefreshSolution(solution: Solution): void
+    public RefreshSolution(solution : Solution): void
     {
       foreach(project in solution.Projects)
-        Evaluator.RefreshProject(project);
+      {
+        def projectSupport   = project.GetProjectSupport();
+        def data             = projectSupport.RefreshReferences(CancellationToken.None, project);
+        def compilerMessages = CompilerMessageList();
+        def files            = project.Files.Select(_.GetEvalPropertiesData()).ToImmutableArray();
+        projectSupport.RefreshProject(CancellationToken.None, compilerMessages, files, data);
+      }
     }
   }
 }

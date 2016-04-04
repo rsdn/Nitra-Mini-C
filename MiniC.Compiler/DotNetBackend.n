@@ -403,6 +403,7 @@ namespace MiniC.Compiler
       {
         | VarDeclaration.ScalarDeclarationSymbol => GetType(var.Type)
         | VarDeclaration.ArrayDeclarationSymbol => GetArrayType(var.Type)
+        | _ => assert(false)
       }
     }
     
