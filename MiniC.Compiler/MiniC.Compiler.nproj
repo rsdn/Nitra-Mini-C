@@ -28,7 +28,7 @@
     <WarningLevel>4</WarningLevel>
     <StartProgram />
     <WorkingDirectory />
-    <CmdArgs>-f "d:\github\Nitra-Mini-C\Mini-C tests\test-0004.test"</CmdArgs>
+    <CmdArgs>-f "c:\!\Nitra-Mini-C\Mini-C tests\test-0004.test"</CmdArgs>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>

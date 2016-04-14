@@ -65,7 +65,7 @@ namespace MiniC
       
       def defineSymbol[Type](name : string, putToRootScope: bool = true) : Type where Type: DeclarationSymbol
       {
-        def name = Name(NoFile, NoSpan, name);
+        def name = Name(NoLocation, name);
         def symbol = 
           if (putToRootScope)
             ExternalDeclaration.[Type](name).DefineSymbol(root.MemberTable)
@@ -95,7 +95,7 @@ namespace MiniC
       definePrintSymbol("bprint", boolSymbol);
       definePrintSymbol("fprint", floatSymbol);
       
-      root.AddDeclaration(ExternalDeclaration.[RootSymbol](Name(NoFile, NoSpan, "<root>")));
+      root.AddDeclaration(ExternalDeclaration.[RootSymbol](Name(NoLocation, "<root>")));
 
       voidSymbol.EvalProperties(context);
       intSymbol.EvalProperties(context); 
@@ -107,9 +107,8 @@ namespace MiniC
       project.Data
 		}
 
-		public RefreshProject(cancellationToken : CancellationToken, compilerMessages : ICompilerMessages, files : ImmutableArray[FileEvalPropertiesData], data : object) : void
+		public RefreshProject(cancellationToken : CancellationToken, files : ImmutableArray[FileEvalPropertiesData], data : object) : void
     {
-      _ = compilerMessages;
       def (context, root) = data :> MiniCDependentPropertyEvalContext * RootSymbol;
       context.CancellationToken = cancellationToken;
       

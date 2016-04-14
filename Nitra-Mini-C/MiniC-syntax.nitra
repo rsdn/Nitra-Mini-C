@@ -8,9 +8,9 @@
     keyword regex ['a'..'z', '_'..'_']+ rule S;
     regex KeywordToken = "if" | "else" | "while" | "return" | "break" | "void" | "int" | "true" | "false" | "bool" | "float";
   
-    [Keyword] token Keyword = Name=KeywordToken !IdentifierPartCharacters;
+    [Keyword]   token Keyword   = Name=KeywordToken !IdentifierPartCharacters;
     [Reference] token Reference = !Keyword IdentifierBody;
-    [Name] token Name = !Keyword IdentifierBody;
+    [Name]      token Name      = !Keyword IdentifierBody;
   
     [StartRule]
     syntax CompilationUnit = (TopDeclaration nl)*;

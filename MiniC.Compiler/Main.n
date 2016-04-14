@@ -58,9 +58,8 @@ namespace MiniC.Compiler
       {
         def projectSupport   = project.GetProjectSupport();
         def data             = projectSupport.RefreshReferences(CancellationToken.None, project);
-        def compilerMessages = CompilerMessageList();
         def files            = project.Files.Select(_.GetEvalPropertiesData()).ToImmutableArray();
-        projectSupport.RefreshProject(CancellationToken.None, compilerMessages, files, data);
+        projectSupport.RefreshProject(CancellationToken.None, files, data);
       }
     }
   }
