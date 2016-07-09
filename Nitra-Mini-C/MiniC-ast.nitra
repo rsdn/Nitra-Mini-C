@@ -8,7 +8,9 @@ namespace MiniC
   ast CompilationUnit
   {
     in ContainingTable: TableScope;
+	
     TopDeclarations.ContainingTable = ContainingTable;
+	
     TopDeclarations: TopDeclaration*;
   }
 
