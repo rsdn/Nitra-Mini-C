@@ -79,7 +79,7 @@
       | ArrayAllocation = "new" TypeRef "[" Expr "]"
   
       precedence Assignment:
-      | ScalarAssignment = Reference              sm "=" sm Expr right-associative
+      | ScalarAssignment = Reference                    sm "=" sm Expr right-associative
       | ArrayAssignment  = Reference "[" Index=Expr "]" sm "=" sm Expr right-associative
   
       precedence Or:
