@@ -47,7 +47,7 @@
     <Reference Include="DotNetLang">
       <Name>DotNetLang</Name>
       <AssemblyName>DotNetLang.dll</AssemblyName>
-      <HintPath>..\..\nitra\Nitra\DotNetLang\bin\Debug\Stage2\DotNetLang.dll</HintPath>
+      <HintPath>..\..\Nitra\bin\Debug\Stage2\DotNetLang.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Nitra.Runtime">
@@ -57,16 +57,11 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <RequiredTargetFramework>4</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+      <RequiredTargetFramework>4</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="Nemerle">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(Nemerle)\Nemerle.dll</HintPath>

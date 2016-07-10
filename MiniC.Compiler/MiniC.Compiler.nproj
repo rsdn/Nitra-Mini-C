@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MiniC.Compiler</RootNamespace>
     <AssemblyName>MiniC.Compiler</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NoStdLib>true</NoStdLib>
     <NemerleVersion>Net-4.0</NemerleVersion>
@@ -40,6 +40,11 @@
     <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DotNetLang, Version=0.1.3646.0, Culture=neutral, PublicKeyToken=e080a9c724e2bfcd">
+      <Name>DotNetLang</Name>
+      <AssemblyName>DotNetLang.dll</AssemblyName>
+      <HintPath>..\..\Nitra\bin\Debug\Stage2\DotNetLang.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Cci.ILGenerator, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
       <Name>Microsoft.Cci.ILGenerator</Name>
       <AssemblyName>Microsoft.Cci.ILGenerator.dll</AssemblyName>
@@ -112,11 +117,6 @@
       <Name>DotNet.BackEnd.CCI</Name>
       <AssemblyName>DotNet.BackEnd.CCI.dll</AssemblyName>
       <HintPath>..\..\nitra\DotNet.BackEnd.CCI\bin\Debug\DotNet.BackEnd.CCI.dll</HintPath>
-    </Reference>
-    <Reference Include="DotNetLang">
-      <Name>DotNetLang</Name>
-      <AssemblyName>DotNetLang.dll</AssemblyName>
-      <HintPath>..\..\nitra\Nitra\DotNetLang\bin\Debug\Stage2\DotNetLang.dll</HintPath>
     </Reference>
     <MacroReference Include="Nemerle.Linq">
       <HintPath>$(Nemerle)\Nemerle.Linq.dll</HintPath>
