@@ -3,5 +3,7 @@
   span class Variable { ForegroundColor=Maroon;     }
   span class Function { ForegroundColor=Chocolate;  }
 
+  extension = .minic;
+
   syntax module MiniCSyntax start rule CompilationUnit;
 }
