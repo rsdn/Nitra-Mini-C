@@ -50,10 +50,10 @@ namespace MiniC
     static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
     static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
     static NoSpan : NSpan              = NSpan(0);
-		
-		public RefreshReferences(cancellationToken : CancellationToken, project : Project) : object
-		{
-		  _ = cancellationToken;
+    
+    public RefreshReferences(cancellationToken : CancellationToken, project : Project) : object
+    {
+      _ = cancellationToken;
       def root = RootSymbol() <- 
       { 
         FullName = "<root>";
@@ -105,9 +105,9 @@ namespace MiniC
 
       project.Data = (context, root);
       project.Data
-		}
+    }
 
-		public RefreshProject(cancellationToken : CancellationToken, files : ImmutableArray[FileEvalPropertiesData], data : object) : void
+    public RefreshProject(cancellationToken : CancellationToken, files : ImmutableArray[FileEvalPropertiesData], data : object) : void
     {
       def (context, root) = data :> MiniCDependentPropertyEvalContext * RootSymbol;
       context.CancellationToken = cancellationToken;
