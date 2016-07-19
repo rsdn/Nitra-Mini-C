@@ -25,7 +25,7 @@ namespace MiniC
     public GetParameterType(func : FunDeclarationSymbol, index : int) : TypeSymbol
     {
       def parameters = func.Parameters;
-      if (index < parameters.Count && parameters[index].IsTypeEvaluated)
+      if (index < parameters.Length && parameters[index].IsTypeEvaluated)
         parameters[index].Type
       else 
         MiniCTypeUnifier.Instance.CreateTypeVar() // Use TypeVar to prevent phantom type mismatch error messages.

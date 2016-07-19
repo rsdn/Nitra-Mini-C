@@ -24,7 +24,7 @@ namespace MiniC
     | Parameter
     | Local
 
-    public static FromHeader(header: VarHeader): VariableKind
+    public static FromHeader(header: VarHeader) : VariableKind
     {
       match (header)
       {
@@ -86,7 +86,7 @@ namespace MiniC
         symbol.ReturnType = voidSymbol;
         def printParam = defineSymbol.[VarDeclaration.ScalarDeclarationSymbol]("value", false);
         printParam.Type = argType;
-        symbol.Parameters = array[printParam];
+        symbol.Parameters = ImmutableArray.Create(printParam);
         printParam.EvalProperties(context);
         symbol.EvalProperties(context)
       }
