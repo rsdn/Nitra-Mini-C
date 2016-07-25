@@ -23,15 +23,15 @@ namespace MiniC.Compiler
     public this()
     {
       def options = [
-        CliOption.String(name = "-file",
-                    aliases = ["-f"],
-                    help = "Source file name",
-                    handler = fileName => { FileName = fileName }),
+        CliOption.String(name    = "-file",
+                         aliases = ["-f"],
+                         help    = "Source file name",
+                         handler = fileName => { FileName = fileName }),
                     
-        CliOption.String(name = "-out",
-                    aliases = [],
-                    help = "Output path",
-                    handler = path => { OutputPath = path })
+        CliOption.String(name    = "-out",
+                         aliases = [],
+                         help    = "Output path",
+                         handler = path => { OutputPath = path })
         ];
       
       Getopt.Parse(options);

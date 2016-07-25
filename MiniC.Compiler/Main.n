@@ -24,37 +24,40 @@ namespace MiniC.Compiler
     Main() : void
     {
       def config = Config();
+      
       when (config.Success)
       {
         def solution = GenerateSolution(config);
-        RefreshSolution(solution);
         mutable hasError = false;
-        foreach(project in solution.Projects)
-          foreach(file in project.Files)
-            foreach (msg in file.GetCompilerMessages())
-            {
-              hasError = true;
-              WriteLine(msg);
-            }
+        
+        RefreshSolution(solution);
+        
+        foreach (project in solution.Projects)
+        foreach (file    in project.Files)
+        foreach (msg     in file.GetCompilerMessages())
+        {
+          hasError = true;
+          WriteLine(msg);
+        }
           
         when (hasError)
           return;
 
-        foreach(project in solution.Projects)
+        foreach (project in solution.Projects)
           DotNetBackend.GenerateAssembly(project, config.OutputPath);
       }
     }
         
-    GenerateSolution(cfg: Config): FsSolution[IAst]
+    GenerateSolution(cfg : Config) : FsSolution[IAst]
     {
       def solution = FsSolution();
       _ = FsProject(solution, Path.GetDirectoryName(cfg.FileName), [FsFile(cfg.FileName, MiniC.Instance)], []);
       solution
     }
     
-    public RefreshSolution(solution : Solution): void
+    public RefreshSolution(solution : Solution) : void
     {
-      foreach(project in solution.Projects)
+      foreach (project in solution.Projects)
       {
         def projectSupport   = project.GetProjectSupport();
         def data             = projectSupport.RefreshReferences(CancellationToken.None, project);

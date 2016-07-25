@@ -30,7 +30,7 @@ namespace MiniC.Compiler
     _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition] = Dictionary();
     _functionMap       : Hashtable[FunDeclarationSymbol, IMethodDefinition] = Hashtable();
     
-    public static GenerateAssembly(project : Project, outputPath: string) : void
+    public static GenerateAssembly(project : Project, outputPath : string) : void
     {
       def (context, rootSymbol) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
       
@@ -168,8 +168,10 @@ namespace MiniC.Compiler
     
     GetFunction(symbol : FunDeclarationSymbol) : IMethodDefinition
     {
-      _functionMap.Get(symbol).Fill(
-        () => (throw Exception($"Cannot find function $symbol, known functions: $(_functionMap.Values.ToArray().ToNList())")));
+      if (_functionMap.Get(symbol) is Some(result))
+        result
+      else
+        throw Exception($"Cannot find function $symbol, known functions: $(_functionMap.Values.ToArray().ToNList())")
     }
     
     EmitFunctionBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
@@ -177,19 +179,22 @@ namespace MiniC.Compiler
       def compoundStatement = func.Declarations.First().Body;
       def isVoid            = ReferenceEquals(method.Type, _host.PlatformType.SystemVoid);
       def methodContext     = MethodContext(this, _nameTable, method, isVoid, ILGenerator(_host, method));
-      func.Parameters.Iter(methodContext.AddParameter);
+      
+      foreach (parameter in func.Parameters)
+        methodContext.AddParameter(parameter);
+
       EmitCompoundStatement(methodContext, compoundStatement);
       methodContext.EmitReturn();
       ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
     }
     
-    EmitCompoundStatement(methodContext : MethodContext, compoundStatement: CompoundStatement) : void
+    EmitCompoundStatement(methodContext : MethodContext, compoundStatement : CompoundStatement) : void
     {
       def gen = methodContext.IlGenerator;
       gen.BeginScope();
       
-      foreach (var in compoundStatement.LocalVariables)
-        methodContext.AddLocalVar(var.Symbol);
+      foreach (variable in compoundStatement.LocalVariables)
+        methodContext.AddLocalVar(variable.Symbol);
       
       foreach (statement in compoundStatement.Statements)
         EmitStatement(methodContext, statement);
@@ -208,15 +213,13 @@ namespace MiniC.Compiler
         
         | Return as s =>
             EmitExpression(methodContext, s.Value);
-            methodContext.Return.Iter(ret =>
+            when (methodContext.Return is Some(ret))
             {
               gen.Emit(Op.Stloc, ret.Var);
               gen.Emit(Op.Br, ret.Label);
-            })
+            }
             
-        | Compound as s =>
-            EmitCompoundStatement(methodContext, s.Nested);
-        
+        | Compound as s => EmitCompoundStatement(methodContext, s.Nested);
         | If as s =>
             def exitLabel = ILGeneratorLabel();
             EmitExpression(methodContext, s.Condition);
@@ -227,7 +230,7 @@ namespace MiniC.Compiler
         
         | IfElse as s =>
             def falseBranchLabel = ILGeneratorLabel();
-            def exitLabel = ILGeneratorLabel();
+            def exitLabel        = ILGeneratorLabel();
             EmitExpression(methodContext, s.Condition);
             gen.Emit(Op.Brfalse, falseBranchLabel);
             // true branch
@@ -239,7 +242,7 @@ namespace MiniC.Compiler
             gen.MarkLabel(exitLabel);
             
         | While as w =>
-            def bodyLabel = ILGeneratorLabel();
+            def bodyLabel      = ILGeneratorLabel();
             def conditionLabel = ILGeneratorLabel();
             gen.Emit(Op.Br, conditionLabel);
             // loop body
@@ -270,7 +273,6 @@ namespace MiniC.Compiler
         | TrueLiteral         => gen.Emit(Op.Ldc_I4_1)
         | FalseLiteral        => gen.Emit(Op.Ldc_I4_0)
         | VariableRef    as e => LoadVar(gen, methodContext, e.Ref.Symbol)
-        
         | ScalarAssignment as assignment =>
             EmitExpression(methodContext, assignment.Value);
             SetVarValue(gen, methodContext, assignment.Ref.Symbol);
@@ -282,7 +284,6 @@ namespace MiniC.Compiler
             gen.Emit(Op.Call, GetFunction(call.Ref.Symbol))
         
         | Argument as arg => EmitExpression(methodContext, arg.Expr)
-        
         | Binary as bin =>
             EmitExpression(methodContext, bin.Expr1);
             EmitExpression(methodContext, bin.Expr2);
@@ -315,7 +316,7 @@ namespace MiniC.Compiler
                 | Multiply => Op.Mul
                 | Divide   => Op.Div
                 | _ => assert(false, $"Unhandled binary expression $bin")
-              }
+              };
             gen.Emit(opCode);
             
         | Unary as unary =>
@@ -378,36 +379,29 @@ namespace MiniC.Compiler
     
     public GetType(typeSymbol : TypeSymbol) : ITypeReference
     {
-      match (typeSymbol)
-      {
-        | IntSymbol   => _host.PlatformType.SystemInt32
-        | FloatSymbol => _host.PlatformType.SystemFloat64
-        | BoolSymbol  => _host.PlatformType.SystemBoolean
-        | VoidSymbol  => _host.PlatformType.SystemVoid
-        | _           => assert(false, $"Unhandled $typeSymbol")
-      }
+      | IntSymbol   => _host.PlatformType.SystemInt32
+      | FloatSymbol => _host.PlatformType.SystemFloat64
+      | BoolSymbol  => _host.PlatformType.SystemBoolean
+      | VoidSymbol  => _host.PlatformType.SystemVoid
+      | _           => assert(false, $"Unhandled $typeSymbol")
     }
     
-    GetArrayType(typeSymbol: TypeSymbol): IArrayTypeReference
+    GetArrayType(typeSymbol : TypeSymbol) : IArrayTypeReference
     {
-      def elementType = GetType(typeSymbol);
       VectorTypeReference() <-
 		  {
-			TypeCode = PrimitiveTypeCode.NotPrimitive;
-			PlatformType = _host.PlatformType;
-			ElementType = elementType;
-			InternFactory = _host.InternFactory;
-		  };
+        TypeCode      = PrimitiveTypeCode.NotPrimitive;
+        PlatformType  = _host.PlatformType;
+        ElementType   = GetType(typeSymbol);
+        InternFactory = _host.InternFactory;
+		  }
     }
     
-    public GetVariableType(var : VarDeclarationSymbol): ITypeReference
+    public GetVariableType(var : VarDeclarationSymbol) : ITypeReference
     {
-      match (var)
-      {
-        | VarDeclaration.ScalarDeclarationSymbol => GetType(var.Type)
-        | VarDeclaration.ArrayDeclarationSymbol  => GetArrayType(var.Type)
-        | _ => assert(false)
-      }
+      | VarDeclaration.ScalarDeclarationSymbol => GetType(var.Type)
+      | VarDeclaration.ArrayDeclarationSymbol  => GetArrayType(var.Type)
+      | _ => assert(false)
     }
     
     public Dispose(): void 
