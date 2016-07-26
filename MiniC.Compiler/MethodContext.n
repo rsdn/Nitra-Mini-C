@@ -26,18 +26,16 @@ namespace MiniC.Compiler
   {
     _backend           : DotNetBackend;
     _nameTable         : NameTable;
-    [Accessor] 
-    _method            : MethodDefinition;
     _isVoid            : bool;
-    [Accessor] 
-    _ilGenerator       : ILGenerator;
     _parameterMap      : Hashtable[VarDeclarationSymbol, IParameterDefinition];
     _localVars         : List[LocalDefinition] = List();
     _localVarMap       : Hashtable[VarDeclarationSymbol, ILocalDefinition];
     _argMap            : Hashtable[VarDeclarationSymbol, ILocalDefinition];
     _whileExitLabelMap : Hashtable[Statement.While, ILGeneratorLabel];
 
-    public Return      : option[Return] { get; }
+    public Method      : MethodDefinition { get; }
+    public Return      : option[Return]   { get; }
+    public IlGenerator : ILGenerator      { get; }
     
     public LocalVars   : Seq[LocalDefinition] { get { _localVars } }
     
@@ -54,9 +52,9 @@ namespace MiniC.Compiler
       _parameterMap      = Hashtable();
       _backend           = backend;
       _nameTable         = nameTable;
-      _method            = method;
+      Method             = method;
       _isVoid            = isVoid;
-      _ilGenerator       = ilGenerator;
+      IlGenerator        = ilGenerator;
       Return = 
         if (_isVoid)
           None() 
