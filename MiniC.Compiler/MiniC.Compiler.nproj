@@ -43,7 +43,7 @@
     <Reference Include="DotNetLang">
       <Name>DotNetLang</Name>
       <AssemblyName>DotNetLang.dll</AssemblyName>
-      <HintPath>..\..\Nitra\bin\Debug\Stage2\DotNetLang.dll</HintPath>
+      <HintPath>..\..\Nitra\bin\Debug\Stage1\DotNetLang.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Cci.ILGenerator, Version=1.0.65055.0, Culture=neutral, PublicKeyToken=736440c9b414ea16">
       <Name>Microsoft.Cci.ILGenerator</Name>
@@ -111,7 +111,7 @@
     <Reference Include="Nitra.Runtime">
       <Name>Nitra.Runtime</Name>
       <AssemblyName>Nitra.Runtime.dll</AssemblyName>
-      <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Runtime.dll</HintPath>
+      <HintPath>..\..\nitra\bin\Debug\Stage1\Nitra.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="DotNet.BackEnd.CCI">
       <Name>DotNet.BackEnd.CCI</Name>

@@ -47,6 +47,13 @@ namespace MiniC
 
   public partial class CompilationUnit : AstBase, IProjectSupport
   {
+    [Record]
+    private class ProjectData
+    {
+      public Context : MiniCDependentPropertyEvalContext;
+      public Root    : RootSymbol;
+    }
+
     static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
     static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
     static NoSpan : NSpan              = NSpan(0);
@@ -103,19 +110,28 @@ namespace MiniC
       boolSymbol.EvalProperties(context);
       root.EvalProperties(context);
 
-      project.Data = (context, root);
+      project.Data = ProjectData(context, root);
       project.Data
     }
 
     public RefreshProject(cancellationToken : CancellationToken, files : ImmutableArray[FileEvalPropertiesData], data : object) : void
     {
-      def (context, root) = data :> MiniCDependentPropertyEvalContext * RootSymbol;
+      def (context, root) = data :> ProjectData;
       context.CancellationToken = cancellationToken;
       
       root.MemberTable.Undefine(_.IsParsed);
       def evalHost = MiniCProjectEvalPropertiesHost(files, root);
       evalHost.EvalProperties(context, "Symbol hierarchy", 0);
       evalHost.EvalProperties(context, "Scopes", 1);
+    }
+
+    public GetSymbolById(_data : object, _symbolId : int) : ValueOption[DeclarationSymbol] { VNone() }
+
+    public DeconstructType(_symbol : DeclarationSymbol, type : out TypeSymbol, typeArgs : out ImmutableArray[TypeSymbol]) : bool
+    {
+      type = null;
+      typeArgs = ImmutableArray.Empty;
+      false
     }
   }
   

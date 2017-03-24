@@ -41,19 +41,19 @@
     <MacroReference Include="Nitra.Compiler">
       <Name>Nitra.Compiler</Name>
       <AssemblyName>Nitra.Compiler.dll</AssemblyName>
-      <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Compiler.dll</HintPath>
+      <HintPath>..\..\nitra\bin\Debug\Stage1\Nitra.Compiler.dll</HintPath>
       <Private>False</Private>
     </MacroReference>
     <Reference Include="DotNetLang">
       <Name>DotNetLang</Name>
       <AssemblyName>DotNetLang.dll</AssemblyName>
-      <HintPath>..\..\Nitra\bin\Debug\Stage2\DotNetLang.dll</HintPath>
+      <HintPath>..\..\Nitra\bin\Debug\Stage1\DotNetLang.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Nitra.Runtime">
       <Name>Nitra.Runtime</Name>
       <AssemblyName>Nitra.Runtime.dll</AssemblyName>
-      <HintPath>..\..\nitra\bin\Debug\Stage2\Nitra.Runtime.dll</HintPath>
+      <HintPath>..\..\nitra\bin\Debug\Stage1\Nitra.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
