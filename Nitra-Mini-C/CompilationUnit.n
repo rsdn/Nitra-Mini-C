@@ -3,6 +3,7 @@ using DotNet;
 
 using Nemerle;
 using Nemerle.Collections;
+using Nemerle.Imperative;
 using Nemerle.Text;
 using Nemerle.Utility;
 using Nemerle.Extensions;
@@ -35,7 +36,7 @@ namespace MiniC
       }
     }
   }
-  
+
   [Record]
   public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
   {
@@ -57,19 +58,19 @@ namespace MiniC
     static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
     static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
     static NoSpan : NSpan              = NSpan(0);
-    
+
     public RefreshReferences(cancellationToken : CancellationToken, project : Project) : object
     {
       _ = cancellationToken;
-      def root = RootSymbol() <- 
-      { 
+      def root = RootSymbol() <-
+      {
         FullName = "<root>";
         Kind = "root";
       };
-      
-      root.MemberTable = TableScope("<root>", root);
+
+      root.MemberTable = TableScope(root, "<root>");
       root.Scope = root.MemberTable;
-      
+
       def defineSymbol[Type](name : string, putToRootScope: bool = true) : Type where Type: DeclarationSymbol
       {
         def name = Name(NoLocation, name);
@@ -80,13 +81,13 @@ namespace MiniC
             ExternalDeclaration.[Type](name).DefineSymbol();
         symbol
       }
-      
+
       def voidSymbol  = defineSymbol.[VoidSymbol]("void");
       def intSymbol   = defineSymbol.[IntSymbol]("int");
       def floatSymbol = defineSymbol.[FloatSymbol]("float");
       def boolSymbol  = defineSymbol.[BoolSymbol]("bool");
       def context = MiniCDependentPropertyEvalContext(voidSymbol, intSymbol, floatSymbol, boolSymbol);
-      
+
       def definePrintSymbol(name : string, argType: TypeSymbol)
       {
         def symbol = defineSymbol.[FunDeclarationSymbol](name);
@@ -97,15 +98,15 @@ namespace MiniC
         printParam.EvalProperties(context);
         symbol.EvalProperties(context)
       }
-      
+
       definePrintSymbol("iprint", intSymbol);
       definePrintSymbol("bprint", boolSymbol);
       definePrintSymbol("fprint", floatSymbol);
-      
+
       root.AddDeclaration(ExternalDeclaration.[RootSymbol](Name(NoLocation, "<root>")));
 
       voidSymbol.EvalProperties(context);
-      intSymbol.EvalProperties(context); 
+      intSymbol.EvalProperties(context);
       floatSymbol.EvalProperties(context);
       boolSymbol.EvalProperties(context);
       root.EvalProperties(context);
@@ -118,14 +119,37 @@ namespace MiniC
     {
       def (context, root) = data :> ProjectData;
       context.CancellationToken = cancellationToken;
-      
+
       root.MemberTable.Undefine(_.IsParsed);
       def evalHost = MiniCProjectEvalPropertiesHost(files, root);
       evalHost.EvalProperties(context, "Symbol hierarchy", 0);
       evalHost.EvalProperties(context, "Scopes", 1);
     }
 
-    public GetSymbolById(_data : object, _symbolId : int) : ValueOption[DeclarationSymbol] { VNone() }
+    public GetSymbolById(data : object, symbolId : int) : ValueOption[DeclarationSymbol]
+    {
+      def (_context, root) = data :> ProjectData;
+      def findSymbol(tableScope : TableScope) : ValueOption[DeclarationSymbol]
+      {
+        foreach (symbols in tableScope.Symbols)
+        foreach (symbol in symbols)
+        {
+          when (symbol.Id == symbolId)
+            return ValueOption.Some(symbol);
+
+          when (symbol is NamespaceSymbol as ns)
+          {
+            def result = findSymbol(ns.MemberTable);
+            when (result.IsSome)
+              return result;
+          }
+        }
+
+        ValueOption.None()
+      }
+
+      findSymbol(root.MemberTable)
+    }
 
     public DeconstructType(_symbol : DeclarationSymbol, type : out TypeSymbol, typeArgs : out ImmutableArray[TypeSymbol]) : bool
     {
@@ -133,8 +157,18 @@ namespace MiniC
       typeArgs = ImmutableArray.Empty;
       false
     }
+
+    public VisitGlobalSymbols(data : object, callback : Predicate[DeclarationSymbol]) : void
+    {
+      def (_context, root) = data :> ProjectData;
+      def symbolsList = root.MemberTable.Symbols.ToArray();
+      foreach (symbols in symbolsList)
+        foreach (symbol in symbols)
+          when (callback(symbol))
+            return;
+    }
   }
-  
+
   public class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
   {
     _root : RootSymbol;

@@ -9,9 +9,9 @@ namespace MiniC
   ast CompilationUnit
   {
     in ContainingTable: TableScope;
-  
+
     TopDeclarations.ContainingTable = ContainingTable;
-  
+
     TopDeclarations: TopDeclaration*;
   }
 
@@ -24,7 +24,7 @@ namespace MiniC
     | Local
   }
 
-  abstract declaration VarDeclaration: TopDeclaration 
+  abstract declaration VarDeclaration: TopDeclaration
   {
     symbol
     {
@@ -44,21 +44,21 @@ namespace MiniC
     | ScalarDeclaration {}
     | ArrayDeclaration {}
   }
-  
+
   abstract ast LocalVariableContainer
   {
     in DeclaredIn : FunDeclarationSymbol;
     in Loop       : option[Statement.While] = None();
   }
 
-  declaration FunDeclaration: TopDeclaration 
+  declaration FunDeclaration: TopDeclaration
   {
-    symbol 
+    symbol
     {
       in ReturnType      : TypeSymbol;
       in Parameters      : ImmutableArray[VarDeclarationSymbol];
       in FunScope        : Scope;
-      out ParameterScope : TableScope = TableScope("parameters", this);
+      table ParameterScope;
       SpanClass = MiniC.FunctionSpanClass;
       Kind      = "function";
     }
@@ -82,7 +82,7 @@ namespace MiniC
   ast CompoundStatement: BindableAst, LocalVariableContainer
   {
     in OuterScope : Scope;
-    out LocalVariableScope: TableScope = TableScope("local variables", DeclaredIn);
+    out LocalVariableScope: TableScope = TableScope(DeclaredIn, "local variables");
 
     LocalVariables.ContainingTable = LocalVariableScope;
     Scope = OuterScope.HideWith(LocalVariableScope);
@@ -97,18 +97,18 @@ namespace MiniC
   abstract ast Statement: BindableAst, LocalVariableContainer
   {
     | Empty {}
-    | Expression 
-      { 
+    | Expression
+      {
         Body.Scope = Scope;
         Body: Expr;
       }
-    | Compound 
-      { 
+    | Compound
+      {
         Nested.OuterScope = Scope;
         Nested.DeclaredIn = DeclaredIn;
         Nested.Loop = Loop;
 
-        Nested : CompoundStatement; 
+        Nested : CompoundStatement;
       }
     | If
       {
@@ -121,7 +121,7 @@ namespace MiniC
         Condition : Expr;
         Body      : Statement;
       }
-    | IfElse 
+    | IfElse
       {
         Condition.Scope = Scope;
         Condition.Used = true;
@@ -136,7 +136,7 @@ namespace MiniC
         TrueBranch  : Statement;
         FalseBranch : Statement;
       }
-    | While 
+    | While
       {
         Condition.Scope = Scope;
         Condition.Used = true;
@@ -148,30 +148,30 @@ namespace MiniC
         Body: Statement;
       }
     | ReturnVoid {}
-    | Return 
-      { 
+    | Return
+      {
         Value.Scope = Scope;
         Value.Used = true;
 
         unless (MiniCTypeUnifier.Instance.TryUnify(Value.Type, DeclaredIn.ReturnType))
           Value.Error(context, $"Expected $(DeclaredIn.ReturnType) but found $(Value.Type)");
 
-        Value: Expr; 
+        Value: Expr;
       }
-    | Break 
+    | Break
       {
         when (Loop.IsNone)
           Error(context, "Break out of while.");
       }
   }
 
-  abstract ast Unary : Expr 
-  { 
+  abstract ast Unary : Expr
+  {
     Expr1.Scope = Scope;
     Expr1.Used = true;
     Type = Expr1.Type;
-    
-    Expr1 : Expr; 
+
+    Expr1 : Expr;
   }
 
   abstract ast NumericUnary : Unary
@@ -180,7 +180,7 @@ namespace MiniC
             MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetFloatSymbol()))
       Expr1.Error(context, $"Expected int or float, but found $(self.Expr1.Type)");
   }
-  
+
   abstract ast BoolUnary : Unary
   {
     unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetBoolSymbol()))
@@ -188,14 +188,14 @@ namespace MiniC
   }
 
   abstract ast Binary : Expr
-  { 
+  {
     Expr1.Scope = Scope;
     Expr2.Scope = Scope;
     Expr1.Used = true;
     Expr2.Used = true;
 
     Expr1 : Expr;
-    Expr2 : Expr; 
+    Expr2 : Expr;
   }
 
   abstract ast SameTypesExpr : Binary
@@ -207,7 +207,7 @@ namespace MiniC
   abstract ast OrAndExpr : SameTypesExpr
   {
     Type = context.GetBoolSymbol();
-    
+
     unless (MiniCTypeUnifier.Instance.TryUnify(Expr1.Type, context.GetBoolSymbol()))
         Expr1.Error(context, $"Expected boolean expression but found $(self.Expr1.Type).");
   }
@@ -224,7 +224,7 @@ namespace MiniC
       Expr1.Error(context, $"Expected int or float, but found $(self.Expr1.Type)");
   }
 
-  abstract ast Comparison : NumericBinary 
+  abstract ast Comparison : NumericBinary
   {
     Type = context.GetBoolSymbol();
   }
@@ -246,33 +246,33 @@ namespace MiniC
     //unless (Used || MiniCTypeUnifier.Instance.TryUnify(Type, context.GetVoidSymbol()))
         //Warning("Result of expression is not used.");
 
-    | IntegerLiteral 
-      { 
+    | IntegerLiteral
+      {
         Type = context.GetIntSymbol();
-        Value : int; 
+        Value : int;
       }
-    | FloatLiteral   
-      { 
+    | FloatLiteral
+      {
         Type = context.GetFloatSymbol();
-        Value : double; 
+        Value : double;
       }
-    | FalseLiteral 
-      { 
-        Type = context.GetBoolSymbol(); 
+    | FalseLiteral
+      {
+        Type = context.GetBoolSymbol();
       }
-    | TrueLiteral 
-      { 
-        Type = context.GetBoolSymbol(); 
+    | TrueLiteral
+      {
+        Type = context.GetBoolSymbol();
       }
-    | VariableRef 
+    | VariableRef
       {
         out Ref: Ref[VarDeclaration.ScalarDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
         Type = Ref.Symbol.Type;
-        
+
         Reference: Reference;
       }
-    | ArrayRef 
+    | ArrayRef
       {
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
@@ -280,11 +280,11 @@ namespace MiniC
         Index.ExpectedType = context.GetIntSymbol();
         Index.Used = true;
         Type = Ref.Symbol.Type;
-        
+
         Reference: Reference;
         Index: Expr;
       }
-    | FunCall 
+    | FunCall
       {
         out Ref: Ref[FunDeclarationSymbol] = Reference.Ref.Resolve();
 
@@ -293,7 +293,7 @@ namespace MiniC
 
         when (Arguments.Count != Ref.Symbol.Parameters.Length)
           Reference.Error(context, $"Wrong number of arguments: expected $(Ref.Symbol.Parameters.Length), but given $(Arguments.Count)");
-        
+
         Arguments.IndexIn = 0;
         Arguments.Func = Ref.Symbol;
         Arguments.Used = true;
@@ -318,7 +318,7 @@ namespace MiniC
         Expr : Expr;
       }
 
-    | ArraySize 
+    | ArraySize
       {
         out Ref: Ref[VarDeclaration.ArrayDeclarationSymbol] = Reference.Ref.Resolve();
         Reference.Scope = Scope;
@@ -327,7 +327,7 @@ namespace MiniC
         Reference: Reference;
       }
 
-    | ArrayAllocation 
+    | ArrayAllocation
       {
         Type = TypeRef.Type;
         Size.Scope = Scope;
@@ -360,7 +360,7 @@ namespace MiniC
         Value.ExpectedType = Ref.Symbol.Type;
         Value.Used = true;
         Used = true;
-        
+
         Reference: Reference;
         Index: Expr;
         Value: Expr;
@@ -383,7 +383,7 @@ namespace MiniC
     | LogicalNegate : BoolUnary {}
   }
 
-  abstract ast TypeReference 
+  abstract ast TypeReference
   {
     in Type: TypeSymbol;
 
