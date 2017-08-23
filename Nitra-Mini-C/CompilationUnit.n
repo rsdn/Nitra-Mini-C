@@ -68,7 +68,7 @@ namespace MiniC
         Kind = "root";
       };
 
-      root.MemberTable = TableScope(root, "<root>");
+      root.MemberTable = TableScope(root, "MemberTable");
       root.Scope = root.MemberTable;
 
       def defineSymbol[Type](name : string, putToRootScope: bool = true) : Type where Type: DeclarationSymbol

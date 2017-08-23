@@ -1,0 +1,13 @@
+int main()
+{
+  if (true) 
+    return 42;
+  else
+    return 2;
+}
+
+/*
+BEGIN-OUTPUT
+42
+END-OUTPUT
+*/
