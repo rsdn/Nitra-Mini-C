@@ -62,6 +62,7 @@ namespace MiniC
     public RefreshReferences(cancellationToken : CancellationToken, project : Project) : object
     {
       _ = cancellationToken;
+
       def root = RootSymbol() <-
       {
         FullName = "<root>";
@@ -74,7 +75,7 @@ namespace MiniC
       def defineSymbol[Type](name : string, putToRootScope: bool = true) : Type where Type: DeclarationSymbol
       {
         def name = Name(NoLocation, name);
-        def symbol = 
+        def symbol =
           if (putToRootScope)
             ExternalDeclaration.[Type](name).DefineSymbol(root.MemberTable)
           else
@@ -86,7 +87,7 @@ namespace MiniC
       def intSymbol   = defineSymbol.[IntSymbol]("int");
       def floatSymbol = defineSymbol.[FloatSymbol]("float");
       def boolSymbol  = defineSymbol.[BoolSymbol]("bool");
-      def context = MiniCDependentPropertyEvalContext(voidSymbol, intSymbol, floatSymbol, boolSymbol);
+      def context = MiniCDependentPropertyEvalContext(project, voidSymbol, intSymbol, floatSymbol, boolSymbol);
 
       def definePrintSymbol(name : string, argType: TypeSymbol)
       {
@@ -167,7 +168,12 @@ namespace MiniC
           when (callback(symbol))
             return;
     }
-  }
+
+    public Postprocessing(cancellationToken : System.Threading.CancellationToken, project : Nitra.ProjectSystem.Project, asts : System.Collections.Immutable.ImmutableArray[(Nitra.Declarations.IAst * bool)], data : object) : void
+    {
+      IgnoreParams();
+    }
+ }
 
   public class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
   {

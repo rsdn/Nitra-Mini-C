@@ -8,14 +8,16 @@ namespace MiniC
 {
   public sealed class MiniCTypeUnifier : TypeUnifier
   {
-    public static Instance : MiniCTypeUnifier = MiniCTypeUnifier();
+    public new static Instance : MiniCTypeUnifier { get { TypeUnifier.Instance :> MiniCTypeUnifier } }
+
+    static this() { TypeUnifier.Instance = MiniCTypeUnifier(); }
 
     protected override IsSubtype(subtype : TypeSymbol, supertype : TypeSymbol) : bool
     {
       subtype.Equals(supertype);
     }
-    
-    public CreateTypeVar(): TypeVarSymbol 
+
+    public CreateTypeVar(): TypeVarSymbol
     {
       CreateTypeVar(null, null);
     }
