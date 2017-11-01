@@ -72,13 +72,13 @@
     </MacroReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MiniCTypeUnifier.n">
+    <Compile Include="TypingSupport\AstUtils.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AstUtils.n">
+    <Compile Include="TypingSupport\MiniCTypeUnifier.n">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CompilationUnit.n">
+    <Compile Include="TypingSupport\VariableKind.n">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MiniC-Ast.nitra">
@@ -90,9 +90,22 @@
     <Compile Include="MiniC-Mapping.nitra">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="TypingSupport\MiniCDependentPropertyEvalContext.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypingSupport\MiniCProjectEvalPropertiesHost.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypingSupport\ProjectData.n">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="TypingSupport\ProjectSupport.n">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.n" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="TypingSupport" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>

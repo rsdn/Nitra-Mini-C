@@ -1,0 +1,45 @@
+﻿using System.Threading;
+using DotNet;
+
+using Nemerle;
+using Nemerle.Collections;
+using Nemerle.Imperative;
+using Nemerle.Text;
+using Nemerle.Utility;
+using Nemerle.Extensions;
+
+using Nitra;
+using Nitra.Declarations;
+using Nitra.ProjectSystem;
+
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+
+namespace MiniC
+{
+  public class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
+  {
+    _root : RootSymbol;
+
+    public this(files : ImmutableArray[FileEvalPropertiesData], root : RootSymbol)
+    {
+      base(files, ImmutableArray.Create(root));
+      _root = root;
+    }
+
+    protected override BeforeStage(context : DependentPropertyEvalContext, _passName : string) : void
+    {
+      match (context.Stage)
+      {
+        | 0 =>
+          foreach (file in _files)
+            when (file.Ast is CompilationUnit as cu)
+              cu.ContainingTable = _root.MemberTable;
+
+        | _ => ()
+      }
+    }
+  }
+}

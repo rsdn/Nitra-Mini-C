@@ -17,44 +17,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
+[assembly: ProjectSupport("MiniC", typeof(MiniC.ProjectSupport))]
+
 namespace MiniC
 {
-  public variant VariableKind
+  public partial class ProjectSupport : IProjectSupport
   {
-    | Global
-    | Parameter
-    | Local
-
-    public static FromHeader(header: VarHeader) : VariableKind
-    {
-      match (header)
-      {
-        | Global => Global()
-        | Parameter => Parameter()
-        | Local => Local()
-        | _ => assert(false, $"Unexpected var header $header")
-      }
-    }
-  }
-
-  [Record]
-  public class MiniCDependentPropertyEvalContext : DependentPropertyEvalContext
-  {
-    public Void       : VoidSymbol;
-    public Int        : IntSymbol;
-    public Float      : FloatSymbol;
-    public Bool       : BoolSymbol;
-  }
-
-  public partial class CompilationUnit : AstBase, IProjectSupport
-  {
-    [Record]
-    private class ProjectData
-    {
-      public Context : MiniCDependentPropertyEvalContext;
-      public Root    : RootSymbol;
-    }
-
     static NoLocation : Location       = Location(SourceSnapshot.Default.File, NSpan(0));
     static NoFile : ProjectSystem.File = SourceSnapshot.Default.File;
     static NoSpan : NSpan              = NSpan(0);
@@ -172,30 +140,6 @@ namespace MiniC
     public Postprocessing(cancellationToken : System.Threading.CancellationToken, project : Nitra.ProjectSystem.Project, asts : System.Collections.Immutable.ImmutableArray[(Nitra.Declarations.IAst * bool)], data : object) : void
     {
       IgnoreParams();
-    }
- }
-
-  public class MiniCProjectEvalPropertiesHost : ProjectEvalPropertiesHost
-  {
-    _root : RootSymbol;
-
-    public this(files : ImmutableArray[FileEvalPropertiesData], root : RootSymbol)
-    {
-      base(files, ImmutableArray.Create(root));
-      _root = root;
-    }
-
-    protected override BeforeStage(context : DependentPropertyEvalContext, _passName : string) : void
-    {
-      match (context.Stage)
-      {
-        | 0 =>
-          foreach (file in _files)
-            when (file.Ast is CompilationUnit as cu)
-              cu.ContainingTable = _root.MemberTable;
-
-        | _ => ()
-      }
     }
   }
 }

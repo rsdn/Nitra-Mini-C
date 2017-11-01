@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-16"?>
 <Config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ProjectSupport Caption="" TypeFullName="" Path="" />
+  <ProjectSupport Caption="MiniC" TypeFullName="MiniC.ProjectSupport" Path="..\Nitra-Mini-C\bin\Debug\Nitra_Mini_C.dll" />
   <Languages>
     <Language Name="MiniC" Path="..\Nitra-Mini-C\bin\Debug\Nitra_Mini_C.dll">
       <DynamicExtensions />
