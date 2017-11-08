@@ -16,7 +16,7 @@ using System.Linq;
 namespace MiniC.Compiler
 {
   type Op = OperationCode;
-    
+
   class DotNetBackend : IDisposable
   {
     _project           : Project;
@@ -29,11 +29,11 @@ namespace MiniC.Compiler
     _coreAssembly      : IAssembly;
     _globalVarMap      : Dictionary[VarDeclarationSymbol, IFieldDefinition] = Dictionary();
     _functionMap       : Hashtable[FunDeclarationSymbol, IMethodDefinition] = Hashtable();
-    
+
     public static GenerateAssembly(project : Project, outputPath : string) : void
     {
       def (context, rootSymbol) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
-      
+
       using (backend = DotNetBackend(project))
       {
         foreach (symbols in rootSymbol.MemberTable.Symbols)
@@ -50,14 +50,14 @@ namespace MiniC.Compiler
         backend.GenerateAssembly(outputPath);
       }
     }
-    
+
     public this(project : Project)
     {
       _project = project;
       (_context, _) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
       _coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
-      
-      _assembly = Assembly() <- 
+
+      _assembly = Assembly() <-
       {
         Name = _nameTable.GetNameFor("hello");
         ModuleName = _nameTable.GetNameFor("hello.exe");
@@ -66,11 +66,11 @@ namespace MiniC.Compiler
         RequiresStartupStub = _host.PointerSize == 4;
         TargetRuntimeVersion = _coreAssembly.TargetRuntimeVersion
       };
-        
+
       _assembly.AssemblyReferences.Add(_coreAssembly);
       _rootUnitNamespace          = RootUnitNamespace() <- { Unit = _assembly };
       _assembly.UnitNamespaceRoot = _rootUnitNamespace;
-     
+
       def moduleClass = NamespaceTypeDefinition() <-
       {
         ContainingUnitNamespace = _rootUnitNamespace;
@@ -78,7 +78,7 @@ namespace MiniC.Compiler
         IsClass                 = true;
         Name                    = _nameTable.GetNameFor("<Module>")
       };
-      
+
       _assembly.AllTypes.Add(moduleClass);
 
       _mainClass = NamespaceTypeDefinition() <-
@@ -96,22 +96,22 @@ namespace MiniC.Compiler
       _rootUnitNamespace.Members.Add(_mainClass);
       _assembly.AllTypes.Add(_mainClass);
     }
-     
+
     GenerateAssembly(outputPath : string) : void
     {
-      def outputPath = 
+      def outputPath =
         if (string.IsNullOrWhiteSpace(outputPath))
           if (_project.Files.IsEmpty())
             Path.Combine(_project.ProjectDir, "out.exe")
-          else 
+          else
             Path.ChangeExtension(_project.Files.First().FullName, ".exe")
-        else 
+        else
           outputPath;
-            
+
       using (peStream = IO.File.Create(outputPath))
         PeWriter.WritePeToStream(_assembly, _host, peStream);
     }
-    
+
     public Add(var : VarDeclarationSymbol) : void
     {
       def field = FieldDefinition() <- {
@@ -123,11 +123,11 @@ namespace MiniC.Compiler
         IsReadOnly               = false;
         InternFactory            = _host.InternFactory;
       };
-      
+
       _mainClass.Fields.Add(field);
       _globalVarMap[var] = field
-    }    
-    
+    }
+
     public Add(func : FunDeclarationSymbol) : void
     {
       if (func.HasParsedDeclarations)
@@ -145,14 +145,14 @@ namespace MiniC.Compiler
           Visibility               = TypeMemberVisibility.Public;
           InternFactory            = _host.InternFactory;
         };
-     
+
         _functionMap[func] = method;
         _mainClass.Methods.Add(method);
         method.Body = EmitFunctionBody(func, method);
-      
+
         when (name.Equals("main", StringComparison.InvariantCultureIgnoreCase))
           _assembly.EntryPoint = method;
-          
+
       }
       else
       {
@@ -161,11 +161,11 @@ namespace MiniC.Compiler
           def systemConsole = UnitHelper.FindType(_nameTable, _coreAssembly, "System.Console");
           TypeHelper.GetMethod(systemConsole, _nameTable.GetNameFor("WriteLine"), returnType);
         }
-        
+
         _functionMap[func] = writeLineFun(GetType(func.Parameters[0].Type));
       }
     }
-    
+
     GetFunction(symbol : FunDeclarationSymbol) : IMethodDefinition
     {
       if (_functionMap.Get(symbol) is Some(result))
@@ -173,13 +173,13 @@ namespace MiniC.Compiler
       else
         throw Exception($"Cannot find function $symbol, known functions: $(_functionMap.Values.ToArray().ToNList())")
     }
-    
+
     EmitFunctionBody(func : FunDeclarationSymbol, method : MethodDefinition) : IMethodBody
     {
       def compoundStatement = func.Declarations.First().Body;
       def isVoid            = ReferenceEquals(method.Type, _host.PlatformType.SystemVoid);
       def methodContext     = MethodContext(this, _nameTable, method, isVoid, ILGenerator(_host, method));
-      
+
       foreach (parameter in func.Parameters)
         methodContext.AddParameter(parameter);
 
@@ -187,30 +187,30 @@ namespace MiniC.Compiler
       methodContext.EmitReturn();
       ILGeneratorMethodBody(methodContext.IlGenerator, true, 10, method, methodContext.LocalVars, []);
     }
-    
+
     EmitCompoundStatement(methodContext : MethodContext, compoundStatement : CompoundStatement) : void
     {
       def gen = methodContext.IlGenerator;
       gen.BeginScope();
-      
+
       foreach (variable in compoundStatement.LocalVariables)
         methodContext.AddLocalVar(variable.Symbol);
-      
+
       foreach (statement in compoundStatement.Statements)
         EmitStatement(methodContext, statement);
-        
+
       gen.EndScope();
     }
-    
-    EmitStatement(methodContext : MethodContext, statement : Statement): void 
+
+    EmitStatement(methodContext : MethodContext, statement : Statement): void
     {
       def gen = methodContext.IlGenerator;
-      
+
       match (statement)
       {
         | Expression as s => EmitExpression(methodContext, s.Body);
         | ReturnVoid => gen.Emit(Op.Ret);
-        
+
         | Return as s =>
             EmitExpression(methodContext, s.Value);
             when (methodContext.Return is Some(ret))
@@ -218,7 +218,7 @@ namespace MiniC.Compiler
               gen.Emit(Op.Stloc, ret.Var);
               gen.Emit(Op.Br, ret.Label);
             }
-            
+
         | Compound as s => EmitCompoundStatement(methodContext, s.Nested);
         | If as s =>
             def exitLabel = ILGeneratorLabel();
@@ -227,7 +227,7 @@ namespace MiniC.Compiler
             // if true
             EmitStatement(methodContext, s.Body);
             gen.MarkLabel(exitLabel);
-        
+
         | IfElse as s =>
             def falseBranchLabel = ILGeneratorLabel();
             def exitLabel        = ILGeneratorLabel();
@@ -240,7 +240,7 @@ namespace MiniC.Compiler
             gen.MarkLabel(falseBranchLabel);
             EmitStatement(methodContext, s.FalseBranch);
             gen.MarkLabel(exitLabel);
-            
+
         | While as w =>
             def bodyLabel      = ILGeneratorLabel();
             def conditionLabel = ILGeneratorLabel();
@@ -253,15 +253,15 @@ namespace MiniC.Compiler
             EmitExpression(methodContext, w.Condition);
             gen.Emit(Op.Brtrue, bodyLabel);
             methodContext.TryFindWhileExitLabel(w).Iter(gen.MarkLabel);
-            
+
         | Break (Loop = Some(loop)) =>
             def whileExitLabel = methodContext.GetOrNewWhileExitLabel(loop);
             gen.Emit(Op.Br, whileExitLabel);
-            
+
         | _ => WriteLine($"Unhandlend statement! $statement");
       }
     }
-    
+
     EmitExpression(methodContext : MethodContext, expr : Expr) : void
     {
       def gen = methodContext.IlGenerator;
@@ -276,19 +276,19 @@ namespace MiniC.Compiler
         | ScalarAssignment as assignment =>
             EmitExpression(methodContext, assignment.Value);
             SetVarValue(gen, methodContext, assignment.Ref.Symbol);
-          
+
         | FunCall as call =>
             foreach (arg in call.Arguments)
               EmitExpression(methodContext, arg);
 
             gen.Emit(Op.Call, GetFunction(call.Ref.Symbol))
-        
+
         | Argument as arg => EmitExpression(methodContext, arg.Expr)
         | Binary as bin =>
             EmitExpression(methodContext, bin.Expr1);
             EmitExpression(methodContext, bin.Expr2);
             def opCode =
-              match (bin) 
+              match (bin)
               {
                 | Or        => Op.Or
                 | And       => Op.And
@@ -297,18 +297,18 @@ namespace MiniC.Compiler
                     gen.Emit(Op.Ceq);
                     gen.Emit(Op.Ldc_I4_0);
                     Op.Ceq;
-				
-                | LessEqual => 
+
+                | LessEqual =>
                     gen.Emit(Op.Cgt);
                     gen.Emit(Op.Ldc_I4_0);
                     Op.Ceq
-				
+
                 | Less         => Op.Clt
                 | GreaterEqual =>
                     gen.Emit(Op.Clt);
                     gen.Emit(Op.Ldc_I4_0);
                     Op.Ceq
-				
+
                 | Greater  => Op.Cgt
                 | Sum      => Op.Add
                 | Sub      => Op.Sub
@@ -318,10 +318,10 @@ namespace MiniC.Compiler
                 | _ => assert(false, $"Unhandled binary expression $bin")
               };
             gen.Emit(opCode);
-            
+
         | Unary as unary =>
             EmitExpression(methodContext, unary.Expr1);
-            match (unary) 
+            match (unary)
             {
               | Minus => gen.Emit(Op.Neg)
               | LogicalNegate =>
@@ -329,34 +329,34 @@ namespace MiniC.Compiler
                   gen.Emit(Op.Ceq)
               | _ => assert(false, $"Unhandled unary expression $unary")
             }
-            
+
         | ArraySize as e =>
             LoadVar(gen, methodContext, e.Ref.Symbol);
             gen.Emit(Op.Ldlen);
-            
+
         | ArrayAllocation as a =>
             EmitExpression(methodContext, a.Size);
             gen.Emit(Op.Newarr, GetArrayType(a.Type));
-            
+
         | ArrayAssignment as a =>
             LoadVar(gen, methodContext, a.Ref.Symbol);
             EmitExpression(methodContext, a.Index);
             EmitExpression(methodContext, a.Value);
             gen.Emit(Op.Stelem, GetType(a.Ref.Symbol.Type));
-            
+
         | ArrayRef as a =>
             LoadVar(gen, methodContext, a.Ref.Symbol);
             EmitExpression(methodContext, a.Index);
             gen.Emit(Op.Ldelem, GetType(a.Type));
-            
+
         | _ => WriteLine($"Unhandled expression! $expr")
       }
-      
+
       // we must pop expression result out from stack if it's not used
       unless (expr.Used || MiniCTypeUnifier.Instance.TryUnify(expr.Type, _context.Void))
         gen.Emit(Op.Pop);
     }
-    
+
     LoadVar(gen : ILGenerator, context : MethodContext, symbol : VarDeclarationSymbol) : void
     {
       match (symbol.VarKind)
@@ -366,7 +366,7 @@ namespace MiniC.Compiler
         | Parameter => gen.Emit(Op.Ldarg, context.GetCciParameter(symbol))
       }
     }
- 
+
     SetVarValue(gen : ILGenerator, context : MethodContext, symbol : VarDeclarationSymbol) : void
     {
       match (symbol.VarKind)
@@ -376,7 +376,7 @@ namespace MiniC.Compiler
         | Parameter => gen.Emit(Op.Starg, context.GetCciParameter(symbol))
       }
     }
-    
+
     public GetType(typeSymbol : TypeSymbol) : ITypeReference
     {
       | IntSymbol   => _host.PlatformType.SystemInt32
@@ -385,27 +385,27 @@ namespace MiniC.Compiler
       | VoidSymbol  => _host.PlatformType.SystemVoid
       | _           => assert(false, $"Unhandled $typeSymbol")
     }
-    
+
     GetArrayType(typeSymbol : TypeSymbol) : IArrayTypeReference
     {
       VectorTypeReference() <-
-		  {
+      {
         TypeCode      = PrimitiveTypeCode.NotPrimitive;
         PlatformType  = _host.PlatformType;
         ElementType   = GetType(typeSymbol);
         InternFactory = _host.InternFactory;
-		  }
+      }
     }
-    
+
     public GetVariableType(var : VarDeclarationSymbol) : ITypeReference
     {
       | VarDeclaration.ScalarDeclarationSymbol => GetType(var.Type)
       | VarDeclaration.ArrayDeclarationSymbol  => GetArrayType(var.Type)
       | _ => assert(false)
     }
-    
-    public Dispose(): void 
-    { 
+
+    public Dispose(): void
+    {
       _host.Dispose()
     }
   }
