@@ -12,7 +12,7 @@ namespace MiniC
 
     static this() { TypeUnifier.Instance = MiniCTypeUnifier(); }
 
-    protected override IsSubtype(subtype : TypeSymbol, supertype : TypeSymbol) : bool
+    protected override IsSubtypeUnwraped(subtype : TypeSymbol, supertype : TypeSymbol) : bool
     {
       subtype.Equals(supertype);
     }
