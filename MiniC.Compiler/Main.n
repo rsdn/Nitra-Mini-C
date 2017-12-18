@@ -59,7 +59,7 @@ namespace MiniC.Compiler
     {
       foreach (project in solution.Projects)
       {
-        def projectSupport   = project.GetProjectSupport();
+        def projectSupport   = ProjectSupport();
         def data             = projectSupport.RefreshReferences(CancellationToken.None, project);
         def files            = project.Files.Select(_.GetEvalPropertiesData()).ToImmutableArray();
         projectSupport.RefreshProject(CancellationToken.None, files, data);
