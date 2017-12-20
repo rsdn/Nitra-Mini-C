@@ -32,7 +32,8 @@ namespace MiniC.Compiler
 
     public static GenerateAssembly(project : Project, outputPath : string) : void
     {
-      def (context, rootSymbol) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+      
+      def (context, rootSymbol) = project.Data :> ProjectData;
 
       using (backend = DotNetBackend(project))
       {
@@ -54,7 +55,7 @@ namespace MiniC.Compiler
     public this(project : Project)
     {
       _project = project;
-      (_context, _) = project.Data :> MiniCDependentPropertyEvalContext * RootSymbol;
+      (_context, _) = project.Data :> ProjectData;
       _coreAssembly = _host.LoadAssembly(_host.CoreAssemblySymbolicIdentity);
 
       _assembly = Assembly() <-
